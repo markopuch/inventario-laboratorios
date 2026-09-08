@@ -5,6 +5,47 @@ baja categorías en PostgreSQL. Se conservaron Java 21, Spring Boot 4.1.1, Gradl
 9.7.1, la configuración mediante variables de entorno y `ddl-auto=validate`.
 Las migraciones V1–V4 y los tests existentes no se modificaron.
 
+## Relación con los ejemplos del profesor
+
+Se revisaron los proyectos `backend`, `workshop` y `review` de la carpeta
+`Carlos_backend`, especialmente `BalanceRestController`, `BalanceService`,
+`BalanceMapping`, `ClientService` e `InvestmentMapper`.
+
+La distribución del proyecto se conserva:
+
+| Ejemplos del curso | Inventario de Laboratorios | Responsabilidad |
+|---|---|---|
+| `controller` | `controller` | Recibir solicitudes y devolver respuestas HTTP |
+| `controller/request` | `dto/request` | Definir los campos que recibe la API |
+| `controller/response` | `dto/response` | Definir los campos que devuelve la API |
+| `business` o `domain/business` | `domain` | Representar la categoría en la lógica de negocio |
+| Servicios en `business` o `domain` | `service` | Aplicar reglas y coordinar la persistencia |
+| Mappers junto al controller | `mapper` | Convertir DTO, dominio y Entity |
+| Entities en `repository` | `entity` | Mapear las columnas de PostgreSQL |
+| Repositories en `repository` | `repository` | Consultar y guardar mediante Spring Data |
+
+Convenciones adoptadas:
+
+- DTOs y dominio como clases con `@Data`, `@Builder`, `@AllArgsConstructor` y
+  `@NoArgsConstructor`, con campos privados y getters/setters.
+- `@Autowired` visible en los constructores del Controller y Service. Las
+  dependencias son `final` y se reciben al construir cada clase.
+- `@ResponseStatus` en GET, PUT y DELETE. POST conserva `ResponseEntity` para
+  devolver 201 y la cabecera dinámica `Location` del recurso creado.
+- `convert` sobrecargado para convertir requests y Entities a dominio, con
+  conversiones de listas. `toEntity` y `toResponse` distinguen los dos destinos
+  posibles de un mismo objeto de dominio.
+- `copy(@MappingTarget ...)` para actualizar la Entity ya recuperada, manteniendo
+  el ID, el estado y la fecha. El Service prepara los valores editables.
+- `ApiError.builder()` y un bucle de errores por campo, como los ejemplos de
+  respuestas de validación del curso.
+
+Se mantienen las decisiones de Sprint 3: `@Getter`/`@Setter` en la Entity,
+`IDENTITY` compatible con `SERIAL`, PUT con respuesta 200, transacciones,
+validación y baja lógica. La copia de PUT utiliza `SET_TO_NULL`, porque omitir
+la descripción significa borrarla en una actualización completa. No se adopta
+el comportamiento de actualización parcial de algunos ejemplos del curso.
+
 ## Arquitectura
 
 ```text
@@ -43,7 +84,8 @@ Repetir GET, PUT o DELETE sobre esa categoría devuelve 404.
 ## MapStruct, Lombok y fechas
 
 MapStruct 1.6.3 genera `CategoriaMapperImpl` durante la compilación. La interfaz
-declara cinco conversiones y usa `componentModel="spring"` y
+declara las cinco conversiones principales, conversiones de listas y `copy` con
+`@MappingTarget`. Usa `componentModel="spring"` y
 `unmappedTargetPolicy=ReportingPolicy.ERROR` para detectar campos destino olvidados.
 Los campos controlados por el servidor se ignoran explícitamente al recibir DTOs.
 
@@ -55,11 +97,11 @@ backend/inventario/build/generated/sources/annotationProcessor/java/main/com/ute
 
 No edites ese archivo: se regenera. Modifica la interfaz `CategoriaMapper`.
 `lombok-mapstruct-binding:0.2.0` permite que MapStruct reconozca los accesores que
-Lombok genera. Lombok aporta getters, setters y constructores sin argumentos al
-dominio y a la Entity; constructores de dependencias al Controller y Service;
-y el logger al manejador de errores. Los DTOs son records de Java, que ya generan
-su constructor y accesores. No se usa `@Data` en la Entity para evitar igualdad,
-hash y representaciones automáticas de todos los campos de persistencia.
+Lombok genera. Lombok aporta getters, setters, builders y constructores a los
+DTOs, al dominio, a la Entity y a `ApiError`; también aporta el logger del
+manejador de errores. Los constructores de dependencias del Controller y Service
+son explícitos y utilizan `@Autowired`. No se usa `@Data` en la Entity para evitar
+igualdad, hash y representaciones automáticas de todos los campos de persistencia.
 
 `GenerationType.IDENTITY` utiliza la generación de ID que ofrece el `SERIAL`
 existente. `fechaCreacion` usa `OffsetDateTime`: PostgreSQL aplica
@@ -373,6 +415,63 @@ Para comprobar persistencia entre arranques, detén Spring Boot con `Ctrl+C`, vu
 a ejecutar `bootRun` con las mismas variables y repite las consultas GET/SQL.
 La categoría actualizada debe conservar sus cambios y la dada de baja debe seguir
 inactiva. Esta comprobación también es manual.
+
+## Pruebas complementarias junto con Postman
+
+Además de las once solicitudes anteriores, puedes comprobar los siguientes casos
+manualmente. Para las escrituras conserva `Content-Type: application/json` y
+`Authorization: No Auth`.
+
+| Acción en Postman | Resultado HTTP esperado | Qué comprobar en pgAdmin |
+|---|---|---|
+| POST con nombre formado solo por espacios | 400, error de `nombre` | No aparece una fila nueva |
+| POST o PUT con nombre de 101 caracteres | 400 | No cambia la fila ni se crea una nueva |
+| POST o PUT con descripción de 256 caracteres | 400 | No cambia la descripción almacenada |
+| POST con JSON incompleto, por ejemplo `{` | 400 | No se inserta ninguna fila |
+| GET `/api/categorias/abc` | 400 | La API exige un ID entero |
+| Repetir el PUT de la prueba 5 | 200 | Se mantienen el ID y la fecha de creación |
+| PUT con `descripcion: null` sobre una categoría activa | 200 | La descripción pasa a `NULL`; nombre, ID y fecha quedan según la solicitud y el registro original |
+| PUT sin el campo `descripcion` | 200 | La descripción también pasa a `NULL`, porque PUT es completo |
+| PUT sobre la categoría dada de baja | 404 | La fila sigue con `activo=false` |
+| Repetir DELETE sobre la categoría dada de baja | 404 | La fila continúa existiendo y sigue inactiva |
+| Repetir POST con el nombre de la categoría dada de baja | 409 | No aparece otra fila con ese nombre |
+| Dos POST desde pestañas distintas con un nombre nuevo equivalente en mayúsculas/minúsculas | Un 201 y un 409 | Solo existe una fila para ese nombre, con V5 aplicada |
+
+Para comprobar el PUT con descripción nula, usa el ID de una categoría activa:
+
+```json
+{
+  "nombre": "Instrumentación Electrónica",
+  "descripcion": null
+}
+```
+
+Después consulta:
+
+```sql
+SELECT id_categoria, nombre, descripcion,
+       descripcion IS NULL AS descripcion_es_nula,
+       activo, fecha_creacion
+FROM categoria
+WHERE nombre = 'Instrumentación Electrónica';
+
+-- Debe devolver cero filas: la comparación incluye categorías inactivas.
+SELECT UPPER(nombre) AS nombre_comparable, COUNT(*) AS cantidad
+FROM categoria
+GROUP BY UPPER(nombre)
+HAVING COUNT(*) > 1;
+
+-- Compara los valores antes y después de una operación rechazada.
+SELECT COUNT(*) AS total,
+       COUNT(*) FILTER (WHERE activo) AS activas,
+       COUNT(*) FILTER (WHERE NOT activo) AS inactivas
+FROM categoria;
+```
+
+Una respuesta 201/200 confirma el resultado HTTP; la consulta SQL permite verificar
+la fila almacenada. Repetir GET después de reiniciar el backend comprueba que los
+datos permanecen en PostgreSQL. Para la baja lógica, el GET debe devolver 404
+mientras la consulta SQL sigue mostrando la fila con `activo=false`.
 
 La implementación fue compilada sin tests. El arranque con V5, las solicitudes
 Postman y la comprobación de persistencia mediante la API quedan pendientes de

@@ -7,6 +7,10 @@ autenticación quedan para sprints posteriores.
 
 La [guía del Sprint 3](docs/sprint-3-categorias.md) explica la arquitectura,
 las once solicitudes manuales de Postman y la comprobación de persistencia en pgAdmin.
+El código sigue convenciones de los ejemplos del curso en `Carlos_backend`:
+clases con Lombok, inyección explícita con `@Autowired`, estados HTTP declarados
+y mappers con `convert` y `copy`. Se mantiene la organización de paquetes de este
+proyecto; la guía incluye la correspondencia con las carpetas del profesor.
 
 ## Requisitos
 

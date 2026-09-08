@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -59,9 +60,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             MethodArgumentNotValidException exception, HttpHeaders headers,
             HttpStatusCode status, WebRequest request) {
         Map<String, String> errors = new TreeMap<>();
-        exception.getBindingResult().getFieldErrors().forEach(fieldError ->
-                errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage() == null
-                        ? "Valor inválido" : fieldError.getDefaultMessage()));
+        for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
+            String message = fieldError.getDefaultMessage() == null
+                    ? "Valor inválido" : fieldError.getDefaultMessage();
+            errors.putIfAbsent(fieldError.getField(), message);
+        }
 
         return new ResponseEntity<>(body(status, "La solicitud contiene campos inválidos.", request, errors),
                 headers, status);
@@ -95,6 +98,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpStatus httpStatus = HttpStatus.resolve(status.value());
         String reason = httpStatus == null ? "Error" : httpStatus.getReasonPhrase();
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-        return new ApiError(OffsetDateTime.now(ZoneOffset.UTC), status.value(), reason, message, path, errors);
+        return ApiError.builder()
+                .timestamp(OffsetDateTime.now(ZoneOffset.UTC))
+                .status(status.value())
+                .error(reason)
+                .message(message)
+                .path(path)
+                .errors(errors)
+                .build();
     }
 }
