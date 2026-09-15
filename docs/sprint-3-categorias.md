@@ -3,7 +3,15 @@
 La vertical implementada permite crear, listar, consultar, actualizar y dar de
 baja categorías en PostgreSQL. Se conservaron Java 21, Spring Boot 4.1.1, Gradle
 9.7.1, la configuración mediante variables de entorno y `ddl-auto=validate`.
-Las migraciones V1–V4 y los tests existentes no se modificaron.
+Las migraciones V1–V5 y el test de arranque existente no se modificaron durante
+la revisión posterior. Se añadieron pruebas de regresión con la autorización
+de ejecutar las comprobaciones necesarias.
+
+La versión actual añade usuarios JPA y autenticación JWT sobre esta vertical.
+Sigue primero la [guía de usuarios y JWT](autenticacion-jwt.md) para obtener un
+token ADMIN de `marko`; las once pruebas de categorías siguientes lo requieren.
+La arquitectura de negocio del Sprint 3 se conserva y los resultados históricos
+anteriores a JWT se identifican al final de este documento.
 
 ## Relación con los ejemplos del profesor
 
@@ -50,6 +58,7 @@ el comportamiento de actualización parcial de algunos ejemplos del curso.
 
 ```text
 Postman envía JSON
+  → JwtAuthFilter valida el token y SecurityConfig comprueba el rol
   → CategoriaController recibe CreateCategoriaRequest / UpdateCategoriaRequest
   → Bean Validation comprueba los campos
   → CategoriaMapper convierte el DTO en Categoria
@@ -80,6 +89,14 @@ editables completos. Se recortan los espacios de los extremos de los textos.
 
 DELETE cambia `activo` a `false` y guarda mediante JPA; no usa `repository.delete`.
 Repetir GET, PUT o DELETE sobre esa categoría devuelve 404.
+
+PUT y DELETE recuperan la fila mediante
+`findForUpdateByIdCategoriaAndActivoTrue`, anotado con
+`@Lock(LockModeType.PESSIMISTIC_WRITE)`. El bloqueo dura hasta terminar la
+transacción: si DELETE obtiene primero la fila, el PUT concurrente espera y
+después devuelve 404. Esto evita reactivar accidentalmente una categoría con
+una copia anterior a su baja. GET utiliza la consulta habitual sin ese bloqueo.
+Es un bloqueo por fila; las demás categorías pueden seguir modificándose.
 
 ## MapStruct, Lombok y fechas
 
@@ -122,6 +139,14 @@ duplicados antes de guardar y el índice impide que dos solicitudes simultáneas
 inserten nombres equivalentes. La violación de esos índices de nombre se traduce
 a 409 sin incluir detalles de PostgreSQL en el JSON. V5 no modifica filas.
 
+Con PostgreSQL configurado en español, Hibernate puede no extraer el nombre de
+la restricción desde el mensaje. El manejador consulta también los metadatos
+estructurados de `PSQLException`: SQLState `23505` y nombre de restricción.
+Así reconoce el duplicado independientemente del idioma. Los otros errores de
+integridad siguen produciendo un 500 genérico. Para utilizar esa API del driver,
+`org.postgresql:postgresql` pasó de `runtimeOnly` a `implementation`; su versión
+sigue administrada por Spring Boot.
+
 En otra base, revisa posibles duplicados antes de arrancar:
 
 ```sql
@@ -149,6 +174,9 @@ con el campo y un mensaje claro, sin repetir el valor rechazado. El error 500
 expone un mensaje genérico; el detalle técnico se registra únicamente en el servidor.
 También se mantienen respuestas coherentes para JSON inválido, IDs no numéricos,
 métodos no admitidos y tipos de contenido incorrectos.
+La autenticación se comprueba antes del controlador: sin token válido se devuelve
+401, y con un rol sin permiso de escritura se devuelve 403. Para observar los
+errores de negocio de las pruebas siguientes utiliza un token ADMIN válido.
 
 Ejemplo de validación:
 
@@ -175,6 +203,23 @@ $env:DB_PASSWORD = [System.Net.NetworkCredential]::new(
     "", (Read-Host "Contraseña local de PostgreSQL" -AsSecureString)
 ).Password
 
+if (-not $env:JWT_SECRET) {
+    $jwtKeyBytes = New-Object byte[] 32
+    $jwtRandom = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $jwtRandom.GetBytes($jwtKeyBytes)
+        $env:JWT_SECRET = [Convert]::ToBase64String($jwtKeyBytes)
+    } finally {
+        $jwtRandom.Dispose()
+        [Array]::Clear($jwtKeyBytes, 0, $jwtKeyBytes.Length)
+    }
+}
+
+$env:SPRING_PROFILES_ACTIVE = 'dev'
+$env:DEMO_USER_PASSWORD = [System.Net.NetworkCredential]::new(
+    '', (Read-Host 'Contraseña inicial de las tres cuentas demo' -AsSecureString)
+).Password
+
 # Compilación opcional de clases principales, sin tests.
 .\gradlew.bat classes -x test
 
@@ -182,8 +227,10 @@ $env:DB_PASSWORD = [System.Net.NetworkCredential]::new(
 .\gradlew.bat bootRun
 ```
 
-Flyway aplicará V5 si V1–V4 ya estaban aplicadas. En una base vacía ejecutará V1–V5.
-No se inicia ninguna suite de tests con esos comandos.
+Flyway aplicará las migraciones pendientes hasta V6. En una base vacía ejecutará
+V1–V6. El perfil `dev` crea las cuentas demo que falten y no cambia las existentes.
+La clave JWT se conserva al reiniciar en esta terminal; si cambias la clave,
+inicia sesión de nuevo. No se inicia ninguna suite de tests con esos comandos.
 
 En otra ventana de PowerShell, con las instalaciones locales habituales:
 
@@ -192,20 +239,30 @@ Start-Process -FilePath "$env:LOCALAPPDATA\Postman\Postman.exe"
 Start-Process -FilePath 'C:\Program Files\PostgreSQL\18\pgAdmin 4\runtime\pgAdmin4.exe'
 ```
 
-## Configuración temporal de Security
+## Seguridad actual con JWT
 
-**Configuración temporal de Sprint 3. Será reemplazada cuando se implemente
-autenticación/autorización.** Las rutas `/api/categorias` y `/api/categorias/**`
-usan `permitAll` y están exceptuadas de CSRF para permitir las escrituras manuales.
-Las otras rutas están denegadas. Los despachos internos de error están permitidos.
-Form login, HTTP Basic y logout están deshabilitados. No hay implementación de
-JWT, login ni usuarios de aplicación. En Postman utiliza **Authorization → No Auth**.
+El login `POST /api/auth/login` es público. Los GET de categorías y
+`GET /api/auth/me` requieren un usuario activo con rol ADMIN, GESTOR o LECTOR.
+POST, PUT y DELETE de categorías requieren ADMIN. Las otras rutas están denegadas.
+El filtro valida el JWT y consulta el usuario y su rol actuales mediante JPA.
+
+Las sesiones, form login, HTTP Basic y logout están deshabilitados. CSRF está
+deshabilitado porque la autenticación usa el encabezado `Authorization` y no
+cookies. Los despachos internos de error están permitidos.
+
+En Postman usa **No Auth solamente para el login**. Sigue la
+[guía de usuarios y JWT](autenticacion-jwt.md#postman-login-y-autorización), inicia
+sesión con `marko` y guarda `accessToken` en la variable de colección `tokenAdmin`.
+Usa **Authorization → Bearer Token → `{{tokenAdmin}}`** en categorías.
 
 ## Preparar las once solicitudes de Postman
 
 Base: `http://localhost:8080/api/categorias`.
 Para POST y PUT selecciona **Body → raw → JSON**. Para GET y DELETE, **Body → none**.
-Configura **No Auth** en todas las solicitudes. No necesitas scripts de Postman.
+Configura **Bearer Token → `{{tokenAdmin}}`** en las once solicitudes. Postman
+agrega el encabezado `Authorization: Bearer {{tokenAdmin}}` a cada una; también
+puedes heredarlo de una colección con esa configuración. No necesitas scripts.
+Si el token vence durante las pruebas, repite el login y actualiza `tokenAdmin`.
 
 V4 ya inserta `Electrónica` e `Instrumentación`; intentar crear `Instrumentación`
 devuelve 409. Para comprobar un POST exitoso se usa `Instrumentación Sprint 3`.
@@ -385,7 +442,7 @@ Comprueba baja lógica y ocultamiento de inactivos; pgAdmin debe conservar la fi
 Selecciona la base `inventario_laboratorios` y abre Query Tool:
 
 ```sql
--- Flyway debe mostrar V1–V5 exitosas tras el arranque.
+-- Flyway debe mostrar V1–V6 exitosas tras el arranque.
 SELECT * FROM flyway_schema_history ORDER BY installed_rank;
 
 -- Todas las categorías, incluyendo inactivas.
@@ -413,6 +470,7 @@ ORDER BY indexname;
 
 Para comprobar persistencia entre arranques, detén Spring Boot con `Ctrl+C`, vuelve
 a ejecutar `bootRun` con las mismas variables y repite las consultas GET/SQL.
+Si el token venció o cambiaste la clave JWT, inicia sesión de nuevo antes del GET.
 La categoría actualizada debe conservar sus cambios y la dada de baja debe seguir
 inactiva. Esta comprobación también es manual.
 
@@ -420,7 +478,7 @@ inactiva. Esta comprobación también es manual.
 
 Además de las once solicitudes anteriores, puedes comprobar los siguientes casos
 manualmente. Para las escrituras conserva `Content-Type: application/json` y
-`Authorization: No Auth`.
+`Authorization: Bearer {{tokenAdmin}}`.
 
 | Acción en Postman | Resultado HTTP esperado | Qué comprobar en pgAdmin |
 |---|---|---|
@@ -473,6 +531,112 @@ la fila almacenada. Repetir GET después de reiniciar el backend comprueba que l
 datos permanecen en PostgreSQL. Para la baja lógica, el GET debe devolver 404
 mientras la consulta SQL sigue mostrando la fila con `activo=false`.
 
-La implementación fue compilada sin tests. El arranque con V5, las solicitudes
-Postman y la comprobación de persistencia mediante la API quedan pendientes de
-tu ejecución manual. No se crearon ni ejecutaron pruebas automáticas.
+## Resultados históricos: revisión del 8 de septiembre de 2026 anterior a JWT
+
+Las cifras de esta sección corresponden a la revisión de categorías realizada
+antes de agregar autenticación. No representan el total de la suite actual.
+Los resultados y las pruebas de seguridad actuales se documentan en la
+[guía de usuarios y JWT](autenticacion-jwt.md).
+
+La revisión incluyó compilación, arranque de la aplicación empaquetada y **32
+comprobaciones correctas de 32** mediante HTTP real y consultas SQL sobre una
+base temporal `inventario_verificacion_*` en PostgreSQL local. Se usó el puerto
+18080 durante esa verificación; tus pasos manuales mantienen el puerto 8080.
+
+Se reprodujeron y corrigieron dos fallos:
+
+| Situación | Antes | Después |
+|---|---|---|
+| Altas simultáneas con nombres equivalentes y mensajes PostgreSQL en español | Una violación del índice podía terminar en 500 | Una creación exitosa; las duplicadas reciben 409 |
+| DELETE obtiene la fila antes de un PUT concurrente | PUT podía guardar nuevamente `activo=true` | DELETE devuelve 204; PUT espera y devuelve 404; la fila continúa inactiva |
+
+Las 32 comprobaciones abarcaron:
+
+- Arranque con Flyway V1–V5 y validación del esquema por Hibernate.
+- POST, cabecera Location, generación de ID/fecha y persistencia comprobada en SQL.
+- GET de lista y detalle, orden por ID y filtro de categorías activas.
+- PUT con nombre propio, campos protegidos, descripción nula u omitida y
+  normalización de espacios.
+- Entradas vacías/nulas/omitidas, límites exactos y excesos de longitud,
+  JSON malformado, body ausente, ID no numérico y fuera del rango Integer.
+- Duplicados exactos, con otras mayúsculas, al actualizar y contra categorías
+  inactivas; rechazo sin modificar filas.
+- DELETE lógico, fila conservada, GET/PUT/DELETE posteriores y nombre reservado.
+- Ocho POST simultáneos: un 201, siete 409 y una sola fila almacenada.
+- DELETE y PUT concurrentes ordenados con un bloqueo externo de la fila.
+- Fallo controlado de acceso a una tabla en la base temporal: 500 genérico y
+  recuperación posterior. La base habitual no se utilizó para provocar errores.
+- Reinicio real del proceso Java: los cambios y las bajas persistieron.
+
+Las pruebas JUnit de esa revisión quedaron en
+`backend/inventario/src/test/java/com/utec/inventario/`:
+
+Resultado histórico de `gradlew test`: **15 pruebas, 0 fallos, 0 errores y 0 omitidas**.
+La compilación y el empaquetado con `bootJar` también terminaron correctamente.
+
+| Clase | Cobertura |
+|---|---|
+| `InventarioApplicationTests` | Arranque del contexto con PostgreSQL y Flyway |
+| `mapper/CategoriaMapperTest` | Campos controlados por servidor y copia con descripción nula |
+| `service/CategoriaServiceTest` | Creación, normalización, duplicados, actualización y baja lógica |
+| `exception/GlobalExceptionHandlerTest` | Restricciones de nombre, error en español y respuesta 500 sin detalles internos |
+| `CategoriaConcurrenciaTests` | Dos carreras reproducidas con HTTP real y transacciones PostgreSQL |
+
+Las pruebas de concurrencia usan nombres UUID propios, eliminan únicamente sus
+filas de prueba y se habilitan cuando `DB_URL` apunta a una base cuyo nombre
+empieza por `inventario_verificacion_`. No se cambia el esquema para estas dos
+regresiones. El caso de error 500 controlado perteneció a la comprobación HTTP
+de esta revisión, no a una prueba que debas repetir en tu base habitual.
+
+La base temporal y los procesos de verificación se eliminaron al finalizar.
+En esa revisión, la base `inventario_laboratorios` conservó sus dos categorías
+y V1–V4; se compararon sus datos antes y después y V5 quedó pendiente en ella.
+El arranque de la versión actual aplica las migraciones que falten hasta V6.
+Ninguna migración existente se editó y no se agregaron credenciales a los archivos.
+
+### Repetir las pruebas automáticas
+
+Para ejecutar únicamente las pruebas que no requieren PostgreSQL, desde
+`backend/inventario`:
+
+```powershell
+.\gradlew.bat test --rerun-tasks --tests '*CategoriaMapperTest' --tests '*CategoriaServiceTest' --tests '*GlobalExceptionHandlerTest' --tests '*JwtServiceTest'
+```
+
+Para ejecutar toda la suite, crea primero una base de pruebas. En pgAdmin,
+conectado a `postgres` y con autocommit, ejecuta una vez:
+
+```sql
+CREATE DATABASE inventario_verificacion_manual;
+```
+
+En PowerShell, conserva `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, el perfil `dev` y
+`DEMO_USER_PASSWORD` definidos como en el arranque manual, y cambia temporalmente
+solo la URL:
+
+```powershell
+$previousDbUrl = $env:DB_URL
+try {
+    $env:DB_URL = 'jdbc:postgresql://localhost:5432/inventario_verificacion_manual'
+    .\gradlew.bat test --rerun-tasks --no-daemon --console=plain
+} finally {
+    $env:DB_URL = $previousDbUrl
+}
+```
+
+La suite arranca su servidor en un puerto aleatorio. Flyway prepara la base de
+pruebas en el primer arranque. El reporte HTML se genera en
+`backend/inventario/build/reports/tests/test/index.html`.
+La suite actual también incluye `AuthIntegrationTests` y `security/JwtServiceTest`;
+la [guía de usuarios y JWT](autenticacion-jwt.md#repetir-la-suite-automática)
+explica sus comprobaciones y condiciones de ejecución.
+
+Para tu comprobación manual de negocio, vuelve a la sección de arranque y a las
+once solicitudes de Postman. Después de DELETE, compara el 404 de GET con la
+fila que permanece en pgAdmin con `activo=false`. Para verificar persistencia,
+reinicia `bootRun` y repite GET y SQL.
+
+Referencias de las correcciones:
+[bloqueos en Spring Data JPA](https://docs.spring.io/spring-data/jpa/reference/jpa/locking.html),
+[aislamiento y reevaluación de filas en PostgreSQL](https://www.postgresql.org/docs/18/transaction-iso.html),
+[metadatos estructurados del driver PostgreSQL](https://jdbc.postgresql.org/documentation/publicapi/org/postgresql/util/ServerErrorMessage.html).

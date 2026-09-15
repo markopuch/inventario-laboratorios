@@ -2,11 +2,35 @@
 
 Backend Spring Boot ubicado en `backend/inventario`. El alcance actual comprende
 la base del proyecto (Sprint 1), el esquema PostgreSQL administrado por Flyway
-(Sprint 2) y la vertical de Categoría (Sprint 3). El resto de entidades y la
-autenticación quedan para sprints posteriores.
+(Sprint 2), la vertical de Categoría (Sprint 3) y usuarios JPA con autenticación
+JWT. Los CRUD de equipos y administración de usuarios quedan para sprints posteriores.
+
+## Arranque rápido en Windows
+
+Con PostgreSQL iniciado, abre una terminal en la raíz del proyecto y ejecuta:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\iniciar-backend.ps1
+```
+
+El script solicita usuario y contraseña de PostgreSQL cuando faltan y genera una
+clave JWT para esa sesión. Presiona Enter para aceptar el usuario `postgres`.
+Espera `Started InventarioApplication` y deja abierta la terminal mientras usas
+Postman en `http://localhost:8080`. Detén el backend con `Ctrl+C`.
+
+Las cuentas existentes `marko`, `aldo` y `romel` funcionan sin el perfil `dev`.
+Para inicializarlas en una base nueva, agrega `-CrearUsuariosDemo` al comando;
+entonces se solicita también la contraseña inicial de demostración.
+
+En este workspace de VS Code también puedes abrir **Terminal → Run Task →
+Iniciar backend de Inventario**. La tarea local usa el mismo script. Ejecutar
+Java directamente requiere configurar previamente las variables del apartado
+de configuración manual. El script no guarda contraseñas ni claves en archivos.
 
 La [guía del Sprint 3](docs/sprint-3-categorias.md) explica la arquitectura,
 las once solicitudes manuales de Postman y la comprobación de persistencia en pgAdmin.
+Comienza por la [guía de usuarios y JWT](docs/autenticacion-jwt.md) para iniciar
+sesión y obtener los tokens que requieren esas solicitudes.
 El código sigue convenciones de los ejemplos del curso en `Carlos_backend`:
 clases con Lombok, inyección explícita con `@Autowired`, estados HTTP declarados
 y mappers con `convert` y `copy`. Se mantiene la organización de paquetes de este
@@ -50,18 +74,29 @@ backend/inventario/
     │   │   └── service/
     │   └── resources/
     │       ├── application.properties
+    │       ├── application-dev.properties
     │       └── db/migration/
-    └── test/java/com/utec/inventario/InventarioApplicationTests.java
+    └── test/java/com/utec/inventario/
+        ├── InventarioApplicationTests.java
+        ├── CategoriaConcurrenciaTests.java
+        ├── AuthIntegrationTests.java
+        ├── exception/GlobalExceptionHandlerTest.java
+        ├── mapper/CategoriaMapperTest.java
+        ├── security/JwtServiceTest.java
+        └── service/CategoriaServiceTest.java
 ```
 
 Los paquetes vacíos contienen `.gitkeep` para conservarlos en Git, sin clases
-ficticias. El test existente se mantiene sin modificaciones.
+ficticias. El test de arranque existente se mantiene sin modificaciones; se
+agregaron pruebas de regresión del Sprint 3 y de autenticación JWT.
 
 Las dependencias incluyen Web MVC, JPA, PostgreSQL JDBC, Validation, Security,
 Flyway con su módulo PostgreSQL, Lombok y DevTools. Los starters de pruebas
 existentes incluyen `spring-boot-starter-test` transitivamente. Sprint 3 incorpora
 MapStruct **1.6.3**, su procesador de anotaciones y `lombok-mapstruct-binding:0.2.0`.
 Las versiones de Java, Spring Boot, Gradle y Lombok se conservan.
+La autenticación utiliza JJWT **0.13.0**, como los ejemplos del profesor,
+y BCrypt de Spring Security para verificar los hashes de contraseñas.
 
 ## Preparar PostgreSQL
 
@@ -92,8 +127,7 @@ Si la base ya contiene tablas o un historial Flyway, revisa su estado antes del
 arranque. No ejecutes un SQL anterior para crear el esquema ni apliques `baseline`
 o `repair` para ocultar diferencias. Los borradores originales V1–V4 solo tenían
 comentarios: si llegaste a aplicarlos, usa una base de desarrollo vacía y conserva
-la anterior hasta revisar sus datos. No se borró ni modificó ninguna base durante
-esta tarea.
+la anterior hasta revisar sus datos.
 
 ## Variables de entorno y ejecución en PowerShell
 
@@ -104,21 +138,32 @@ Set-Location .\backend\inventario
 java -version
 ```
 
-Ejemplo de configuración; los valores siguientes son ilustrativos y
-`<TU_PASSWORD_LOCAL>` es un marcador que debes configurar localmente:
+Configura la conexión y las cuentas de demostración en esa misma terminal.
+Introduce las contraseñas mediante los avisos; sus valores no se escriben en
+el historial de comandos:
 
 ```powershell
-$env:DB_URL="jdbc:postgresql://localhost:5432/inventario_laboratorios"
-$env:DB_USER="inventario_app"
-$env:DB_PASSWORD="<TU_PASSWORD_LOCAL>"
-```
-
-Para introducir la contraseña sin escribir su valor en el historial de comandos,
-puedes sustituir la última línea por:
-
-```powershell
+$env:DB_URL = 'jdbc:postgresql://localhost:5432/inventario_laboratorios'
+$env:DB_USER = Read-Host 'Usuario local de PostgreSQL'
 $env:DB_PASSWORD = [System.Net.NetworkCredential]::new(
-    "", (Read-Host "Contraseña local de PostgreSQL" -AsSecureString)
+    '', (Read-Host 'Contraseña local de PostgreSQL' -AsSecureString)
+).Password
+
+if (-not $env:JWT_SECRET) {
+    $jwtKeyBytes = New-Object byte[] 32
+    $jwtRandom = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $jwtRandom.GetBytes($jwtKeyBytes)
+        $env:JWT_SECRET = [Convert]::ToBase64String($jwtKeyBytes)
+    } finally {
+        $jwtRandom.Dispose()
+        [Array]::Clear($jwtKeyBytes, 0, $jwtKeyBytes.Length)
+    }
+}
+
+$env:SPRING_PROFILES_ACTIVE = 'dev'
+$env:DEMO_USER_PASSWORD = [System.Net.NetworkCredential]::new(
+    '', (Read-Host 'Contraseña inicial de las tres cuentas demo' -AsSecureString)
 ).Password
 ```
 
@@ -131,6 +176,16 @@ Ejecuta en esa misma ventana:
 La aplicación usa el puerto `8080`. Las variables anteriores pertenecen a esta
 sesión de PowerShell. Un archivo `.env` no se carga automáticamente: configura
 las variables en la terminal o en tu entorno de ejecución.
+
+El perfil `dev` crea `marko` (ADMIN), `aldo` (GESTOR) y `romel` (LECTOR) mediante
+JPA, usando la contraseña inicial que introduzcas. Reiniciar no duplica usuarios,
+no restablece contraseñas ni cambia sus roles o estados. La contraseña de la demo
+es independiente de la de PostgreSQL. Sin `dev`, las cuentas existentes siguen
+disponibles, pero no se crean cuentas demo.
+
+`JWT_SECRET` es obligatorio y contiene al menos 32 bytes aleatorios en Base64.
+Los comandos anteriores lo conservan al reiniciar en la misma terminal; si cambia
+la clave, inicia sesión otra vez. Los tokens duran 1800 segundos por defecto.
 
 No guardes credenciales reales en archivos versionados. `.env` y
 `application-local.properties` están excluidos de Git.
@@ -161,15 +216,17 @@ integración, conforme a la
 | `V3__crear_equipos_y_movimientos.sql` | `equipo`, `movimiento_equipo` |
 | `V4__insertar_datos_iniciales.sql` | Tres roles y organización/catálogos ficticios |
 | `V5__categoria_nombre_unico_sin_mayusculas.sql` | Índice único sobre `UPPER(categoria.nombre)`, incluyendo categorías inactivas |
+| `V6__agregar_username_usuario.sql` | Nombre de acceso único sin distinguir mayúsculas; usuarios anteriores reciben `usuario_<id_usuario>` |
 
 Flyway es la fuente oficial del esquema. Cada migración se aplica una vez y queda
 registrada con su checksum en `flyway_schema_history`. Tras aplicar estas versiones,
 los cambios posteriores deben introducirse mediante nuevas migraciones.
 
 `spring.jpa.hibernate.ddl-auto=validate` indica a Hibernate que valide el esquema
-frente a las entidades mapeadas, sin crear, actualizar ni borrar tablas. Sprint 3
-mapea únicamente `CategoriaEntity`; un arranque correcto no valida las otras nueve
-tablas mediante JPA. Verifica el esquema mediante las consultas siguientes.
+frente a las entidades mapeadas, sin crear, actualizar ni borrar tablas. Ahora
+se mapean `CategoriaEntity`, `UsuarioEntity` y `RolEntity`; un arranque correcto
+no valida las otras siete tablas mediante JPA. Verifica el esquema mediante las
+consultas siguientes.
 
 V1–V4 ya fueron aplicadas en la base local inspeccionada y se conservaron sin
 modificaciones. V5 amplía la unicidad de nombre para impedir duplicados que solo
@@ -198,6 +255,8 @@ V4 inserta `ADMIN`, `GESTOR`, `LECTOR`, una sede, dos áreas, los laboratorios `
 y `L206`, dos categorías y cuatro subcategorías. No inserta usuarios, hashes,
 equipos ni movimientos. Las relaciones de los datos iniciales se resuelven por
 nombre/código, sin asumir identificadores numéricos.
+Las cuentas demo se insertan posteriormente mediante `DemoUsuariosConfig` y
+solo con el perfil `dev`; los hashes BCrypt no forman parte de las migraciones.
 
 Los documentos en `docs/` se conservan como referencias de diseño de Sprint 0;
 no implican que los endpoints o reglas de servicio estén implementados. No se
@@ -214,11 +273,17 @@ FROM information_schema.tables
 WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
 ORDER BY table_name;
 
--- Tras iniciar Sprint 3: cinco migraciones, versiones 1–5, con success = true.
+-- Tras iniciar la versión actual: seis migraciones, versiones 1–6, con success = true.
 SELECT * FROM flyway_schema_history ORDER BY installed_rank;
 
 -- ADMIN, GESTOR, LECTOR.
 SELECT id_rol, nombre, activo FROM rol ORDER BY nombre;
+
+-- Usuarios de aplicación y sus roles; no muestra contraseñas ni hashes.
+SELECT u.id_usuario, u.username, u.nombre, r.nombre AS rol, u.activo
+FROM usuario AS u
+JOIN rol AS r ON r.id_rol = u.id_rol
+ORDER BY u.id_usuario;
 
 -- Una sede, dos áreas y los laboratorios L201 y L206.
 SELECT s.nombre AS sede, a.nombre AS area, l.codigo, l.nombre AS laboratorio
@@ -247,9 +312,10 @@ WHERE schemaname = 'public'
 ORDER BY tablename, indexname;
 ```
 
-La aplicación de V5 y la comprobación HTTP/persistencia de Sprint 3 quedan
-pendientes de tu arranque y pruebas manuales. La compilación de las clases
-principales se puede comprobar sin tests con:
+`bootRun` aplica las migraciones pendientes hasta V6. Los resultados de la
+verificación actual y los comandos para repetirla están en la
+[guía de usuarios y JWT](docs/autenticacion-jwt.md).
+La compilación de las clases principales se puede comprobar sin tests con:
 
 ```powershell
 .\gradlew.bat classes -x test
@@ -267,16 +333,37 @@ principales se puede comprobar sin tests con:
 
 POST y PUT reciben exclusivamente el modelo editable `nombre` y `descripcion`.
 El servidor controla ID, estado y fecha. Los errores se devuelven como JSON:
-400 para entradas inválidas, 404 para categorías inexistentes o inactivas,
+400 para entradas inválidas, 401 para autenticación ausente o inválida,
+403 para permisos insuficientes, 404 para categorías inexistentes o inactivas,
 409 para nombres duplicados y 500 con un mensaje genérico para fallos internos.
 
-**Configuración temporal de Sprint 3. Será reemplazada cuando se implemente
-autenticación/autorización.** `SecurityConfig` permite `/api/categorias` y sus
-subrutas sin autenticación y exceptúa esas rutas de CSRF para permitir POST,
-PUT y DELETE desde Postman. Form login, HTTP Basic y logout están deshabilitados;
-las otras rutas quedan denegadas. Los despachos internos de error están permitidos.
-En Postman selecciona **No Auth**.
+## Autenticación y permisos
+
+`POST /api/auth/login` es público y recibe `userName` y `password`. Devuelve
+`accessToken`, `tokenType`, `expiresIn` y los datos públicos del usuario.
+`GET /api/auth/me` devuelve el perfil asociado a un token válido.
+
+| Operación | ADMIN | GESTOR | LECTOR |
+|---|---|---|---|
+| Consultar categorías y perfil propio | Sí | Sí | Sí |
+| Crear, actualizar y dar de baja categorías | Sí | No | No |
+
+En Postman selecciona **No Auth únicamente para el login**. En las solicitudes
+de categorías usa **Bearer Token** con el token de `marko` para completar las
+once pruebas de negocio. Sin token válido, las categorías devuelven 401; con
+un rol sin permiso de escritura, devuelven 403.
+
+`SecurityConfig` usa sesiones deshabilitadas y `JwtAuthFilter` consulta el usuario
+y rol vigentes mediante JPA en cada petición. El JWT se envía exclusivamente en
+`Authorization`; no se usan cookies para autenticar, por lo que CSRF está
+deshabilitado. Form login, HTTP Basic y logout están deshabilitados y las otras
+rutas quedan denegadas. Los despachos internos de error están permitidos.
+
+La [guía de usuarios y JWT](docs/autenticacion-jwt.md) contiene el flujo completo,
+las pruebas de login y roles, los comandos PowerShell y las consultas SQL.
 
 `Instrumentación` ya existe por V4: un POST con ese nombre devolverá 409.
 La guía usa `Instrumentación Sprint 3` y los IDs realmente devueltos por la API.
-No se ejecutaron tests automáticos, solicitudes HTTP ni Postman durante esta tarea.
+La guía del Sprint 3 conserva los resultados históricos de la revisión anterior
+a JWT y las correcciones de concurrencia. Sus pasos manuales se actualizaron para
+utilizar el token ADMIN. Postman queda disponible para tu comprobación manual.

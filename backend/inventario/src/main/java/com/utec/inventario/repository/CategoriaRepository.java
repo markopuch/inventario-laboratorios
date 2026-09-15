@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import com.utec.inventario.entity.CategoriaEntity;
+
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Integer> {
@@ -14,6 +17,10 @@ public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Inte
     List<CategoriaEntity> findAllByActivoTrueOrderByIdCategoriaAsc();
 
     Optional<CategoriaEntity> findByIdCategoriaAndActivoTrue(Integer idCategoria);
+
+    // Serializa las escrituras sobre la misma categoría hasta finalizar la transacción.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<CategoriaEntity> findForUpdateByIdCategoriaAndActivoTrue(Integer idCategoria);
 
     boolean existsByNombreIgnoreCase(String nombre);
 

@@ -54,7 +54,7 @@ public class CategoriaService {
 
     @Transactional
     public Categoria actualizarCategoria(Integer id, Categoria cambios) {
-        CategoriaEntity categoria = this.buscarCategoriaActiva(id);
+        CategoriaEntity categoria = this.buscarCategoriaActivaParaModificar(id);
         String nombre = cambios.getNombre().trim();
         if (this.categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot(nombre, id)) {
             throw new ConflictException("Ya existe una categoría con ese nombre.");
@@ -70,7 +70,7 @@ public class CategoriaService {
 
     @Transactional
     public void eliminarCategoria(Integer id) {
-        CategoriaEntity categoria = this.buscarCategoriaActiva(id);
+        CategoriaEntity categoria = this.buscarCategoriaActivaParaModificar(id);
         categoria.setActivo(false);
         this.categoriaRepository.saveAndFlush(categoria);
     }
@@ -83,5 +83,11 @@ public class CategoriaService {
 
     private String normalizarDescripcion(String descripcion) {
         return descripcion == null ? null : descripcion.trim();
+    }
+
+    private CategoriaEntity buscarCategoriaActivaParaModificar(Integer id) {
+        return this.categoriaRepository.findForUpdateByIdCategoriaAndActivoTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe una categoría activa con el ID " + id + "."));
     }
 }
