@@ -187,3 +187,36 @@ Las reglas quedan correctamente implementadas cuando se demuestra que:
 - Los controladores solo coordinan HTTP y delegan la lógica al servicio.
 - Las pruebas automatizadas cubren los casos permitidos y rechazados.
 - Postman evidencia respuestas `200`, `201`, `204`, `400`, `401`, `403`, `404` y `409`.
+
+## 10. Reglas incorporadas en Sprint 4A
+
+RN-01 a RN-30 conservan su numeración y describen el diseño del sistema completo;
+su presencia no implica que las verticales de equipos, movimientos y alcance
+ya estén implementadas. En Sprint 4A se agregan estas reglas para
+**Categoría → Subcategoría**.
+
+### RN-31. Padre activo
+
+Una entidad hija no puede crearse ni reasignarse bajo un padre inactivo. Para
+Subcategoría, el padre Categoría debe existir y estar activo: padre inexistente
+devuelve `404 Not Found`; padre existente pero inactivo devuelve `409 Conflict`.
+La consulta jerárquica de hijas de una categoría inexistente o inactiva devuelve
+404. Crear o mover una hija y dar de baja su padre coordinan sus escrituras
+mediante bloqueo de la categoría dentro de la transacción.
+
+### RN-32. Baja de padre con hijos activos
+
+No se puede desactivar una Categoría mientras tenga Subcategorías activas.
+La operación devuelve `409 Conflict` y conserva el padre activo. Si no tiene
+hijas activas, su baja lógica puede continuar y devuelve `204 No Content`.
+La regla se comprueba en `CategoriaService`, no en el Controller.
+
+En este sprint, la unicidad de RN-13 para Subcategoría se precisa como
+`id_categoria + UPPER(nombre)`, incluyendo nombres reservados por bajas lógicas.
+El mismo nombre puede existir en categorías diferentes. Las once reglas
+RN-S4A-01 a RN-S4A-11 y sus comprobaciones se detallan en la
+[guía de Sprint 4A](sprint-4a-subcategorias.md#validación-reglas-y-transacciones).
+
+**Pendiente:** la regla «No desactivar Subcategoría con Equipos activos» se
+implementará cuando exista la vertical de Equipo. La relación
+Subcategoría → Equipo no se implementa en Sprint 4A.

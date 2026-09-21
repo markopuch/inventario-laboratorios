@@ -2,8 +2,11 @@
 
 Backend Spring Boot ubicado en `backend/inventario`. El alcance actual comprende
 la base del proyecto (Sprint 1), el esquema PostgreSQL administrado por Flyway
-(Sprint 2), la vertical de Categoría (Sprint 3) y usuarios JPA con autenticación
-JWT. Los CRUD de equipos y administración de usuarios quedan para sprints posteriores.
+(Sprint 2), la vertical de Categoría (Sprint 3), usuarios JPA con autenticación
+JWT y Subcategorías relacionadas con Categoría (Sprint 4A). El
+[resumen de Sprint 4](docs/sprint-4.md) reúne este avance y los pendientes.
+Los CRUD de Sede, Área, Laboratorio, Equipo y administración completa de usuarios,
+así como UsuarioLaboratorio y MovimientoEquipo, quedan para sprints posteriores.
 
 ## Arranque rápido en Windows
 
@@ -31,6 +34,8 @@ La [guía del Sprint 3](docs/sprint-3-categorias.md) explica la arquitectura,
 las once solicitudes manuales de Postman y la comprobación de persistencia en pgAdmin.
 Comienza por la [guía de usuarios y JWT](docs/autenticacion-jwt.md) para iniciar
 sesión y obtener los tokens que requieren esas solicitudes.
+La [guía de Sprint 4A](docs/sprint-4a-subcategorias.md) explica la relación JPA,
+las nuevas reglas padre-hija y 21 pruebas manuales con Postman y SQL.
 El código sigue convenciones de los ejemplos del curso en `Carlos_backend`:
 clases con Lombok, inyección explícita con `@Autowired`, estados HTTP declarados
 y mappers con `convert` y `copy`. Se mantiene la organización de paquetes de este
@@ -217,6 +222,7 @@ integración, conforme a la
 | `V4__insertar_datos_iniciales.sql` | Tres roles y organización/catálogos ficticios |
 | `V5__categoria_nombre_unico_sin_mayusculas.sql` | Índice único sobre `UPPER(categoria.nombre)`, incluyendo categorías inactivas |
 | `V6__agregar_username_usuario.sql` | Nombre de acceso único sin distinguir mayúsculas; usuarios anteriores reciben `usuario_<id_usuario>` |
+| `V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql` | Nombre de subcategoría único por categoría sobre `UPPER(nombre)`, incluyendo inactivas |
 
 Flyway es la fuente oficial del esquema. Cada migración se aplica una vez y queda
 registrada con su checksum en `flyway_schema_history`. Tras aplicar estas versiones,
@@ -224,8 +230,8 @@ los cambios posteriores deben introducirse mediante nuevas migraciones.
 
 `spring.jpa.hibernate.ddl-auto=validate` indica a Hibernate que valide el esquema
 frente a las entidades mapeadas, sin crear, actualizar ni borrar tablas. Ahora
-se mapean `CategoriaEntity`, `UsuarioEntity` y `RolEntity`; un arranque correcto
-no valida las otras siete tablas mediante JPA. Verifica el esquema mediante las
+se mapean `CategoriaEntity`, `SubcategoriaEntity`, `UsuarioEntity` y `RolEntity`;
+un arranque correcto no valida las otras seis tablas mediante JPA. Verifica el esquema mediante las
 consultas siguientes.
 
 V1–V4 ya fueron aplicadas en la base local inspeccionada y se conservaron sin
@@ -233,6 +239,11 @@ modificaciones. V5 amplía la unicidad de nombre para impedir duplicados que sol
 difieran en mayúsculas, incluso ante escrituras concurrentes. No se encontraron
 duplicados al inspeccionar la base. Si aparecen antes del próximo arranque, V5
 fallará hasta que se revisen; no elimina ni fusiona datos automáticamente.
+V7 aplica el mismo criterio a Subcategoría dentro de cada padre. Antes de aplicar
+V7 en una base existente, ejecuta la consulta de duplicados de la
+[guía de Sprint 4A](docs/sprint-4a-subcategorias.md#comprobación-manual-en-postgresql--pgadmin).
+Si hay duplicados, deben revisarse antes de la migración; no se eliminan datos
+ni se ejecuta `repair` automáticamente.
 
 Decisiones del esquema:
 
@@ -273,7 +284,7 @@ FROM information_schema.tables
 WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
 ORDER BY table_name;
 
--- Tras iniciar la versión actual: seis migraciones, versiones 1–6, con success = true.
+-- Tras iniciar la versión actual: siete migraciones, versiones 1–7, con success = true.
 SELECT * FROM flyway_schema_history ORDER BY installed_rank;
 
 -- ADMIN, GESTOR, LECTOR.
@@ -312,9 +323,9 @@ WHERE schemaname = 'public'
 ORDER BY tablename, indexname;
 ```
 
-`bootRun` aplica las migraciones pendientes hasta V6. Los resultados de la
+`bootRun` aplica las migraciones pendientes hasta V7. Los resultados de la
 verificación actual y los comandos para repetirla están en la
-[guía de usuarios y JWT](docs/autenticacion-jwt.md).
+[guía de Sprint 4A](docs/sprint-4a-subcategorias.md#tests-automáticos).
 La compilación de las clases principales se puede comprobar sin tests con:
 
 ```powershell
@@ -336,6 +347,28 @@ El servidor controla ID, estado y fecha. Los errores se devuelven como JSON:
 400 para entradas inválidas, 401 para autenticación ausente o inválida,
 403 para permisos insuficientes, 404 para categorías inexistentes o inactivas,
 409 para nombres duplicados y 500 con un mensaje genérico para fallos internos.
+Desde Sprint 4A, DELETE de una categoría con subcategorías activas devuelve 409.
+
+## API de subcategorías — Sprint 4A
+
+Subcategorías implementadas con relación JPA `@ManyToOne` hacia Categoría,
+DTOs, dominio, MapStruct, servicio transaccional y baja lógica.
+
+| Método | Ruta | Resultado correcto |
+|---|---|---|
+| GET | `/api/subcategorias` | 200, lista de subcategorías activas |
+| GET | `/api/subcategorias/{id}` | 200, subcategoría con resumen de su categoría |
+| GET | `/api/categorias/{idCategoria}/subcategorias` | 200, hijas activas de una categoría activa |
+| POST | `/api/subcategorias` | 201 y cabecera `Location` |
+| PUT | `/api/subcategorias/{id}` | 200, reemplazo de campos editables |
+| DELETE | `/api/subcategorias/{id}` | 204, baja lógica |
+
+POST y PUT reciben `nombre`, `descripcion` e `idCategoria`. El padre debe existir
+y estar activo; el nombre es único sin distinguir mayúsculas dentro de ese padre,
+incluso para filas inactivas. PUT permite cambiar de categoría. La
+[guía de Sprint 4A](docs/sprint-4a-subcategorias.md) incluye tests, SQL y 21 casos
+de Postman. La regla de impedir la baja de Subcategoría con Equipos activos queda
+pendiente hasta implementar Equipo.
 
 ## Autenticación y permisos
 
@@ -345,8 +378,8 @@ El servidor controla ID, estado y fecha. Los errores se devuelven como JSON:
 
 | Operación | ADMIN | GESTOR | LECTOR |
 |---|---|---|---|
-| Consultar categorías y perfil propio | Sí | Sí | Sí |
-| Crear, actualizar y dar de baja categorías | Sí | No | No |
+| Consultar categorías, subcategorías y perfil propio | Sí | Sí | Sí |
+| Crear, actualizar y dar de baja categorías y subcategorías | Sí | No | No |
 
 En Postman selecciona **No Auth únicamente para el login**. En las solicitudes
 de categorías usa **Bearer Token** con el token de `marko` para completar las

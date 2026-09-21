@@ -12,6 +12,7 @@ import com.utec.inventario.exception.ConflictException;
 import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.CategoriaMapper;
 import com.utec.inventario.repository.CategoriaRepository;
+import com.utec.inventario.repository.SubcategoriaRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,11 +20,14 @@ public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
     private final CategoriaMapper mapper;
+    private final SubcategoriaRepository subcategoriaRepository;
 
     @Autowired
-    public CategoriaService(CategoriaRepository categoriaRepository, CategoriaMapper mapper) {
+    public CategoriaService(CategoriaRepository categoriaRepository, CategoriaMapper mapper,
+            SubcategoriaRepository subcategoriaRepository) {
         this.categoriaRepository = categoriaRepository;
         this.mapper = mapper;
+        this.subcategoriaRepository = subcategoriaRepository;
     }
 
     public List<Categoria> listarCategorias() {
@@ -71,6 +75,9 @@ public class CategoriaService {
     @Transactional
     public void eliminarCategoria(Integer id) {
         CategoriaEntity categoria = this.buscarCategoriaActivaParaModificar(id);
+        if (this.subcategoriaRepository.existsByCategoria_IdCategoriaAndActivoTrue(id)) {
+            throw new ConflictException("No se puede desactivar la categoría porque contiene subcategorías activas.");
+        }
         categoria.setActivo(false);
         this.categoriaRepository.saveAndFlush(categoria);
     }

@@ -53,24 +53,34 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleIntegrity(DataIntegrityViolationException exception, WebRequest request) {
         // La restricción de PostgreSQL cubre también dos escrituras concurrentes.
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
-            if (cause instanceof ConstraintViolationException violation
-                    && esRestriccionDeNombre(violation.getConstraintName())) {
-                return error(HttpStatus.CONFLICT, "Ya existe una categoría con ese nombre.", request);
+            if (cause instanceof ConstraintViolationException violation) {
+                String message = mensajeConflictoDeNombre(violation.getConstraintName());
+                if (message != null) {
+                    return error(HttpStatus.CONFLICT, message, request);
+                }
             }
             // Los metadatos del driver no dependen del idioma del mensaje de PostgreSQL.
             if (cause instanceof PSQLException postgresException
                     && "23505".equals(postgresException.getSQLState())
-                    && postgresException.getServerErrorMessage() != null
-                    && esRestriccionDeNombre(postgresException.getServerErrorMessage().getConstraint())) {
-                return error(HttpStatus.CONFLICT, "Ya existe una categoría con ese nombre.", request);
+                    && postgresException.getServerErrorMessage() != null) {
+                String message = mensajeConflictoDeNombre(postgresException.getServerErrorMessage().getConstraint());
+                if (message != null) {
+                    return error(HttpStatus.CONFLICT, message, request);
+                }
             }
         }
         return handleUnexpected(exception, request);
     }
 
-    private boolean esRestriccionDeNombre(@Nullable String nombre) {
-        return "uq_categoria_nombre".equals(nombre)
-                || "uq_categoria_nombre_ignore_case".equals(nombre);
+    private @Nullable String mensajeConflictoDeNombre(@Nullable String nombre) {
+        if ("uq_categoria_nombre".equals(nombre) || "uq_categoria_nombre_ignore_case".equals(nombre)) {
+            return "Ya existe una categoría con ese nombre.";
+        }
+        if ("uq_subcategoria_nombre_categoria".equals(nombre)
+                || "uq_subcategoria_categoria_nombre_ignore_case".equals(nombre)) {
+            return "Ya existe una subcategoría con ese nombre en la categoría seleccionada.";
+        }
+        return null;
     }
 
     @ExceptionHandler(Exception.class)

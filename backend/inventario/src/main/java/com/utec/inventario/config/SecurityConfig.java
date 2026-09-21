@@ -38,11 +38,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/categorias", "/api/categorias/**")
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/categorias", "/api/categorias/**",
+                                "/api/subcategorias", "/api/subcategorias/**")
                         .hasAnyRole("ADMIN", "GESTOR", "LECTOR")
-                        .requestMatchers(HttpMethod.POST, "/api/categorias", "/api/categorias/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/categorias", "/api/categorias/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categorias", "/api/categorias/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/categorias", "/api/categorias/**",
+                                "/api/subcategorias", "/api/subcategorias/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categorias", "/api/categorias/**",
+                                "/api/subcategorias", "/api/subcategorias/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categorias", "/api/categorias/**",
+                                "/api/subcategorias", "/api/subcategorias/**").hasRole("ADMIN")
                         .anyRequest().denyAll())
                 // La API acepta JWT en Authorization; no utiliza cookies para autenticar.
                 .csrf(AbstractHttpConfigurer::disable)

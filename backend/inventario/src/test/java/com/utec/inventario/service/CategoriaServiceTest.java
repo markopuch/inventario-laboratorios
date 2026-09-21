@@ -30,6 +30,7 @@ import com.utec.inventario.exception.ConflictException;
 import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.CategoriaMapper;
 import com.utec.inventario.repository.CategoriaRepository;
+import com.utec.inventario.repository.SubcategoriaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CategoriaServiceTest {
@@ -39,12 +40,15 @@ class CategoriaServiceTest {
     @Mock
     private CategoriaRepository categoriaRepository;
 
+    @Mock
+    private SubcategoriaRepository subcategoriaRepository;
+
     private CategoriaService categoriaService;
 
     @BeforeEach
     void prepararServicio() {
         this.categoriaService = new CategoriaService(this.categoriaRepository,
-                Mappers.getMapper(CategoriaMapper.class));
+                Mappers.getMapper(CategoriaMapper.class), this.subcategoriaRepository);
     }
 
     @Test
@@ -136,6 +140,7 @@ class CategoriaServiceTest {
     void eliminarSoloMarcaInactivaLaMismaEntidadSinBorrarlaFisicamente() {
         CategoriaEntity existente = categoriaActiva();
         when(this.categoriaRepository.findForUpdateByIdCategoriaAndActivoTrue(7)).thenReturn(Optional.of(existente));
+        when(this.subcategoriaRepository.existsByCategoria_IdCategoriaAndActivoTrue(7)).thenReturn(false);
         when(this.categoriaRepository.saveAndFlush(existente)).thenAnswer(invocation -> {
             assertSame(existente, invocation.getArgument(0));
             assertFalse(existente.isActivo());
@@ -150,8 +155,26 @@ class CategoriaServiceTest {
                 () -> assertEquals("Robótica", existente.getNombre()),
                 () -> assertEquals(FECHA_CREACION, existente.getFechaCreacion()));
         verify(this.categoriaRepository).findForUpdateByIdCategoriaAndActivoTrue(7);
+        verify(this.subcategoriaRepository).existsByCategoria_IdCategoriaAndActivoTrue(7);
         verify(this.categoriaRepository).saveAndFlush(existente);
         verifyNoMoreInteractions(this.categoriaRepository);
+    }
+
+    @Test
+    void eliminarCategoriaConSubcategoriasActivasRechazaLaBajaSinModificarElPadre() {
+        CategoriaEntity existente = categoriaActiva();
+        when(this.categoriaRepository.findForUpdateByIdCategoriaAndActivoTrue(7)).thenReturn(Optional.of(existente));
+        when(this.subcategoriaRepository.existsByCategoria_IdCategoriaAndActivoTrue(7)).thenReturn(true);
+
+        ConflictException exception = assertThrows(ConflictException.class,
+                () -> this.categoriaService.eliminarCategoria(7));
+
+        assertAll(
+                () -> assertTrue(existente.isActivo()),
+                () -> assertEquals("No se puede desactivar la categoría porque contiene subcategorías activas.",
+                        exception.getMessage()));
+        verify(this.subcategoriaRepository).existsByCategoria_IdCategoriaAndActivoTrue(7);
+        verify(this.categoriaRepository, never()).saveAndFlush(any(CategoriaEntity.class));
     }
 
     @Test

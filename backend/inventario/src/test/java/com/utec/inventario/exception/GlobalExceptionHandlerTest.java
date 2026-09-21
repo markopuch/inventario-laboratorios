@@ -82,6 +82,60 @@ class GlobalExceptionHandlerTest {
                 () -> assertFalse(error.toString().contains("23505")));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { "uq_subcategoria_nombre_categoria", "uq_subcategoria_categoria_nombre_ignore_case" })
+    void duplicadoDeSubcategoriaDevuelveConflictoPorCategoriaSinDetallesSQL(String restriccion) {
+        ConstraintViolationException cause = new ConstraintViolationException(
+                "insert into subcategoria values ('DATO PRIVADO')",
+                new SQLException("Detalle SQL privado", "23505"), restriccion);
+        DataIntegrityViolationException exception = new DataIntegrityViolationException(
+                "Fallo de persistencia", new RuntimeException("Causa intermedia", cause));
+        ServletWebRequest solicitud = new ServletWebRequest(
+                new MockHttpServletRequest("POST", "/api/subcategorias"));
+
+        ResponseEntity<Object> respuesta = this.handler.handleIntegrity(exception, solicitud);
+
+        ApiError error = assertInstanceOf(ApiError.class, respuesta.getBody());
+        assertAll(
+                () -> assertEquals(HttpStatus.CONFLICT, respuesta.getStatusCode()),
+                () -> assertEquals(409, error.getStatus()),
+                () -> assertEquals("Ya existe una subcategoría con ese nombre en la categoría seleccionada.",
+                        error.getMessage()),
+                () -> assertEquals("/api/subcategorias", error.getPath()),
+                () -> assertNotNull(error.getTimestamp()),
+                () -> assertTrue(error.getErrors().isEmpty()),
+                () -> assertFalse(error.toString().contains("Detalle SQL privado")),
+                () -> assertFalse(error.toString().contains("DATO PRIVADO")),
+                () -> assertFalse(error.toString().contains(restriccion)));
+    }
+
+    @Test
+    void duplicadoDeSubcategoriaEnEspanolReconoceIndiceDesdeMetadatosPostgresql() {
+        ServerErrorMessage mensajeServidor = new ServerErrorMessage(
+                "SERROR\0VERROR\0C23505\0"
+                        + "Mllave duplicada viola restricción de unicidad\0"
+                        + "DYa existe la llave (id_categoria, upper(nombre))=(3, DATO PRIVADO).\0"
+                        + "nuq_subcategoria_categoria_nombre_ignore_case\0\0");
+        ConstraintViolationException cause = new ConstraintViolationException(
+                "Fallo SQL privado", new PSQLException(mensajeServidor), (String) null);
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("Fallo de persistencia", cause);
+        ServletWebRequest solicitud = new ServletWebRequest(
+                new MockHttpServletRequest("PUT", "/api/subcategorias/7"));
+
+        ResponseEntity<Object> respuesta = this.handler.handleIntegrity(exception, solicitud);
+
+        ApiError error = assertInstanceOf(ApiError.class, respuesta.getBody());
+        assertAll(
+                () -> assertEquals(HttpStatus.CONFLICT, respuesta.getStatusCode()),
+                () -> assertEquals(409, error.getStatus()),
+                () -> assertEquals("Ya existe una subcategoría con ese nombre en la categoría seleccionada.",
+                        error.getMessage()),
+                () -> assertEquals("/api/subcategorias/7", error.getPath()),
+                () -> assertFalse(error.toString().contains("DATO PRIVADO")),
+                () -> assertFalse(error.toString().contains("uq_subcategoria_categoria_nombre_ignore_case")),
+                () -> assertFalse(error.toString().contains("23505")));
+    }
+
     @Test
     void otraRestriccionDevuelveErrorInternoGenericoSinExponerLaCausa() {
         ConstraintViolationException cause = new ConstraintViolationException(
