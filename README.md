@@ -4,14 +4,16 @@ Backend Spring Boot ubicado en `backend/inventario`. El alcance actual comprende
 la base del proyecto (Sprint 1), el esquema PostgreSQL administrado por Flyway
 (Sprint 2), la vertical de Categoría (Sprint 3), usuarios JPA con autenticación
 JWT, Subcategorías relacionadas con Categoría (Sprint 4A) y la jerarquía
-Sede → Área → Laboratorio (Sprint 4B–4D). El
-[resumen de Sprint 4](docs/sprint-4.md) reúne este avance y los pendientes.
-Equipo, MovimientoEquipo, UsuarioLaboratorio, el alcance por laboratorio,
-la administración completa de usuarios y frontend quedan para sprints posteriores.
+Sede → Área → Laboratorio (Sprint 4B–4D) y UsuarioLaboratorio con alcance efectivo
+de laboratorios (Sprint 4E). El [resumen de Sprint 4](docs/sprints/sprint-4.md)
+reúne este avance y los pendientes. Rol, Usuario, JWT, Categoría, Subcategoría,
+Sede, Área, Laboratorio y UsuarioLaboratorio están implementados. Equipo,
+MovimientoEquipo, aplicar el alcance a Equipo, la administración completa de
+usuarios y frontend quedan para sprints posteriores.
 
-Documentación visual: [ERD lógico v2](docs/erd-logico-v2.md),
-[ERD físico PostgreSQL v2](docs/erd-fisico-v2.md) y
-[cambios respecto a los ERD anteriores](docs/erd-v2-cambios.md).
+Documentación visual: [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md),
+[ERD físico PostgreSQL v2](docs/Erd_actual/erd-fisico-v2.md) y
+[cambios respecto a los ERD anteriores](docs/Erd_actual/erd-v2-cambios.md).
 
 ## Arranque rápido en Windows
 
@@ -35,18 +37,20 @@ Iniciar backend de Inventario**. La tarea local usa el mismo script. Ejecutar
 Java directamente requiere configurar previamente las variables del apartado
 de configuración manual. El script no guarda contraseñas ni claves en archivos.
 
-La [guía del Sprint 3](docs/sprint-3-categorias.md) explica la arquitectura,
+La [guía del Sprint 3](docs/sprints/sprint-3-categorias.md) explica la arquitectura,
 las once solicitudes manuales de Postman y la comprobación de persistencia en pgAdmin.
 Comienza por la [guía de usuarios y JWT](docs/autenticacion-jwt.md) para iniciar
 sesión y obtener los tokens que requieren esas solicitudes.
-La [guía de Sprint 4A](docs/sprint-4a-subcategorias.md) explica la relación JPA,
+La [guía de Sprint 4A](docs/sprints/sprint-4a-subcategorias.md) explica la relación JPA,
 las nuevas reglas padre-hija y 21 pruebas manuales con Postman y SQL.
-La [guía de Sprint 4B–4D](docs/sprint-4b-organizacion.md) explica los tres CRUD
+La [guía de Sprint 4B–4D](docs/sprints/sprint-4b-organizacion.md) explica los tres CRUD
 organizacionales, sus 17 endpoints, movimientos entre padres, permisos, pruebas
 manuales y consultas SQL. Las guías anteriores conservan sus resultados históricos.
-La suite actual pasó **140 pruebas, sin fallos, errores ni omitidas**, usando una
-base de verificación separada. El cierre y la preservación de datos se registran
-en [Sprint 4](docs/sprint-4.md).
+La [guía de Sprint 4E](docs/sprints/sprint-4e-usuario-laboratorio.md) explica la
+clave compuesta, las asignaciones, el alcance, sus tres endpoints y las pruebas
+manuales. La base de regresión anterior era de **140 pruebas**. Resultado final
+Sprint 4E: **168 aprobadas de 168, sin fallos, errores ni omitidas**. El cierre y la preservación de datos se
+registran en [Sprint 4](docs/sprints/sprint-4.md).
 El código sigue convenciones de los ejemplos del curso en `Carlos_backend`:
 clases con Lombok, inyección explícita con `@Autowired`, estados HTTP declarados
 y mappers con `convert` y `copy`. Se mantiene la organización de paquetes de este
@@ -100,15 +104,21 @@ backend/inventario/
         ├── SubcategoriaConcurrenciaTests.java
         ├── OrganizacionIntegrationTests.java
         ├── OrganizacionConcurrenciaTests.java
+        ├── UsuarioLaboratorioIntegrationTests.java
+        ├── UsuarioLaboratorioConcurrenciaTests.java
+        ├── entity/UsuarioLaboratorioIdTest.java
         ├── exception/GlobalExceptionHandlerTest.java
-        ├── mapper/ (Categoria, Subcategoria, Sede, Area y Laboratorio)
+        ├── mapper/ (Categoria, Subcategoria, Sede, Area, Laboratorio y UsuarioLaboratorio)
         ├── security/JwtServiceTest.java
-        └── service/ (Categoria, Subcategoria, Sede, Area y Laboratorio)
+        └── service/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio y AlcanceLaboratorio)
 ```
 
 Los paquetes vacíos contienen `.gitkeep` para conservarlos en Git, sin clases
 ficticias. El test de arranque existente se mantiene; las pruebas incluyen
-Categoría, Subcategoría, organización, autenticación, reglas y concurrencia.
+Categoría, Subcategoría, organización, autenticación, asignaciones, alcance,
+reglas y concurrencia. Sprint 4E agrega 28 invocaciones a la regresión de 140;
+la suite completa pasó en una base temporal que se eliminó después de verificar
+los fixtures. La base habitual conserva 3 usuarios, 2 laboratorios y 0 asignaciones.
 
 Las dependencias incluyen Web MVC, JPA, PostgreSQL JDBC, Validation, Security,
 Flyway con su módulo PostgreSQL, Lombok y DevTools. Los starters de pruebas
@@ -247,10 +257,11 @@ los cambios posteriores deben introducirse mediante nuevas migraciones.
 
 `spring.jpa.hibernate.ddl-auto=validate` indica a Hibernate que valide el esquema
 frente a las entidades mapeadas, sin crear, actualizar ni borrar tablas. Ahora
-se mapean Categoría, Subcategoría, Sede, Área, Laboratorio, Usuario y Rol.
-Equipo, MovimientoEquipo y UsuarioLaboratorio todavía no tienen Entities ni API;
-un arranque correcto no valida esas tres tablas mediante JPA. Verifica el esquema
-mediante las consultas siguientes.
+se mapean Categoría, Subcategoría, Sede, Área, Laboratorio, Usuario, Rol y
+UsuarioLaboratorio. Equipo y MovimientoEquipo todavía no tienen Entities ni API;
+un arranque correcto no valida esas dos tablas mediante JPA. Sprint 4E utiliza
+la tabla puente de V2 sin cambiar su estructura: **no necesita V10** ni cambios
+en la base habitual. No se agregan asignaciones de demostración automáticamente.
 
 V1–V4 ya fueron aplicadas en la base local inspeccionada y se conservaron sin
 modificaciones. V5 amplía la unicidad de nombre para impedir duplicados que solo
@@ -259,12 +270,12 @@ duplicados al inspeccionar la base. Si aparecen antes del próximo arranque, V5
 fallará hasta que se revisen; no elimina ni fusiona datos automáticamente.
 V7 aplica el mismo criterio a Subcategoría dentro de cada padre. Antes de aplicar
 V7 en una base existente, ejecuta la consulta de duplicados de la
-[guía de Sprint 4A](docs/sprint-4a-subcategorias.md#comprobación-manual-en-postgresql--pgadmin).
+[guía de Sprint 4A](docs/sprints/sprint-4a-subcategorias.md#comprobación-manual-en-postgresql--pgadmin).
 Si hay duplicados, deben revisarse antes de la migración; no se eliminan datos
 ni se ejecuta `repair` automáticamente.
 V8 y V9 extienden la protección a Área por sede y código global de Laboratorio.
 Antes de aplicarlas, utiliza las consultas de duplicados de la
-[guía de organización](docs/sprint-4b-organizacion.md#22-consultas-sql-de-verificación-en-pgadmin).
+[guía de organización](docs/sprints/sprint-4b-organizacion.md#22-consultas-sql-de-verificación-en-pgadmin).
 Si hay conflictos, la migración se detiene sin borrar datos. Se conservan las
 restricciones UNIQUE anteriores junto con los nuevos índices. Las tres tablas
 organizacionales ya tenían estado y fecha; no se agregan columnas redundantes.
@@ -351,7 +362,7 @@ ORDER BY tablename, indexname;
 
 `bootRun` aplica las migraciones pendientes hasta V9. Los resultados de la
 verificación actual y los comandos para repetirla están en la
-[guía de Sprint 4B–4D](docs/sprint-4b-organizacion.md#23-tests-y-verificación-reproducible).
+[guía de Sprint 4B–4D](docs/sprints/sprint-4b-organizacion.md#23-tests-y-verificación-reproducible).
 La compilación de las clases principales se puede comprobar sin tests con:
 
 ```powershell
@@ -392,7 +403,7 @@ DTOs, dominio, MapStruct, servicio transaccional y baja lógica.
 POST y PUT reciben `nombre`, `descripcion` e `idCategoria`. El padre debe existir
 y estar activo; el nombre es único sin distinguir mayúsculas dentro de ese padre,
 incluso para filas inactivas. PUT permite cambiar de categoría. La
-[guía de Sprint 4A](docs/sprint-4a-subcategorias.md) incluye tests, SQL y 21 casos
+[guía de Sprint 4A](docs/sprints/sprint-4a-subcategorias.md) incluye tests, SQL y 21 casos
 de Postman. La regla de impedir la baja de Subcategoría con Equipos activos queda
 pendiente hasta implementar Equipo.
 
@@ -421,9 +432,32 @@ Sede recibe nombre, dirección, distrito y departamento; Área nombre, descripci
 e `idSede`; Laboratorio nombre, código, ubicación e `idArea`. Nombre de Área es
 único por sede y código de Laboratorio es único global, ambos sin distinguir
 mayúsculas e incluyendo bajas lógicas. Sede no impone unicidad de nombre.
-La [guía de organización](docs/sprint-4b-organizacion.md) incluye los JSON exactos,
-errores, concurrencia y consultas SQL. Las restricciones de Laboratorio con
-Equipos activos o usuarios asignados quedan pendientes de sus verticales.
+La [guía de organización](docs/sprints/sprint-4b-organizacion.md) incluye los JSON
+exactos, errores, concurrencia y consultas SQL. Desde Sprint 4E, dar de baja un
+Laboratorio con asignaciones activas devuelve 409, incluso si el usuario asignado
+está inactivo. La restricción relacionada con Equipos queda pendiente.
+
+## API de asignaciones y alcance — Sprint 4E
+
+| Método y ruta | Permiso | Resultado |
+|---|---|---|
+| `GET /api/admin/usuarios/{idUsuario}/laboratorios` | ADMIN | Asignaciones explícitas activas del usuario; sin asignaciones devuelve lista vacía |
+| `PUT /api/admin/usuarios/{idUsuario}/laboratorios` | ADMIN | Reemplaza atómicamente las asignaciones explícitas; devuelve el conjunto final |
+| `GET /api/auth/me/laboratorios` | ADMIN, GESTOR, LECTOR | Alcance efectivo del usuario autenticado, sin recibir ID del cliente |
+
+PUT recibe `{"idsLaboratorio":[1,2]}` usando IDs reales: elimina duplicados,
+acepta `[]`, desactiva relaciones retiradas y reactiva las anteriores sin cambiar
+su fecha original. Un usuario inexistente devuelve 404; cada laboratorio debe
+existir (404) y estar activo (409), y cualquier error conserva todo el conjunto
+anterior. ADMIN puede preparar asignaciones de un usuario inactivo, que continúa
+sin poder autenticarse. Las filas nunca se borran al desasignar.
+
+**Rol = qué; alcance = dónde.** ADMIN tiene alcance global a todos los
+laboratorios activos, independientemente de sus asignaciones explícitas.
+GESTOR/LECTOR obtienen solamente laboratorios activos con asignación activa.
+Los cambios se reflejan en la siguiente consulta con el mismo JWT válido.
+`GET /api/laboratorios` continúa siendo un catálogo global para los tres roles;
+el nuevo servicio se aplicará a Equipo cuando se implemente esa vertical.
 
 ## Autenticación y permisos
 
@@ -440,8 +474,9 @@ En Postman selecciona **No Auth únicamente para el login**. En las solicitudes
 de categorías usa **Bearer Token** con el token de `marko` para completar las
 once pruebas de negocio. Subcategorías y organización usan la misma política:
 sin token válido devuelven 401; con un rol sin permiso de escritura, 403.
-Los catálogos son globales para los tres roles; todavía no se aplica alcance
-por laboratorio mediante UsuarioLaboratorio.
+Los catálogos son globales para los tres roles. Sprint 4E agrega la consulta de
+alcance propio y la administración exclusiva de asignaciones por ADMIN; la
+aplicación de ese alcance a Equipo y MovimientoEquipo sigue pendiente.
 
 `SecurityConfig` usa sesiones deshabilitadas y `JwtAuthFilter` consulta el usuario
 y rol vigentes mediante JPA en cada petición. El JWT se envía exclusivamente en

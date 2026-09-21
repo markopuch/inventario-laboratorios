@@ -20,11 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.utec.inventario.domain.Usuario;
 import com.utec.inventario.dto.request.AuthRequest;
 import com.utec.inventario.dto.response.AuthResponse;
+import com.utec.inventario.dto.response.AlcanceLaboratoriosResponse;
 import com.utec.inventario.dto.response.UsuarioResponse;
 import com.utec.inventario.mapper.UsuarioMapper;
+import com.utec.inventario.mapper.UsuarioLaboratorioMapper;
 import com.utec.inventario.security.JwtService;
 import com.utec.inventario.security.UserInfoDetails;
 import com.utec.inventario.service.UsuarioService;
+import com.utec.inventario.service.AlcanceLaboratorioService;
 
 import jakarta.validation.Valid;
 
@@ -36,14 +39,20 @@ public class AuthController {
     private final JwtService jwtService;
     private final UsuarioService usuarioService;
     private final UsuarioMapper mapper;
+    private final AlcanceLaboratorioService alcanceLaboratorioService;
+    private final UsuarioLaboratorioMapper asignacionMapper;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-            UsuarioService usuarioService, UsuarioMapper mapper) {
+            UsuarioService usuarioService, UsuarioMapper mapper,
+            AlcanceLaboratorioService alcanceLaboratorioService,
+            UsuarioLaboratorioMapper asignacionMapper) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.usuarioService = usuarioService;
         this.mapper = mapper;
+        this.alcanceLaboratorioService = alcanceLaboratorioService;
+        this.asignacionMapper = asignacionMapper;
     }
 
     @PostMapping("/login")
@@ -70,5 +79,12 @@ public class AuthController {
     @ResponseStatus(HttpStatus.OK)
     public UsuarioResponse me(@AuthenticationPrincipal UserInfoDetails principal) {
         return this.mapper.toResponse(this.usuarioService.obtenerUsuario(principal.getId()));
+    }
+
+    @GetMapping("/me/laboratorios")
+    @ResponseStatus(HttpStatus.OK)
+    public AlcanceLaboratoriosResponse meLaboratorios(@AuthenticationPrincipal UserInfoDetails principal) {
+        return this.asignacionMapper.toResponse(
+                this.alcanceLaboratorioService.obtenerAlcanceEfectivo(principal.getId()));
     }
 }

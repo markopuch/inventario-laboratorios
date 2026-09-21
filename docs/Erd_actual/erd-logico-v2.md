@@ -67,8 +67,8 @@ flowchart LR
 
     classDef implementado fill:#E7F1FF,stroke:#225EA8,stroke-width:2px,color:#102A43;
     classDef futuro fill:#FFF3D6,stroke:#956200,stroke-width:2px,stroke-dasharray:6 4,color:#493300;
-    class Sede,Area,Laboratorio,Categoria,Subcategoria,Rol,Usuario implementado;
-    class UsuarioLaboratorio,Equipo,MovimientoEquipo futuro;
+    class Sede,Area,Laboratorio,Categoria,Subcategoria,Rol,Usuario,UsuarioLaboratorio implementado;
+    class Equipo,MovimientoEquipo futuro;
 ```
 
 **Leyenda de cardinalidades:** `1` = exactamente una referencia obligatoria;
@@ -82,7 +82,8 @@ obligatorio.
 **Leyenda de estado:** azul con borde continuo = **implementado en Java/API**;
 ámbar con borde discontinuo = **solo esquema BD / diseño futuro de la API**.
 El color no cambia el modelo: las diez entidades ya tienen tabla en las
-migraciones. Los tres elementos ámbar no son tablas por crear.
+migraciones. Los dos elementos ámbar no son tablas por crear. Sprint 4E incorpora
+UsuarioLaboratorio en Java/API sin cambiar entidades, relaciones ni cardinalidades.
 
 ## 2. Entidades y significado de negocio
 
@@ -141,13 +142,14 @@ equivale a estar asignado a su laboratorio, no cambia el rol y no autoriza
 consultas ni modificaciones. El usuario actor registra quién realizó un
 movimiento; tampoco es una asignación de acceso.
 
-La tabla UsuarioLaboratorio prepara el alcance de acceso por laboratorio, pero
-su administración y aplicación en la API son futuras. Actualmente la
-autorización utiliza JWT y el rol vigente. Los catálogos de Categoría,
+Desde Sprint 4E, UsuarioLaboratorio tiene administración de asignaciones por
+ADMIN y consulta del alcance efectivo propio: ADMIN global; GESTOR/LECTOR con
+asignación activa a un laboratorio activo. La aplicación a Equipo sigue pendiente.
+La autorización conserva JWT y el rol vigente. Los catálogos de Categoría,
 Subcategoría, Sede, Área y Laboratorio permiten consultas a ADMIN, GESTOR y
 LECTOR, y escritura a ADMIN; todavía no filtran por asignaciones de laboratorio.
-Véanse la [matriz de permisos](matriz-permisos.md) y la
-[guía JWT](autenticacion-jwt.md).
+Véanse la [matriz de permisos](../matriz-permisos.md) y la
+[guía JWT](../autenticacion-jwt.md).
 
 El origen de MovimientoEquipo es opcional; el destino, el equipo y el actor son
 obligatorios. Estas referencias permiten registrar el hecho histórico, pero
@@ -184,9 +186,10 @@ deban apuntar a una entidad activa.
 |---|---|---|
 | **Implementado en Java/API** | Rol y Usuario | Integración JPA con autenticación JWT, roles y perfil propio; esta clasificación no implica un CRUD administrativo completo de usuarios o roles. |
 | **Implementado en Java/API** | Categoría, Subcategoría, Sede, Área y Laboratorio | Verticales de catálogo con consulta, creación, actualización y baja lógica. |
-| **Solo esquema BD / diseño futuro** | UsuarioLaboratorio, Equipo y MovimientoEquipo | Tablas y relaciones creadas por V2/V3; sin verticales Java/API completas. No se implementan en esta actualización documental. |
+| **Implementado en Java/API** | UsuarioLaboratorio | Sprint 4E: asignaciones explícitas administradas por ADMIN, baja/reactivación y servicio de alcance efectivo; misma tabla de V2. |
+| **Solo esquema BD / diseño futuro** | Equipo y MovimientoEquipo | Tablas y relaciones creadas por V3; sus verticales Java/API y la aplicación del alcance siguen pendientes. |
 
-La clasificación se contrastó con las siete Entities actuales y con la
+La clasificación se contrastó con las ocho Entities actuales y con la
 configuración de seguridad. La existencia de una tabla no implica que ya exista
 su endpoint ni que estén vigentes todas las reglas de negocio propuestas.
 
@@ -194,8 +197,10 @@ Las trece claves foráneas usan `ON UPDATE RESTRICT` y `ON DELETE RESTRICT`, com
 se detalla en el ERD físico. Estas acciones protegen referencias ante cambios
 de claves y borrados físicos; **no bloquean por sí mismas una baja lógica**.
 Las comprobaciones de padre activo y de hijos activos de los catálogos
-implementados pertenecen a sus servicios. Las restricciones pendientes sobre
-Equipos o UsuarioLaboratorio no se dan por implementadas.
+implementados pertenecen a sus servicios. Desde Sprint 4E, LaboratorioService
+impide la baja con asignaciones activas de UsuarioLaboratorio, incluso de
+usuarios inactivos. Las restricciones pendientes sobre Equipos no se dan por
+implementadas.
 
 ## 7. Observaciones para una versión futura
 
@@ -211,33 +216,33 @@ Equipos o UsuarioLaboratorio no se dan por implementadas.
 
 ## 8. Fuentes y verificación estática
 
-Se inspeccionaron, en orden, las nueve migraciones y se reconstruyó el esquema
-que definen. **No se consultó ni se modificó PostgreSQL en esta tarea**; este
-documento no afirma una inspección del estado de un servidor en ejecución.
-Tampoco se ejecutaron tests Java, se modificaron migraciones ni se implementó
-funcionalidad.
+La revisión original del ERD inspeccionó las nueve migraciones y reconstruyó
+el esquema estáticamente, sin consultar PostgreSQL ni ejecutar Java. Sprint 4E
+actualiza únicamente el estado de implementación de UsuarioLaboratorio en este
+ERD; conserva el esquema de V1–V9. La evidencia de implementación y pruebas del
+sprint está en la [guía de Sprint 4E](../sprints/sprint-4e-usuario-laboratorio.md).
 
 | Fuente | Contribución al modelo lógico |
 |---|---|
-| [V1 — organización y catálogos](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) | Sede, Área, Laboratorio, Categoría y Subcategoría; tres relaciones obligatorias. |
-| [V2 — usuarios y seguridad](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) | Rol, Usuario y UsuarioLaboratorio; rol obligatorio y puente con identidad compuesta. |
-| [V3 — equipos y movimientos](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) | Equipo y MovimientoEquipo; siete relaciones, con responsable y origen opcionales. |
-| [V4 — datos iniciales](../backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql) | Datos de ejemplo; no agrega tablas ni relaciones. |
-| [V5 — nombre de categoría](../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) | Unicidad sin distinguir mayúsculas, incluyendo categorías inactivas. |
-| [V6 — username](../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) | Identidad de acceso obligatoria y única sin distinguir mayúsculas. |
-| [V7 — nombre de subcategoría](../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) | Unicidad por categoría, sin distinguir mayúsculas e incluyendo inactivas. |
-| [V8 — nombre de área](../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) | Unicidad por sede, sin distinguir mayúsculas e incluyendo inactivas. |
-| [V9 — código de laboratorio](../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) | Unicidad global sin distinguir mayúsculas e incluyendo inactivos. |
+| [V1 — organización y catálogos](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) | Sede, Área, Laboratorio, Categoría y Subcategoría; tres relaciones obligatorias. |
+| [V2 — usuarios y seguridad](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) | Rol, Usuario y UsuarioLaboratorio; rol obligatorio y puente con identidad compuesta. |
+| [V3 — equipos y movimientos](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) | Equipo y MovimientoEquipo; siete relaciones, con responsable y origen opcionales. |
+| [V4 — datos iniciales](../../backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql) | Datos de ejemplo; no agrega tablas ni relaciones. |
+| [V5 — nombre de categoría](../../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) | Unicidad sin distinguir mayúsculas, incluyendo categorías inactivas. |
+| [V6 — username](../../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) | Identidad de acceso obligatoria y única sin distinguir mayúsculas. |
+| [V7 — nombre de subcategoría](../../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) | Unicidad por categoría, sin distinguir mayúsculas e incluyendo inactivas. |
+| [V8 — nombre de área](../../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) | Unicidad por sede, sin distinguir mayúsculas e incluyendo inactivas. |
+| [V9 — código de laboratorio](../../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) | Unicidad global sin distinguir mayúsculas e incluyendo inactivos. |
 
-Contraste de implementación: [Entities JPA](../backend/inventario/src/main/java/com/utec/inventario/entity),
-[SecurityConfig](../backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java),
-[README](../README.md), [Sprint 4](sprint-4.md),
-[Sprint 4A](sprint-4a-subcategorias.md) y
-[Sprint 4B–4D](sprint-4b-organizacion.md).
-El [ERD lógico anterior](erd-logico.pdf) se conserva como documento histórico,
+Contraste de implementación: [Entities JPA](../../backend/inventario/src/main/java/com/utec/inventario/entity),
+[SecurityConfig](../../backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java),
+[README](../../README.md), [Sprint 4](../sprints/sprint-4.md),
+[Sprint 4A](../sprints/sprint-4a-subcategorias.md) y
+[Sprint 4B–4D](../sprints/sprint-4b-organizacion.md).
+El [ERD lógico anterior](../erd-logico.pdf) se conserva como documento histórico,
 sin prioridad sobre Flyway.
 
 La revisión documental verificó las diez entidades, las trece relaciones, los
 dos extremos de cada cardinalidad, las dos referencias opcionales y la
-distinción entre las siete entidades integradas en Java/API y las tres
+distinción actual entre ocho entidades integradas en Java/API y las dos
 verticales futuras.

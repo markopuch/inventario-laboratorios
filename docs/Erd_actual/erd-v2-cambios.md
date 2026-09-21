@@ -11,28 +11,28 @@ ampliadas para facilitar la lectura de las tablas.
 
 ## Fuentes y alcance de la comprobación
 
-Se inspeccionaron, en este orden, las migraciones, las siete Entities JPA, el
-README, el cierre de Sprint 4 y los PDF [lógico anterior](erd-logico.pdf) y
-[físico anterior](erd-fisico.pdf). Se revisaron el texto y la representación
+En la revisión original se inspeccionaron las migraciones, las siete Entities JPA de aquel cierre, el
+README, el cierre de Sprint 4 y los PDF [lógico anterior](../erd-logico.pdf) y
+[físico anterior](../erd-fisico.pdf). Se revisaron el texto y la representación
 visual de ambos PDF, de una página cada uno.
 
 | Migración revisada | Aporte al modelo vigente |
 |---|---|
-| [V1__crear_organizacion_y_catalogos.sql](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) | Sede, Área, Laboratorio, Categoría y Subcategoría; PK, FK, UNIQUE, defaults e índices |
-| [V2__crear_usuarios_y_seguridad.sql](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) | Rol, Usuario y la tabla puente UsuarioLaboratorio |
-| [V3__crear_equipos_y_movimientos.sql](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) | Equipo y MovimientoEquipo, checks y relaciones de custodia y trazabilidad |
-| [V4__insertar_datos_iniciales.sql](../backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql) | Datos iniciales; no agrega columnas ni restricciones |
-| [V5__categoria_nombre_unico_sin_mayusculas.sql](../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) | Índice UNIQUE sobre `UPPER(categoria.nombre)` |
-| [V6__agregar_username_usuario.sql](../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) | `usuario.username VARCHAR(50) NOT NULL` e índice UNIQUE sobre `UPPER(username)` |
-| [V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql](../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) | Unicidad de Subcategoría por categoría y nombre sin distinguir mayúsculas |
-| [V8__area_nombre_unico_por_sede_sin_mayusculas.sql](../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) | Unicidad de Área por sede y nombre sin distinguir mayúsculas |
-| [V9__laboratorio_codigo_unico_sin_mayusculas.sql](../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) | Unicidad global de código de Laboratorio sin distinguir mayúsculas |
+| [V1__crear_organizacion_y_catalogos.sql](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) | Sede, Área, Laboratorio, Categoría y Subcategoría; PK, FK, UNIQUE, defaults e índices |
+| [V2__crear_usuarios_y_seguridad.sql](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) | Rol, Usuario y la tabla puente UsuarioLaboratorio |
+| [V3__crear_equipos_y_movimientos.sql](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) | Equipo y MovimientoEquipo, checks y relaciones de custodia y trazabilidad |
+| [V4__insertar_datos_iniciales.sql](../../backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql) | Datos iniciales; no agrega columnas ni restricciones |
+| [V5__categoria_nombre_unico_sin_mayusculas.sql](../../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) | Índice UNIQUE sobre `UPPER(categoria.nombre)` |
+| [V6__agregar_username_usuario.sql](../../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) | `usuario.username VARCHAR(50) NOT NULL` e índice UNIQUE sobre `UPPER(username)` |
+| [V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql](../../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) | Unicidad de Subcategoría por categoría y nombre sin distinguir mayúsculas |
+| [V8__area_nombre_unico_por_sede_sin_mayusculas.sql](../../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) | Unicidad de Área por sede y nombre sin distinguir mayúsculas |
+| [V9__laboratorio_codigo_unico_sin_mayusculas.sql](../../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) | Unicidad global de código de Laboratorio sin distinguir mayúsculas |
 
 Esta verificación es documental y estática: **no se abrió ninguna conexión a
 PostgreSQL, no se ejecutaron migraciones ni tests Java**. El esquema descrito es
 el generado por los archivos V1–V9, no una nueva inspección de una base en vivo.
 La comprobación de Flyway en la base habitual registrada en el cierre de
-[Sprint 4](sprint-4.md) es evidencia histórica de aquel sprint.
+[Sprint 4](../sprints/sprint-4.md) es evidencia histórica de aquel sprint.
 
 ## Comparación v1 → v2
 
@@ -69,16 +69,20 @@ Java esté implementada.
 | Cardinalidades | Predominaban etiquetas `1:N`; origen/destino se resumían juntos | Se explicitan `1`, `0..1` y `0..N`; origen y destino tienen relaciones separadas | Nullability y ausencia de UNIQUE sobre las FK en V1–V3 |
 | Acciones referenciales | Nota pendiente para definirlas al implementar | Las 13 FK tienen `ON UPDATE RESTRICT ON DELETE RESTRICT` | V1–V3 |
 | Índices | Nota general de crear índices para FK | Catálogo de 12 índices de FK explícitos y 5 índices UNIQUE por expresión, además de índices implícitos de PK/UQ | V1–V3 y V5–V9; la PK del puente ya cubre su primera columna |
-| Estado de implementación | Propuesta de diseño sin estado actual de verticales | Siete Entities JPA implementadas; tres tablas aún sin vertical Java completa | Entities actuales, README y cierre de Sprint 4 |
+| Estado de implementación | Propuesta de diseño sin estado actual de verticales | Ocho Entities JPA implementadas desde Sprint 4E; Equipo y MovimientoEquipo aún sin vertical Java completa | Entities actuales, README y cierre de Sprint 4 |
 
 ## Implementación actual y diseño futuro
 
 | Estado | Entidades | Alcance |
 |---|---|---|
 | Implementadas en Java / integradas con API | Rol, Usuario, Categoria, Subcategoria, Sede, Area, Laboratorio | Rol y Usuario participan en JPA/JWT/login; esto no afirma que exista un CRUD administrativo completo de usuarios o roles. Los otros cinco catálogos tienen CRUD |
-| Solo esquema BD / diseño futuro | UsuarioLaboratorio, Equipo, MovimientoEquipo | Sus tablas y FK existen en Flyway; sus verticales Java completas y el alcance por laboratorio siguen pendientes |
+| Implementada en Java/API desde Sprint 4E | UsuarioLaboratorio | Administración de asignaciones explícitas por ADMIN y cálculo del alcance propio; tabla V2 sin cambios |
+| Solo esquema BD / diseño futuro | Equipo, MovimientoEquipo | Sus tablas y FK existen en Flyway; sus verticales y la aplicación del alcance siguen pendientes |
 
-La clasificación no cambia nombres de tablas ni relaciones. Las descripciones
+Sprint 4E actualiza únicamente el estado de implementación en estos ERD: ocho
+entidades integradas en Java/API y dos futuras. No necesita V10 ni cambios en
+columnas, claves, restricciones o diagramas físicos. El lógico cambia de color
+UsuarioLaboratorio. La clasificación no cambia nombres de tablas ni relaciones. Las descripciones
 de roles sembradas en V4 expresan un alcance previsto, pero no activan por sí
 solas autorización por laboratorio. Los catálogos actuales mantienen el alcance
 global descrito en README y la matriz de permisos.
@@ -105,8 +109,8 @@ Son observaciones, no cambios ejecutados ni decisiones ya aprobadas:
 4. Definir las reglas de MovimientoEquipo antes de añadir listas cerradas de
    tipos, exigir origen distinto de destino o relacionar movimientos con el
    laboratorio actual de Equipo. La BD actual no impone esas reglas.
-5. Implementar UsuarioLaboratorio y el alcance de autorización en su sprint;
-   la mera existencia de la tabla puente no habilita ese comportamiento.
+5. Aplicar a Equipo el servicio de alcance implementado en Sprint 4E. La tabla
+   UsuarioLaboratorio ya tiene vertical Java/API; no se cambió su estructura.
 
 ## Cobertura documental
 
@@ -156,8 +160,8 @@ $erdBrowserConfig = Join-Path $erdScratch 'puppeteer.json'
 $erdConfigJson = @{ executablePath = $erdChrome } | ConvertTo-Json
 [IO.File]::WriteAllText($erdBrowserConfig, $erdConfigJson, $erdEncoding)
 $erdJobs = @(
-    @{ File = 'docs/erd-logico-v2.md'; Names = @('erd-logico-v2') },
-    @{ File = 'docs/erd-fisico-v2.md'; Names = @('erd-fisico-v2', 'erd-fisico-v2-catalogos', 'erd-fisico-v2-inventario') }
+    @{ File = 'docs/Erd_actual/erd-logico-v2.md'; Names = @('erd-logico-v2') },
+    @{ File = 'docs/Erd_actual/erd-fisico-v2.md'; Names = @('erd-fisico-v2', 'erd-fisico-v2-catalogos', 'erd-fisico-v2-inventario') }
 )
 $erdPreviousDownload = $env:PUPPETEER_SKIP_DOWNLOAD
 try {
@@ -170,7 +174,7 @@ try {
             $erdName = $erdJob.Names[$erdIndex]
             $erdInput = Join-Path $erdScratch ($erdName + '.mmd')
             [IO.File]::WriteAllText($erdInput, $erdBlocks[$erdIndex].Groups[1].Value, $erdEncoding)
-            $erdOutput = Join-Path 'docs' ($erdName + '.svg')
+            $erdOutput = Join-Path 'docs/Erd_actual' ($erdName + '.svg')
             npx.cmd --yes --package @mermaid-js/mermaid-cli@11.17.0 mmdc -i $erdInput -o $erdOutput -p $erdBrowserConfig -b white -w 2400
             if ($LASTEXITCODE -ne 0) { throw ('Error al exportar ' + $erdName) }
         }

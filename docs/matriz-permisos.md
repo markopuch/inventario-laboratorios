@@ -2,7 +2,7 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Diseño base y permisos implementados hasta Sprint 4B–4D
+**Estado:** Diseño base y permisos implementados hasta Sprint 4E
 
 ## 1. Principio de autorización
 
@@ -11,9 +11,10 @@ La autorización se evalúa en dos niveles:
 1. **Rol:** determina la clase de operación permitida.
 2. **Alcance de laboratorio:** determina sobre qué laboratorios puede ejecutarse la operación.
 
-En el diseño futuro de equipos y movimientos, `ADMIN` tiene alcance global y
-`GESTOR`/`LECTOR` estarán limitados por asignaciones de `usuario_laboratorio`.
-Ese alcance aún no está implementado. Los catálogos actuales de Categoría,
+Desde Sprint 4E, `ADMIN` tiene alcance efectivo global a laboratorios activos y
+`GESTOR`/`LECTOR` obtienen sus laboratorios activamente asignados. El servicio
+está preparado para Equipo; aplicar esa restricción a equipos y movimientos
+queda pendiente de esas verticales. Los catálogos actuales de Categoría,
 Subcategoría, Sede, Área y Laboratorio son **globales para lectura de los tres
 roles** y permiten escritura únicamente a ADMIN.
 
@@ -41,18 +42,23 @@ roles** y permiten escritura únicamente a ADMIN.
 | Crear o editar usuarios | Sí | No | No |
 | Activar o desactivar usuarios | Sí | No | No |
 | Asignar laboratorios a usuarios | Sí | No | No |
+| Consultar asignaciones explícitas de un usuario | Sí | No | No |
+| Consultar alcance propio | Global activo | Asignaciones activas a laboratorios activos | Asignaciones activas a laboratorios activos |
 | Cambiar roles | Sí | No | No |
 
 ## 3. Matriz de endpoints existentes y propuestas futuras
 
-Login, perfil propio, Categoría, Subcategoría y las 17 operaciones de organización
-están implementados. Las filas de equipos, movimientos y administración de
-usuarios son propuestas, sujetas a sus sprints. La sección 6 delimita el alcance.
+Login, perfil propio, Categoría, Subcategoría, las 17 operaciones de organización
+y los tres endpoints de asignaciones/alcance están implementados. Las filas de
+equipos, movimientos y administración general de usuarios siguen siendo
+propuestas. Administrar asignaciones no implica crear usuarios ni cambiar roles.
+La sección 6 delimita el alcance.
 
 | Método y ruta | Operación | ADMIN | GESTOR | LECTOR | Regla de alcance |
 |---|---|---:|---:|---:|---|
 | `POST /api/auth/login` | Autenticarse | Sí | Sí | Sí | El usuario debe estar activo |
 | `GET /api/auth/me` | Consultar perfil propio | Sí | Sí | Sí | JWT válido |
+| `GET /api/auth/me/laboratorios` **IMPLEMENTADO** | Consultar alcance efectivo propio | Sí | Sí | Sí | ADMIN: todos activos; GESTOR/LECTOR: asignación y laboratorio activos; principal del contexto |
 | `GET /api/equipos` | Listar equipos | Sí | Sí | Sí | ADMIN ve todos; los demás solo sus laboratorios |
 | `GET /api/equipos/{id}` | Consultar equipo | Sí | Sí | Sí | El equipo debe pertenecer al alcance del usuario |
 | `POST /api/equipos` | Registrar equipo | Sí | Sí | No | GESTOR debe tener asignado el laboratorio recibido |
@@ -88,11 +94,12 @@ usuarios son propuestas, sujetas a sus sprints. La sección 6 delimita el alcanc
 | `GET /api/areas/{idArea}/laboratorios` | Listar laboratorios activos de área activa | Sí | Sí | Sí | Catálogo global; padre inactivo/ausente → 404 |
 | `POST /api/laboratorios` | Crear laboratorio | Sí | No | No | Área existente y activa; código global único |
 | `PUT /api/laboratorios/{id}` | Actualizar o mover laboratorio | Sí | No | No | Laboratorio activo y área destino activa |
-| `DELETE /api/laboratorios/{id}` | Dar de baja laboratorio | Sí | No | No | Baja lógica; conserva código reservado |
+| `DELETE /api/laboratorios/{id}` | Dar de baja laboratorio | Sí | No | No | Rechaza con 409 si hay asignaciones activas, aun de usuarios inactivos; conserva código reservado |
 | `POST /api/admin/usuarios` | Crear usuario | Sí | No | No | Solo administración |
 | `PUT /api/admin/usuarios/{id}` | Editar usuario | Sí | No | No | Solo administración |
 | `PATCH /api/admin/usuarios/{id}/estado` | Activar/desactivar usuario | Sí | No | No | Solo administración |
-| `PUT /api/admin/usuarios/{id}/laboratorios` | Asignar laboratorios | Sí | No | No | Solo administración |
+| `GET /api/admin/usuarios/{idUsuario}/laboratorios` **IMPLEMENTADO** | Consultar asignaciones explícitas activas | Sí | No | No | Configuración del destinatario, incluso inactivo; no es su alcance efectivo |
+| `PUT /api/admin/usuarios/{idUsuario}/laboratorios` **IMPLEMENTADO** | Reemplazar asignaciones explícitas activas | Sí | No | No | Atómico; lista vacía válida; destinatario existente; laboratorios existentes y activos |
 | `GET /api/admin/equipos` | Consultar todos los equipos | Sí | No | No | Endpoint explícitamente global |
 
 ## 4. Casos esperados de autorización
@@ -103,6 +110,10 @@ usuarios son propuestas, sujetas a sus sprints. La sección 6 delimita el alcanc
 | Token inválido, alterado o vencido | `401 Unauthorized` |
 | Usuario inactivo con token anterior | `401 Unauthorized` o invalidación equivalente documentada |
 | Usuario autenticado con rol insuficiente | `403 Forbidden` |
+| GESTOR o LECTOR consulta o reemplaza asignaciones administrativas | `403 Forbidden` |
+| ADMIN consulta sus asignaciones explícitas | `200`, solo filas activas; pueden ser cero sin limitar su alcance global |
+| GESTOR/LECTOR sin asignaciones consulta su alcance | `200`, `alcanceGlobal=false`, `laboratorios=[]` |
+| Cualquier rol consulta `GET /api/laboratorios` | `200`, catálogo global activo; no es el endpoint de alcance propio |
 | GESTOR intenta acceder a equipos de un laboratorio no asignado | `403 Forbidden` en el futuro módulo de alcance |
 | LECTOR intenta crear, editar, trasladar o dar de baja | `403 Forbidden` |
 | ADMIN consulta o administra cualquier laboratorio | Operación permitida si la solicitud es válida |
@@ -112,12 +123,12 @@ usuarios son propuestas, sujetas a sus sprints. La sección 6 delimita el alcanc
 ## 5. Implementación recomendada
 
 - Spring Security valida autenticación y rol.
-- El servicio de negocio valida el alcance mediante `usuario_laboratorio`.
-- El backend obtiene el usuario desde el JWT o contexto de seguridad; no confía en un `idUsuario` enviado por el cliente.
-- Los repositorios y filtros deben incluir el alcance permitido para evitar exposición accidental de datos.
+- `AlcanceLaboratorioService` calcula el alcance y comprueba acceso a un laboratorio: ADMIN global activo; GESTOR/LECTOR según asignación activa.
+- El endpoint de alcance propio obtiene el principal del contexto; no recibe un ID de usuario. Los endpoints ADMIN sí reciben el ID del destinatario después de autorizar al administrador.
+- Los futuros repositorios y filtros de Equipo deberán aplicar el alcance; el catálogo global de Laboratorio conserva su política.
 - Las pruebas deben cubrir al menos un caso permitido y uno rechazado por cada rol.
 
-## 6. Alcance implementado hasta Sprint 4B–4D
+## 6. Alcance implementado hasta Sprint 4E
 
 Están implementados login JWT, perfil propio (`GET /api/auth/me`), Categoría y
 Subcategoría, Sede, Área y Laboratorio. Los tres roles consultan los catálogos;
@@ -128,11 +139,19 @@ Todas estas rutas, salvo el login, requieren un JWT válido: ausencia o token
 inválido devuelve 401; rol sin permiso devuelve 403.
 
 Los endpoints de equipos, movimientos y administración completa de usuarios
-de la matriz siguen siendo propuestas. El alcance por laboratorio
-y UsuarioLaboratorio aún no tienen implementación de servicio. Esto mantiene
-la política conceptual del Sprint 0 sin presentar permisos futuros como
-funcionalidades terminadas. Consulta la
-[guía de Sprint 4A](sprint-4a-subcategorias.md) y la
-[guía de organización](sprint-4b-organizacion.md#paso-16--jwt-y-roles-401-y-403)
-para comprobar los roles con Postman. Las restricciones de baja de Laboratorio
-por Equipos o UsuarioLaboratorio quedan pendientes de esas verticales.
+de la matriz siguen siendo propuestas. Sprint 4E implementa GET/PUT de
+asignaciones, GET del alcance propio y la regla de no desactivar Laboratorio
+con asignaciones activas. La asignación de un usuario inactivo también bloquea
+la baja; ese usuario continúa sin autenticarse. Las relaciones inactivas no
+bloquean y su fecha original se conserva al reactivarlas.
+
+El reemplazo consulta el estado vigente dentro de una transacción. El alcance
+se actualiza en la siguiente petición sin renovar un JWT que continúe válido.
+ADMIN puede tener asignaciones explícitas, pero no limitan su alcance global.
+No se modifican login, BCrypt, firma ni expiración JWT. La regla de baja por
+Equipos queda pendiente de esa vertical.
+
+Consulta las guías de [Sprint 4A](sprints/sprint-4a-subcategorias.md),
+[organización](sprints/sprint-4b-organizacion.md#paso-16--jwt-y-roles-401-y-403) y
+[Sprint 4E](sprints/sprint-4e-usuario-laboratorio.md#28-postman-secuencia-manual)
+para comprobar los roles con Postman.

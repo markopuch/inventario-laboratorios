@@ -14,6 +14,7 @@ import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.LaboratorioMapper;
 import com.utec.inventario.repository.AreaRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
+import com.utec.inventario.repository.UsuarioLaboratorioRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -22,13 +23,16 @@ public class LaboratorioService {
     private final LaboratorioRepository laboratorioRepository;
     private final AreaRepository areaRepository;
     private final LaboratorioMapper mapper;
+    private final UsuarioLaboratorioRepository usuarioLaboratorioRepository;
 
     @Autowired
     public LaboratorioService(LaboratorioRepository laboratorioRepository,
-            AreaRepository areaRepository, LaboratorioMapper mapper) {
+            AreaRepository areaRepository, LaboratorioMapper mapper,
+            UsuarioLaboratorioRepository usuarioLaboratorioRepository) {
         this.laboratorioRepository = laboratorioRepository;
         this.areaRepository = areaRepository;
         this.mapper = mapper;
+        this.usuarioLaboratorioRepository = usuarioLaboratorioRepository;
     }
 
     public List<Laboratorio> listarLaboratorios() {
@@ -93,6 +97,11 @@ public class LaboratorioService {
     @Transactional
     public void eliminarLaboratorio(Integer id) {
         LaboratorioEntity laboratorio = this.buscarLaboratorioActivoParaModificar(id);
+        // Comparte el bloqueo con PUT de asignaciones; no depende de usuario.activo.
+        if (this.usuarioLaboratorioRepository.existsByLaboratorio_IdLaboratorioAndActivoTrue(id)) {
+            throw new ConflictException(
+                    "No se puede desactivar el laboratorio porque tiene asignaciones activas de usuarios.");
+        }
         laboratorio.setActivo(false);
         this.laboratorioRepository.saveAndFlush(laboratorio);
     }

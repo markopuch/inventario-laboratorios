@@ -1,7 +1,7 @@
 # ERD físico PostgreSQL v2
 
 Esquema de dominio **derivado estáticamente de Flyway V1–V9**, contrastado con las
-siete Entities JPA actuales. Esta revisión no conecta con PostgreSQL: describe el
+ocho Entities JPA actuales tras Sprint 4E. La revisión del ERD es estática: describe el
 DDL resultante de esas migraciones, sin afirmar una inspección del catálogo de una
 instancia local. No modifica código, migraciones ni datos.
 
@@ -19,20 +19,20 @@ de las diez tablas del dominio.
 
 | Migración | Efecto relevante |
 |---|---|
-| [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) | Crea sede, area, laboratorio, categoria y subcategoria; PK, FK, UNIQUE e índices FK. |
-| [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) | Crea rol, usuario y usuario_laboratorio; PK, FK, UNIQUE e índices FK. |
-| [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) | Crea equipo y movimiento_equipo completos; PK, FK, UNIQUE, CHECK e índices FK. |
-| [V4](../backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql) | Inserta datos iniciales; no agrega columnas, constraints, defaults ni CHECK de roles. |
-| [V5](../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) | Índice UNIQUE global sobre UPPER(categoria.nombre). |
-| [V6](../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) | Agrega usuario.username, completa usuarios existentes con usuario_ID, establece NOT NULL e índice UNIQUE sobre UPPER(username). El valor de actualización no es un DEFAULT. |
-| [V7](../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) | Detecta duplicados y agrega índice UNIQUE de subcategoría por categoría y nombre sin distinguir mayúsculas. |
-| [V8](../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) | Detecta duplicados y agrega índice UNIQUE de área por sede y nombre sin distinguir mayúsculas. |
-| [V9](../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) | Detecta duplicados y agrega índice UNIQUE global de código de laboratorio sin distinguir mayúsculas. |
+| [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) | Crea sede, area, laboratorio, categoria y subcategoria; PK, FK, UNIQUE e índices FK. |
+| [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) | Crea rol, usuario y usuario_laboratorio; PK, FK, UNIQUE e índices FK. |
+| [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) | Crea equipo y movimiento_equipo completos; PK, FK, UNIQUE, CHECK e índices FK. |
+| [V4](../../backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql) | Inserta datos iniciales; no agrega columnas, constraints, defaults ni CHECK de roles. |
+| [V5](../../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) | Índice UNIQUE global sobre UPPER(categoria.nombre). |
+| [V6](../../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) | Agrega usuario.username, completa usuarios existentes con usuario_ID, establece NOT NULL e índice UNIQUE sobre UPPER(username). El valor de actualización no es un DEFAULT. |
+| [V7](../../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) | Detecta duplicados y agrega índice UNIQUE de subcategoría por categoría y nombre sin distinguir mayúsculas. |
+| [V8](../../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) | Detecta duplicados y agrega índice UNIQUE de área por sede y nombre sin distinguir mayúsculas. |
+| [V9](../../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) | Detecta duplicados y agrega índice UNIQUE global de código de laboratorio sin distinguir mayúsculas. |
 
-Contraste JPA: [directorio entity](../backend/inventario/src/main/java/com/utec/inventario/entity/),
+Contraste JPA: [directorio entity](../../backend/inventario/src/main/java/com/utec/inventario/entity/),
 con `SedeEntity`, `AreaEntity`, `LaboratorioEntity`, `CategoriaEntity`,
-`SubcategoriaEntity`, `RolEntity` y `UsuarioEntity`. Como apoyo del estado
-implementado se revisaron el [README](../README.md) y el [Sprint 4](sprint-4.md).
+`SubcategoriaEntity`, `RolEntity`, `UsuarioEntity` y `UsuarioLaboratorioEntity`. Como apoyo del estado
+implementado se revisaron el [README](../../README.md) y el [Sprint 4](../sprints/sprint-4.md).
 Los diagramas antiguos no determinan ningún atributo de este modelo.
 
 ## 2. Leyenda y convenciones
@@ -65,13 +65,14 @@ declarados o su tipo físico equivalente.
 
 | Estado | Tablas |
 |---|---|
-| Implementado en Java/API | rol, usuario, categoria, subcategoria, sede, area, laboratorio |
-| Solo esquema BD / diseño futuro | usuario_laboratorio, equipo, movimiento_equipo |
+| Implementado en Java/API | rol, usuario, categoria, subcategoria, sede, area, laboratorio, usuario_laboratorio |
+| Solo esquema BD / diseño futuro | equipo, movimiento_equipo |
 
 Rol y Usuario participan en JPA y en autenticación/autorización JWT. Esta leyenda
-no afirma que ambos tengan un CRUD público completo. UsuarioLaboratorio y el
-alcance por laboratorio todavía no están implementados en Java/API. Ser
-responsable de un Equipo no concede permisos.
+no afirma que ambos tengan un CRUD público completo. Sprint 4E implementa
+UsuarioLaboratorio y el servicio de alcance efectivo sin cambios de esquema ni
+V10. Su aplicación a Equipo sigue pendiente. Ser responsable de un Equipo no
+concede permisos.
 
 ## 3. Vista física completa
 
@@ -199,8 +200,9 @@ erDiagram
 
 ### 4.1. Organización, clasificación e identidad
 
-[SVG de catálogos e identidad](erd-fisico-v2-catalogos.svg). Contiene las siete
-tablas implementadas en Java/API, con todas sus columnas. Las relaciones hacia
+[SVG de catálogos e identidad](erd-fisico-v2-catalogos.svg). Contiene siete de las ocho
+tablas implementadas en Java/API, con todas sus columnas. UsuarioLaboratorio,
+incorporada en Sprint 4E, conserva su vista ampliada junto a inventario. Las relaciones hacia
 tablas que no aparecen en esta vista se conservan en el diagrama general.
 
 ```mermaid
@@ -354,7 +356,7 @@ posterior en V6.
 
 ### sede — 7 columnas
 
-Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
+Fuente: [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -368,7 +370,7 @@ Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_org
 
 ### area — 6 columnas
 
-Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
+Fuente: [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -381,7 +383,7 @@ Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_org
 
 ### laboratorio — 7 columnas
 
-Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
+Fuente: [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -395,7 +397,7 @@ Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_org
 
 ### categoria — 5 columnas
 
-Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
+Fuente: [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -407,7 +409,7 @@ Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_org
 
 ### subcategoria — 6 columnas
 
-Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
+Fuente: [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -420,7 +422,7 @@ Fuente: [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_org
 
 ### rol — 5 columnas
 
-Fuente: [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql). Implementada en Java/API.
+Fuente: [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -432,7 +434,7 @@ Fuente: [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usu
 
 ### usuario — 10 columnas
 
-Fuente: [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) + [V6](../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql). Implementada en Java/API.
+Fuente: [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) + [V6](../../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql). Implementada en Java/API.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -449,7 +451,7 @@ Fuente: [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usu
 
 ### usuario_laboratorio — 4 columnas
 
-Fuente: [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql). Solo esquema BD / diseño futuro.
+Fuente: [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql). Implementada en Java/API desde Sprint 4E; estructura sin cambios.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -460,7 +462,7 @@ Fuente: [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usu
 
 ### equipo — 18 columnas
 
-Fuente: [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql). Solo esquema BD / diseño futuro.
+Fuente: [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql). Solo esquema BD / diseño futuro.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -485,7 +487,7 @@ Fuente: [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equ
 
 ### movimiento_equipo — 8 columnas
 
-Fuente: [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql). Solo esquema BD / diseño futuro.
+Fuente: [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql). Solo esquema BD / diseño futuro.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -512,59 +514,59 @@ crean sus propios índices implícitos, además de los 17 índices explícitos.
 
 | Tabla | Constraint/Índice | Tipo | Columnas/Expresión | Migración |
 |---|---|---|---|---|
-| `sede` | `sede_pkey` | PK | `(id_sede)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `area` | `area_pkey` | PK | `(id_area)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `laboratorio` | `laboratorio_pkey` | PK | `(id_laboratorio)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `categoria` | `categoria_pkey` | PK | `(id_categoria)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `subcategoria` | `subcategoria_pkey` | PK | `(id_subcategoria)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `rol` | `rol_pkey` | PK | `(id_rol)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `usuario` | `usuario_pkey` | PK | `(id_usuario)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `usuario_laboratorio` | `pk_usuario_laboratorio` | PK | `(id_usuario, id_laboratorio)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `equipo` | `equipo_pkey` | PK | `(id_equipo)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `movimiento_equipo_pkey` | PK | `(id_movimiento)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `area` | `fk_area_sede` | FK | `(id_sede) → sede(id_sede); UPDATE RESTRICT; DELETE RESTRICT` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `laboratorio` | `fk_laboratorio_area` | FK | `(id_area) → area(id_area); UPDATE RESTRICT; DELETE RESTRICT` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `subcategoria` | `fk_subcategoria_categoria` | FK | `(id_categoria) → categoria(id_categoria); UPDATE RESTRICT; DELETE RESTRICT` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `usuario` | `fk_usuario_rol` | FK | `(id_rol) → rol(id_rol); UPDATE RESTRICT; DELETE RESTRICT` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `usuario_laboratorio` | `fk_usuario_laboratorio_usuario` | FK | `(id_usuario) → usuario(id_usuario); UPDATE RESTRICT; DELETE RESTRICT` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `usuario_laboratorio` | `fk_usuario_laboratorio_laboratorio` | FK | `(id_laboratorio) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `equipo` | `fk_equipo_subcategoria` | FK | `(id_subcategoria) → subcategoria(id_subcategoria); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `fk_equipo_laboratorio` | FK | `(id_laboratorio) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `fk_equipo_responsable` | FK | `(id_responsable) → usuario(id_usuario); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `fk_movimiento_equipo_equipo` | FK | `(id_equipo) → equipo(id_equipo); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `fk_movimiento_equipo_origen` | FK | `(id_laboratorio_origen) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `fk_movimiento_equipo_destino` | FK | `(id_laboratorio_destino) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `fk_movimiento_equipo_actor` | FK | `(id_usuario_actor) → usuario(id_usuario); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `area` | `uq_area_nombre_sede` | UQ (constraint) | `(nombre, id_sede)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `laboratorio` | `uq_laboratorio_codigo` | UQ (constraint) | `(codigo)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `categoria` | `uq_categoria_nombre` | UQ (constraint) | `(nombre)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `subcategoria` | `uq_subcategoria_nombre_categoria` | UQ (constraint) | `(nombre, id_categoria)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `rol` | `uq_rol_nombre` | UQ (constraint) | `(nombre)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `usuario` | `uq_usuario_email` | UQ (constraint) | `(email)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `equipo` | `uq_equipo_codigo_interno` | UQ (constraint) | `(codigo_interno)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `uq_equipo_serie_utec` | UQ (constraint) | `(serie_utec)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `uq_equipo_numero_serie` | UQ (constraint) | `(numero_serie)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `ck_equipo_estado` | CHECK | `estado IN ('OPERATIVO', 'MANTENIMIENTO', 'INOPERATIVO', 'BAJA')` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `ck_equipo_anio` | CHECK | `anio IS NULL OR anio BETWEEN 1900 AND 2100` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `ck_movimiento_equipo_tipo_no_vacio` | CHECK | `BTRIM(tipo_movimiento) <> ''` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `ck_movimiento_equipo_motivo_no_vacio` | CHECK | `BTRIM(motivo) <> ''` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `area` | `idx_area_id_sede` | Índice FK | `(id_sede)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `laboratorio` | `idx_laboratorio_id_area` | Índice FK | `(id_area)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `subcategoria` | `idx_subcategoria_id_categoria` | Índice FK | `(id_categoria)` | [V1](../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
-| `usuario` | `idx_usuario_id_rol` | Índice FK | `(id_rol)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `usuario_laboratorio` | `idx_usuario_laboratorio_id_laboratorio` | Índice FK | `(id_laboratorio)` | [V2](../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
-| `equipo` | `idx_equipo_id_subcategoria` | Índice FK | `(id_subcategoria)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `idx_equipo_id_laboratorio` | Índice FK | `(id_laboratorio)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `equipo` | `idx_equipo_id_responsable` | Índice FK | `(id_responsable)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `idx_movimiento_equipo_id_equipo` | Índice FK | `(id_equipo)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `idx_movimiento_equipo_id_laboratorio_origen` | Índice FK | `(id_laboratorio_origen)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `idx_movimiento_equipo_id_laboratorio_destino` | Índice FK | `(id_laboratorio_destino)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `movimiento_equipo` | `idx_movimiento_equipo_id_usuario_actor` | Índice FK | `(id_usuario_actor)` | [V3](../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
-| `categoria` | `uq_categoria_nombre_ignore_case` | Índice UQ CI | `(UPPER(nombre))` | [V5](../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) |
-| `usuario` | `uq_usuario_username_ignore_case` | Índice UQ CI | `(UPPER(username))` | [V6](../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) |
-| `subcategoria` | `uq_subcategoria_categoria_nombre_ignore_case` | Índice UQ CI | `(id_categoria, UPPER(nombre))` | [V7](../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) |
-| `area` | `uq_area_sede_nombre_ignore_case` | Índice UQ CI | `(id_sede, UPPER(nombre))` | [V8](../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) |
-| `laboratorio` | `uq_laboratorio_codigo_ignore_case` | Índice UQ CI | `(UPPER(codigo))` | [V9](../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) |
+| `sede` | `sede_pkey` | PK | `(id_sede)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `area` | `area_pkey` | PK | `(id_area)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `laboratorio` | `laboratorio_pkey` | PK | `(id_laboratorio)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `categoria` | `categoria_pkey` | PK | `(id_categoria)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `subcategoria` | `subcategoria_pkey` | PK | `(id_subcategoria)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `rol` | `rol_pkey` | PK | `(id_rol)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `usuario` | `usuario_pkey` | PK | `(id_usuario)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `usuario_laboratorio` | `pk_usuario_laboratorio` | PK | `(id_usuario, id_laboratorio)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `equipo` | `equipo_pkey` | PK | `(id_equipo)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `movimiento_equipo_pkey` | PK | `(id_movimiento)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `area` | `fk_area_sede` | FK | `(id_sede) → sede(id_sede); UPDATE RESTRICT; DELETE RESTRICT` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `laboratorio` | `fk_laboratorio_area` | FK | `(id_area) → area(id_area); UPDATE RESTRICT; DELETE RESTRICT` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `subcategoria` | `fk_subcategoria_categoria` | FK | `(id_categoria) → categoria(id_categoria); UPDATE RESTRICT; DELETE RESTRICT` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `usuario` | `fk_usuario_rol` | FK | `(id_rol) → rol(id_rol); UPDATE RESTRICT; DELETE RESTRICT` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `usuario_laboratorio` | `fk_usuario_laboratorio_usuario` | FK | `(id_usuario) → usuario(id_usuario); UPDATE RESTRICT; DELETE RESTRICT` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `usuario_laboratorio` | `fk_usuario_laboratorio_laboratorio` | FK | `(id_laboratorio) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `equipo` | `fk_equipo_subcategoria` | FK | `(id_subcategoria) → subcategoria(id_subcategoria); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `fk_equipo_laboratorio` | FK | `(id_laboratorio) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `fk_equipo_responsable` | FK | `(id_responsable) → usuario(id_usuario); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `fk_movimiento_equipo_equipo` | FK | `(id_equipo) → equipo(id_equipo); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `fk_movimiento_equipo_origen` | FK | `(id_laboratorio_origen) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `fk_movimiento_equipo_destino` | FK | `(id_laboratorio_destino) → laboratorio(id_laboratorio); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `fk_movimiento_equipo_actor` | FK | `(id_usuario_actor) → usuario(id_usuario); UPDATE RESTRICT; DELETE RESTRICT` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `area` | `uq_area_nombre_sede` | UQ (constraint) | `(nombre, id_sede)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `laboratorio` | `uq_laboratorio_codigo` | UQ (constraint) | `(codigo)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `categoria` | `uq_categoria_nombre` | UQ (constraint) | `(nombre)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `subcategoria` | `uq_subcategoria_nombre_categoria` | UQ (constraint) | `(nombre, id_categoria)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `rol` | `uq_rol_nombre` | UQ (constraint) | `(nombre)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `usuario` | `uq_usuario_email` | UQ (constraint) | `(email)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `equipo` | `uq_equipo_codigo_interno` | UQ (constraint) | `(codigo_interno)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `uq_equipo_serie_utec` | UQ (constraint) | `(serie_utec)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `uq_equipo_numero_serie` | UQ (constraint) | `(numero_serie)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `ck_equipo_estado` | CHECK | `estado IN ('OPERATIVO', 'MANTENIMIENTO', 'INOPERATIVO', 'BAJA')` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `ck_equipo_anio` | CHECK | `anio IS NULL OR anio BETWEEN 1900 AND 2100` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `ck_movimiento_equipo_tipo_no_vacio` | CHECK | `BTRIM(tipo_movimiento) <> ''` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `ck_movimiento_equipo_motivo_no_vacio` | CHECK | `BTRIM(motivo) <> ''` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `area` | `idx_area_id_sede` | Índice FK | `(id_sede)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `laboratorio` | `idx_laboratorio_id_area` | Índice FK | `(id_area)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `subcategoria` | `idx_subcategoria_id_categoria` | Índice FK | `(id_categoria)` | [V1](../../backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql) |
+| `usuario` | `idx_usuario_id_rol` | Índice FK | `(id_rol)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `usuario_laboratorio` | `idx_usuario_laboratorio_id_laboratorio` | Índice FK | `(id_laboratorio)` | [V2](../../backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql) |
+| `equipo` | `idx_equipo_id_subcategoria` | Índice FK | `(id_subcategoria)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `idx_equipo_id_laboratorio` | Índice FK | `(id_laboratorio)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `equipo` | `idx_equipo_id_responsable` | Índice FK | `(id_responsable)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `idx_movimiento_equipo_id_equipo` | Índice FK | `(id_equipo)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `idx_movimiento_equipo_id_laboratorio_origen` | Índice FK | `(id_laboratorio_origen)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `idx_movimiento_equipo_id_laboratorio_destino` | Índice FK | `(id_laboratorio_destino)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `movimiento_equipo` | `idx_movimiento_equipo_id_usuario_actor` | Índice FK | `(id_usuario_actor)` | [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql) |
+| `categoria` | `uq_categoria_nombre_ignore_case` | Índice UQ CI | `(UPPER(nombre))` | [V5](../../backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql) |
+| `usuario` | `uq_usuario_username_ignore_case` | Índice UQ CI | `(UPPER(username))` | [V6](../../backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql) |
+| `subcategoria` | `uq_subcategoria_categoria_nombre_ignore_case` | Índice UQ CI | `(id_categoria, UPPER(nombre))` | [V7](../../backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql) |
+| `area` | `uq_area_sede_nombre_ignore_case` | Índice UQ CI | `(id_sede, UPPER(nombre))` | [V8](../../backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql) |
+| `laboratorio` | `uq_laboratorio_codigo_ignore_case` | Índice UQ CI | `(UPPER(codigo))` | [V9](../../backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql) |
 
 ### 6.1. Unicidad y bajas lógicas
 
@@ -671,9 +673,9 @@ cambios dentro de esta tarea**.
   `motivo` tampoco tiene DEFAULT. El esquema no exige origen distinto de destino.
 - Ni Rol.nombre ni los identificadores de equipo tienen protección UPPER en estas
   migraciones. Los datos iniciales de roles no equivalen a un CHECK.
-- UsuarioLaboratorio, Equipo y MovimientoEquipo existen físicamente, pero sus
-  reglas de API, permisos por laboratorio y validaciones futuras siguen pendientes.
-  La documentación no implementa esas verticales.
+- UsuarioLaboratorio tiene vertical Java/API y servicio de alcance desde Sprint 4E.
+  Equipo y MovimientoEquipo existen físicamente, pero sus verticales y la
+  aplicación del alcance siguen pendientes. Este estado no cambia el esquema.
 - V6 actualiza usernames de filas existentes con `'usuario_' || id_usuario`;
   ese backfill no crea un DEFAULT para nuevas filas.
 - Los índices UPPER no expresan normalización de espacios ni equivalencia de
@@ -693,7 +695,7 @@ cambios dentro de esta tarea**.
 | Índices explícitos | **17**: 12 para FK y 5 UNIQUE con UPPER de V5–V9 |
 | Tipos, NN/NULL y DEFAULT | Cubiertos columna por columna en la sección 5 |
 | Fechas | Todas las columnas de fecha del esquema son TIMESTAMPTZ |
-| Modelo físico frente a Java | Siete tablas con Entity; tres tablas solo en BD |
+| Modelo físico frente a Java | Ocho tablas con Entity; dos tablas solo en BD |
 | Alcance de comprobación | Lectura de fuentes y validación documental; sin tests Java ni acceso a PostgreSQL |
 
 Relacionado: [ERD lógico v2](erd-logico-v2.md) ·

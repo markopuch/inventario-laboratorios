@@ -23,15 +23,17 @@ import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.LaboratorioMapper;
 import com.utec.inventario.repository.AreaRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
+import com.utec.inventario.repository.UsuarioLaboratorioRepository;
 
 @ExtendWith(MockitoExtension.class)
 class LaboratorioServiceTest {
     @Mock private LaboratorioRepository laboratorios;
     @Mock private AreaRepository areas;
+    @Mock private UsuarioLaboratorioRepository asignaciones;
     private LaboratorioService service;
 
     @BeforeEach
-    void preparar() { service = new LaboratorioService(laboratorios, areas, Mappers.getMapper(LaboratorioMapper.class)); }
+    void preparar() { service = new LaboratorioService(laboratorios, areas, Mappers.getMapper(LaboratorioMapper.class), asignaciones); }
 
     @Test
     void areaAusenteOInactivaSeDistingueAntesDePersistir() {
@@ -95,6 +97,24 @@ class LaboratorioServiceTest {
         verify(laboratorios).saveAndFlush(entity);
         verify(laboratorios, never()).delete(any());
         verifyNoInteractions(areas);
+    }
+
+    @Test
+    void asignacionesActivasBloqueanBajaBajoElMismoBloqueoDelLaboratorio() {
+        LaboratorioEntity entity = LaboratorioEntity.builder().idLaboratorio(9).codigo("L500")
+                .nombre("Laboratorio").activo(true).build();
+        when(laboratorios.findForUpdateByIdLaboratorioAndActivoTrue(9)).thenReturn(Optional.of(entity));
+        when(asignaciones.existsByLaboratorio_IdLaboratorioAndActivoTrue(9)).thenReturn(true, false);
+        assertThrows(ConflictException.class, () -> service.eliminarLaboratorio(9));
+        assertTrue(entity.isActivo());
+        verify(laboratorios, never()).saveAndFlush(any());
+        var ordered = inOrder(laboratorios, asignaciones);
+        ordered.verify(laboratorios).findForUpdateByIdLaboratorioAndActivoTrue(9);
+        ordered.verify(asignaciones).existsByLaboratorio_IdLaboratorioAndActivoTrue(9);
+        service.eliminarLaboratorio(9);
+        assertFalse(entity.isActivo());
+        verify(laboratorios).saveAndFlush(entity);
+        verify(laboratorios, never()).delete(any());
     }
 
     private Laboratorio input(int parent, String code) {

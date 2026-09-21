@@ -38,7 +38,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/categorias", "/api/categorias/**",
+                        .requestMatchers(HttpMethod.GET, "/api/admin/usuarios/*/laboratorios").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/usuarios/*/laboratorios").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/auth/me/laboratorios",
+                                "/api/categorias", "/api/categorias/**",
                                 "/api/subcategorias", "/api/subcategorias/**",
                                 "/api/sedes", "/api/sedes/**", "/api/areas", "/api/areas/**",
                                 "/api/laboratorios", "/api/laboratorios/**")

@@ -1,13 +1,16 @@
-# Sprint 4 — Subcategorías y organización
+# Sprint 4 — Subcategorías, organización y alcance
 
-Este documento conserva el cierre de **Sprint 4A: Subcategorías** y agrega el
-[reporte de Sprint 4B–4D](#1-resumen-del-sprint-4b4d): **Sede → Área → Laboratorio**.
-Las guías detalladas son [Sprint 4A](sprint-4a-subcategorias.md) y
-[organización](sprint-4b-organizacion.md).
+Este documento conserva los cierres históricos de **Sprint 4A: Subcategorías** y
+**Sprint 4B–4D: Sede → Área → Laboratorio**, y agrega el cierre vigente de
+[Sprint 4E: UsuarioLaboratorio y alcance](#1-resumen-sprint-4e).
+Las guías detalladas son [Sprint 4A](sprint-4a-subcategorias.md),
+[organización](sprint-4b-organizacion.md) y
+[UsuarioLaboratorio](sprint-4e-usuario-laboratorio.md).
 
 **Registro histórico de Sprint 4A (2026-09-20):** las siguientes 15 secciones
 describen aquel cierre. Sus 99 pruebas y V7 son la base anterior; el resultado
-actual está en las secciones 14–16 del reporte 4B–4D al final de este archivo.
+de aquel incremento está en el reporte 4B–4D. El estado vigente está en el
+reporte 4E, con 168 pruebas aprobadas y sin nueva migración.
 
 ## 1. Resumen Sprint 4A
 
@@ -218,10 +221,10 @@ puerto. Este registro histórico no afirma que exista un backend activo ahora.
 
 ## 13. Cambios de documentación
 
-- [README](../README.md): estado, rutas, permisos y V7.
-- [Reglas de negocio](reglas-negocio.md): RN-31 padre activo y RN-32 baja de
+- [README](../../README.md): estado, rutas, permisos y V7.
+- [Reglas de negocio](../reglas-negocio.md): RN-31 padre activo y RN-32 baja de
   padre con hijas activas, sin renumerar RN-01 a RN-30.
-- [Matriz de permisos](matriz-permisos.md): seis rutas nuevas y distinción
+- [Matriz de permisos](../matriz-permisos.md): seis rutas nuevas y distinción
   entre API actual y funcionalidades propuestas.
 - [Guía Sprint 4A](sprint-4a-subcategorias.md): JPA, capas, flujos, reglas,
   archivos, 21 pruebas Postman, SQL y tests.
@@ -274,6 +277,11 @@ No se incorporaron frontend, Docker, OpenAPI, mantenimiento ni auditoría genera
 - [x] No se implementó Sprint 4B
 
 ---
+
+**Registro histórico de Sprint 4B–4D:** las siguientes 20 secciones conservan
+sus 140 pruebas y sus pendientes de aquel cierre. UsuarioLaboratorio y alcance
+se completan después, en el reporte Sprint 4E al final; los valores históricos
+no se reescriben como si ya hubieran existido.
 
 # 1. Resumen del Sprint 4B–4D
 
@@ -562,9 +570,9 @@ versionadas. La comprobación manual queda disponible para el usuario.
 
 # 18. Documentación actualizada
 
-- [README](../README.md): estado real, APIs, permisos y V8/V9.
-- [Reglas de negocio](reglas-negocio.md): RN-13 global y RN-31/RN-32 en tres jerarquías.
-- [Matriz de permisos](matriz-permisos.md): 17 rutas organizacionales y tres roles.
+- [README](../../README.md): estado real, APIs, permisos y V8/V9.
+- [Reglas de negocio](../reglas-negocio.md): RN-13 global y RN-31/RN-32 en tres jerarquías.
+- [Matriz de permisos](../matriz-permisos.md): 17 rutas organizacionales y tres roles.
 - [Sprint 4](sprint-4.md): cierre 4A histórico más reporte de este incremento.
 - [Sprint 4B–4D organización](sprint-4b-organizacion.md): guía pedagógica de 26 temas.
 
@@ -626,5 +634,278 @@ No se adelantan Docker, mantenimiento ni auditoría general.
 - [x] README actualizado
 - [x] Documentación actualizada
 - [x] No se implementó UsuarioLaboratorio
+- [x] No se implementó Equipo
+- [x] No se implementó MovimientoEquipo
+
+
+---
+
+# 1. Resumen Sprint 4E
+
+Se implementó UsuarioLaboratorio sobre la tabla de V2: asignaciones explícitas
+administradas por ADMIN, reemplazo atómico, baja lógica y reactivación, alcance
+efectivo propio y servicio reutilizable para Equipo. Laboratorio rechaza su baja
+si tiene asignaciones activas. El catálogo global conserva su comportamiento.
+
+**168 pruebas aprobadas de 168**: 140 anteriores y 28 nuevas; cero fallos, errores
+y omitidas. No se necesita V10. Equipo y MovimientoEquipo siguen pendientes.
+
+# 2. Estado inicial encontrado
+
+El backend tenía JPA/JWT/BCrypt y tres roles, Categoría, Subcategoría y
+Sede → Área → Laboratorio. Flyway llegaba a V9 y la regresión era de 140 pruebas.
+UsuarioLaboratorio existía solo como tabla; ahora incorpora vertical Java/API.
+
+Esquema real de `usuario_laboratorio`, conservado íntegro:
+
+| Columna | Tipo | Restricción/default |
+|---|---|---|
+| `id_usuario` | INTEGER | NOT NULL, componente de PK y FK Usuario |
+| `id_laboratorio` | INTEGER | NOT NULL, componente de PK y FK Laboratorio |
+| `activo` | BOOLEAN | NOT NULL, DEFAULT TRUE |
+| `fecha_asignacion` | TIMESTAMPTZ | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
+
+PK `(id_usuario,id_laboratorio)`; ambas FK con UPDATE/DELETE RESTRICT. La PK
+cubre búsquedas por usuario y existe índice adicional por laboratorio. La
+inspección de la base habitual coincidió con el esquema definido por V1–V9.
+
+# 3. Arquitectura
+
+```text
+Rol (1)
+  ↓ (0..N)
+Usuario
+  ↓ (1 usuario por asignación; 0..N asignaciones)
+UsuarioLaboratorio
+  ↓ (1 laboratorio por asignación; 0..N asignaciones)
+Laboratorio
+
+Usuario ↔ Laboratorio: N:M mediante la Entity puente.
+Rol = qué. Alcance = dónde.
+HTTP/JWT → Controller → DTO + Mapper → Domain → Service → Repository → PostgreSQL
+```
+
+Se conservan los paquetes y convenciones del curso. El dominio no tiene
+anotaciones JPA; los responses solo contienen datos públicos. El servicio de
+alcance se reutilizará en Equipo sin anticipar esa vertical.
+
+# 4. Archivos creados
+
+Las primeras quince rutas parten de
+`backend/inventario/src/main/java/com/utec/inventario/`.
+
+| Ruta | Propósito |
+|---|---|
+| `entity/UsuarioLaboratorioId.java` | PK compuesta serializable e igualdad |
+| `entity/UsuarioLaboratorioEntity.java` | Puente con EmbeddedId, MapsId, estado y fecha |
+| `domain/UsuarioLaboratorio.java` | Dominio de relación sin JPA |
+| `domain/UsuarioLaboratorios.java` | Usuario y conjunto explícito de laboratorios |
+| `domain/AlcanceLaboratorios.java` | Dominio del alcance global o asignado |
+| `dto/request/ActualizarLaboratoriosUsuarioRequest.java` | Lista obligatoria y elementos positivos no nulos |
+| `dto/response/UsuarioResumenResponse.java` | Cinco campos públicos de usuario |
+| `dto/response/LaboratorioAlcanceResponse.java` | ID, código y nombre |
+| `dto/response/UsuarioLaboratoriosResponse.java` | Asignaciones explícitas |
+| `dto/response/AlcanceLaboratoriosResponse.java` | Alcance efectivo |
+| `mapper/UsuarioLaboratorioMapper.java` | Mapeos públicos con MapStruct |
+| `repository/UsuarioLaboratorioRepository.java` | Consultas de asignaciones y existencia activa |
+| `service/UsuarioLaboratorioService.java` | Reemplazo transaccional |
+| `service/AlcanceLaboratorioService.java` | Obtener, comprobar y validar alcance |
+| `controller/UsuarioLaboratorioController.java` | GET/PUT exclusivos ADMIN |
+
+Pruebas, con base `backend/inventario/src/test/java/com/utec/inventario/`:
+
+| Ruta | Propósito |
+|---|---|
+| `entity/UsuarioLaboratorioIdTest.java` | Igualdad y hash de la clave compuesta |
+| `mapper/UsuarioLaboratorioMapperTest.java` | Dominio y responses sin datos sensibles |
+| `service/UsuarioLaboratorioServiceTest.java` | Reemplazo y reglas |
+| `service/AlcanceLaboratorioServiceTest.java` | Política ADMIN/GESTOR/LECTOR y comprobación de acceso |
+| `UsuarioLaboratorioIntegrationTests.java` | HTTP, SQL, estados, seguridad y rollback |
+| `UsuarioLaboratorioConcurrenciaTests.java` | Asignación frente a DELETE y dos PUT |
+
+Nueva documentación:
+`docs/sprints/sprint-4e-usuario-laboratorio.md`, guía pedagógica de 33 temas,
+Postman, SQL y verificación.
+
+# 5. Archivos modificados
+
+| Ruta | Motivo |
+|---|---|
+| `backend/inventario/src/main/java/com/utec/inventario/repository/UsuarioRepository.java` | Bloquear ID del usuario y consultar proyecciones públicas sin contraseña |
+| `backend/inventario/src/main/java/com/utec/inventario/repository/LaboratorioRepository.java` | Comprobar existencia activa para alcance |
+| `backend/inventario/src/main/java/com/utec/inventario/service/LaboratorioService.java` | Bloquear baja con asignaciones activas |
+| `backend/inventario/src/main/java/com/utec/inventario/controller/AuthController.java` | GET del alcance del principal |
+| `backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java` | Reglas de rol para tres endpoints |
+| `backend/inventario/src/test/java/com/utec/inventario/service/LaboratorioServiceTest.java` | Regresión de la nueva restricción de baja |
+| `README.md` | Estado, endpoints y enlaces a las carpetas actuales |
+| `docs/reglas-negocio.md` | RN-33 a RN-36 |
+| `docs/matriz-permisos.md` | Separar asignaciones/alcance vigentes de CRUD de usuarios futuro |
+| `docs/sprints/sprint-4.md` | Agregar este reporte conservando cierres históricos |
+| `docs/Erd_actual/erd-logico-v2.md` | UsuarioLaboratorio pasa a implementado, sin relaciones nuevas |
+| `docs/Erd_actual/erd-logico-v2.svg` | Reflejar el estado visual actualizado de UsuarioLaboratorio |
+| `docs/Erd_actual/erd-fisico-v2.md` | Actualizar solo estado de implementación y enlaces |
+| `docs/Erd_actual/erd-v2-cambios.md` | Ocho entidades implementadas, dos futuras; esquema idéntico |
+
+No se modifica `DemoUsuariosConfig`, JWT, BCrypt ni V1–V9.
+
+# 6. Flyway
+
+**No fue necesaria una nueva migración; no se creó V10.** V2 ya contiene la
+PK compuesta, las cuatro columnas, las dos FK y el índice necesario. Mapear una
+tabla existente en JPA no justifica aumentar la versión de Flyway.
+
+V1–V9 conservaron sus huellas SHA-256. La base temporal aplicó las nueve
+migraciones con éxito. La base habitual no necesita ninguna modificación para
+este sprint. Compilación, suite completa y generación del JAR con `bootJar`
+finalizaron correctamente.
+
+# 7. Clave compuesta JPA
+
+`UsuarioLaboratorioId` implementa Serializable, `@Embeddable` e igualdad por
+ambos componentes. La Entity utiliza `@EmbeddedId`. Dos `@MapsId` enlazan
+cada componente con su asociación `@ManyToOne(fetch=LAZY)`: Usuario y Laboratorio.
+No se agregan colecciones bidireccionales ni un identificador artificial.
+
+# 8. Semántica de asignaciones
+
+PUT reemplaza el conjunto explícito activo. Normaliza IDs repetidos, permite
+`[]`, mantiene las relaciones solicitadas, desactiva las retiradas y reactiva
+las existentes inactivas. Solo crea filas para pares nuevos. Nunca borra las
+relaciones ni cambia su fecha original al reactivar. Es idempotente.
+
+Usuario inexistente da 404; laboratorio inexistente da 404; inactivo da 409.
+Todos los destinos se validan antes de modificar y el conjunto se confirma en
+una transacción. ADMIN puede administrar la configuración de usuarios inactivos,
+que siguen sin poder autenticarse.
+
+# 9. Alcance efectivo
+
+ADMIN devuelve `alcanceGlobal=true` y todos los laboratorios activos,
+independientemente de sus asignaciones explícitas. GESTOR/LECTOR devuelven
+`false` y solo laboratorios activos con una asignación activa. Una lista vacía
+es válida. Obtener, comprobar y validar alcance utilizan estado vigente.
+
+El endpoint propio obtiene el usuario del contexto autenticado. Cambiar
+asignaciones no requiere renovar un JWT aún válido. `GET /api/laboratorios`
+sigue siendo el catálogo global; el alcance se consulta por la ruta específica.
+`id_responsable` de Equipo no concede permisos ni alcance.
+
+# 10. LaboratorioService
+
+Después de bloquear el laboratorio, el Service consulta si existe una asignación
+activa. En tal caso devuelve 409 y conserva el laboratorio activo, incluso si
+el usuario asignado está inactivo. Con solo asignaciones inactivas la baja puede
+continuar y devuelve 204. La comprobación por Equipos sigue pendiente.
+
+# 11. Seguridad
+
+| Endpoint | ADMIN | GESTOR | LECTOR |
+|---|---|---|---|
+| GET `/api/admin/usuarios/{idUsuario}/laboratorios` | 200 | 403 | 403 |
+| PUT `/api/admin/usuarios/{idUsuario}/laboratorios` | 200 | 403 | 403 |
+| GET `/api/auth/me/laboratorios` | 200 global | 200 asignado | 200 asignado |
+
+Los códigos de éxito presuponen petición válida y recursos adecuados.
+Sin token válido las tres rutas devuelven 401. Login, firma, expiración y BCrypt
+se conservan. No existe nuevo CRUD general de usuarios.
+
+# 12. Concurrencia
+
+Cada PUT bloquea primero al Usuario y después los laboratorios destino en orden
+ascendente. Dos reemplazos del mismo usuario quedan serializados y el estado
+final corresponde a un conjunto completo. Asignar/reactivar y DELETE comparten
+el bloqueo de Laboratorio: si gana la asignación, DELETE recibe 409; si gana
+DELETE, la asignación recibe 409. Las regresiones coordinan ambos órdenes y
+verifican que no sobreviva asignación activa a laboratorio inactivo.
+
+# 13. Tests
+
+| Medida | Resultado |
+|---|---:|
+| Total anterior | 140 |
+| Nuevas invocaciones | 28 |
+| Total final | 168 |
+| Aprobadas | 168 |
+| Fallidas | 0 |
+| Errores | 0 |
+| Omitidas | 0 |
+
+Desglose nuevo: ID compuesto 1, Mapper 2, Service de asignaciones 5, Service de
+alcance 3, integración 12, concurrencia 4 y regresión de LaboratorioService 1.
+Los escenarios HTTP/SQL se agrupan por flujo; no se cuenta cada solicitud como test.
+
+Base usada: `inventario_verificacion_s4e_scope_20260921_a7d9`.
+Tras la suite quedaron solo datos iniciales/demo propios de esa base: 3 roles,
+3 usuarios, 2 categorías, 4 subcategorías, 1 sede, 2 áreas, 2 laboratorios y
+0 asignaciones. Cero pares duplicados y cero asignaciones activas a laboratorios
+inactivos. Tras comprobar cero conexiones se eliminó la base temporal y se
+confirmó su ausencia en el catálogo PostgreSQL.
+
+# 14. Base habitual
+
+No se agregaron asignaciones demo ni se modificó `DemoUsuariosConfig`. Al no
+necesitar migración, no se escribió en la base habitual.
+
+| Tabla | Antes | Después |
+|---|---:|---:|
+| usuario | 3 | 3 |
+| laboratorio | 2 | 2 |
+| usuario_laboratorio | 0 | 0 |
+
+Las huellas de los datos públicos comparados también permanecieron idénticas.
+No se imprimieron contraseñas, hashes, JWT ni credenciales. Las pruebas con
+escritura utilizaron exclusivamente la base temporal indicada.
+
+# 15. Documentación actualizada
+
+[README](../../README.md), [reglas de negocio](../reglas-negocio.md),
+[matriz de permisos](../matriz-permisos.md), este reporte y la
+[guía Sprint 4E](sprint-4e-usuario-laboratorio.md). La guía incluye 33 temas,
+las tres rutas, JSON, 13 casos manuales y 14 bloques de consultas de pgAdmin.
+
+Se respeta la organización actual `docs/sprints/` y `docs/Erd_actual/`.
+Los ERD existentes solo cambian el estado documental de UsuarioLaboratorio:
+ocho entidades implementadas y dos futuras. El esquema, sus diez tablas,
+76 columnas y trece relaciones se conserva.
+
+# 16. Pendientes
+
+Equipo, MovimientoEquipo, aplicar el alcance a Equipo y movimientos,
+administración completa de usuarios y frontend. También quedan fuera
+traslados, mantenimiento, auditoría general y Docker. Sprint 4E termina aquí.
+
+# 17. Checklist
+
+- [x] UsuarioLaboratorioId
+- [x] UsuarioLaboratorioEntity
+- [x] EmbeddedId
+- [x] MapsId Usuario
+- [x] MapsId Laboratorio
+- [x] Domain
+- [x] Repository
+- [x] Request
+- [x] Responses
+- [x] Service de asignaciones
+- [x] Service de alcance
+- [x] GET admin asignaciones
+- [x] PUT admin asignaciones
+- [x] GET alcance propio
+- [x] ADMIN global
+- [x] GESTOR asignaciones
+- [x] LECTOR asignaciones
+- [x] Baja lógica de asignación
+- [x] Reactivación
+- [x] PUT atómico
+- [x] Request vacío válido
+- [x] IDs repetidos normalizados
+- [x] Laboratorio inexistente 404
+- [x] Laboratorio inactivo 409
+- [x] Usuario inexistente 404
+- [x] Impedir baja laboratorio con asignaciones activas
+- [x] 401
+- [x] 403
+- [x] Concurrencia
+- [x] Tests aprobados: 168/168
+- [x] Documentación
 - [x] No se implementó Equipo
 - [x] No se implementó MovimientoEquipo

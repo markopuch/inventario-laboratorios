@@ -33,4 +33,6 @@ public interface LaboratorioRepository extends JpaRepository<LaboratorioEntity, 
     boolean existsByCodigoIgnoreCaseAndIdLaboratorioNot(String codigo, Integer idLaboratorio);
 
     boolean existsByArea_IdAreaAndActivoTrue(Integer idArea);
+
+    boolean existsByIdLaboratorioAndActivoTrue(Integer idLaboratorio);
 }

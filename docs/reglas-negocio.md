@@ -2,7 +2,7 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Diseño base y reglas incorporadas hasta Sprint 4B–4D
+**Estado:** Diseño base y reglas incorporadas hasta Sprint 4E
 
 **Fuente de verdad:** migraciones Flyway y código del backend
 
@@ -18,10 +18,12 @@ El modelo considera tres roles:
 
 La pertenencia de un usuario a uno o más laboratorios se administra mediante `usuario_laboratorio`. El campo `equipo.id_responsable` identifica al custodio del equipo, pero no concede permisos de acceso.
 
-Las reglas de alcance, Equipo, MovimientoEquipo y administración de
-UsuarioLaboratorio describen funcionalidad futura. Actualmente los catálogos
-Categoría, Subcategoría, Sede, Área y Laboratorio son globales: los tres roles
-consultan y solo ADMIN escribe. JWT y usuarios con rol ya están implementados.
+UsuarioLaboratorio y el cálculo de alcance efectivo están implementados desde
+Sprint 4E. Equipo, MovimientoEquipo y la aplicación del alcance a esas verticales
+describen funcionalidad futura. Los catálogos Categoría, Subcategoría, Sede, Área
+y Laboratorio siguen siendo globales: los tres roles consultan y solo ADMIN
+escribe. JWT y usuarios con rol están implementados; no hay administración
+completa de usuarios.
 
 ## 2. Reglas de identidad, usuarios y seguridad
 
@@ -43,7 +45,11 @@ Todo usuario debe tener exactamente un rol activo: `ADMIN`, `GESTOR` o `LECTOR`.
 
 ### RN-05. Asignación de laboratorios
 
-Un usuario puede estar asignado a uno o más laboratorios mediante `usuario_laboratorio`. La combinación `id_usuario + id_laboratorio` no puede repetirse.
+Un usuario puede tener cero, una o varias asignaciones de laboratorio mediante
+`usuario_laboratorio`. La combinación `id_usuario + id_laboratorio` no puede
+repetirse, incluso si la fila está inactiva. ADMIN puede configurar asignaciones
+de un usuario inactivo; su estado sigue impidiendo autenticarse y no elimina
+sus asignaciones.
 
 ## 3. Reglas de autorización
 
@@ -208,7 +214,7 @@ Las reglas quedan correctamente implementadas cuando se demuestra que:
 ## 10. Reglas incorporadas en Sprint 4A y extendidas en Sprint 4B–4D
 
 RN-01 a RN-30 conservan su numeración y describen el diseño del sistema completo;
-su presencia no implica que las verticales de equipos, movimientos y alcance
+su presencia no implica que las verticales de equipos y movimientos
 ya estén implementadas. Las reglas siguientes se introdujeron en Sprint 4A para
 **Categoría → Subcategoría** y ahora también aplican a **Sede → Área** y
 **Área → Laboratorio**, conservando su numeración.
@@ -238,15 +244,59 @@ En este sprint, la unicidad de RN-13 para Subcategoría se precisa como
 `id_categoria + UPPER(nombre)`, incluyendo nombres reservados por bajas lógicas.
 El mismo nombre puede existir en categorías diferentes. Las once reglas
 RN-S4A-01 a RN-S4A-11 y sus comprobaciones se detallan en la
-[guía de Sprint 4A](sprint-4a-subcategorias.md#validación-reglas-y-transacciones).
+[guía de Sprint 4A](sprints/sprint-4a-subcategorias.md#validación-reglas-y-transacciones).
 
 En Sprint 4B–4D, Sede, Área y Laboratorio usan `activo=false` para DELETE,
 conservan ID y fecha en PUT y ocultan inactivos en GET. PUT/DELETE de inactivos
 devuelven 404. Los índices V8/V9 protegen también los duplicados concurrentes.
-La [guía de organización](sprint-4b-organizacion.md) describe sus pruebas.
+La [guía de organización](sprints/sprint-4b-organizacion.md) describe sus pruebas.
 
 **Pendientes:** las reglas «No desactivar Subcategoría con Equipos activos» y
 «No desactivar Laboratorio con Equipos activos» se implementarán con la vertical
-de Equipo. Las restricciones ligadas a UsuarioLaboratorio y el alcance por
-laboratorio también quedan pendientes. No se crean repositorios de esos módulos
-únicamente para anticipar sus reglas.
+de Equipo. Desde Sprint 4E sí se impide la baja de Laboratorio con asignaciones
+activas y existe el servicio reutilizable de alcance descrito a continuación.
+
+## 11. Reglas incorporadas en Sprint 4E
+
+### RN-33. Laboratorio asignable
+
+Cada laboratorio solicitado debe existir y estar activo. Un ID inexistente
+devuelve 404 y uno inactivo devuelve 409. Se valida el conjunto completo antes
+de modificar asignaciones. El estado del usuario destinatario no impide que
+ADMIN prepare su configuración: un usuario inactivo mantiene bloqueada su
+autenticación, pero puede conservar, recibir o retirar asignaciones.
+
+### RN-34. Reemplazo atómico de asignaciones
+
+`PUT /api/admin/usuarios/{idUsuario}/laboratorios` reemplaza todas las asignaciones
+explícitas activas en una transacción. `idsLaboratorio` es obligatorio, admite
+lista vacía y exige elementos no nulos y positivos; IDs repetidos se normalizan
+como conjunto. Cualquier error conserva íntegro el conjunto anterior. Las
+relaciones retiradas cambian a `activo=false`; una relación solicitada de nuevo
+se reactiva, conserva su PK compuesta y su `fecha_asignacion` original. Nunca se
+borra físicamente al desasignar ni se duplica el par. Repetir el mismo PUT es
+idempotente. Se bloquea primero al Usuario y después los laboratorios solicitados
+en orden ascendente para serializar reemplazos y coordinarse con sus bajas.
+
+### RN-35. Laboratorio con usuarios asignados
+
+No se puede dar de baja un Laboratorio mientras exista alguna asignación
+`usuario_laboratorio.activo=true`, incluso si su usuario está inactivo. DELETE
+devuelve 409 y conserva el laboratorio activo. Las asignaciones inactivas no
+bloquean la baja. `LaboratorioService` comprueba la regla después de bloquear el
+laboratorio; agregar o reactivar asignaciones usa el mismo bloqueo. Si gana la
+asignación, la baja recibe 409; si gana la baja, la asignación recibe 409.
+
+### RN-36. Alcance efectivo
+
+`GET /api/auth/me/laboratorios` obtiene el usuario del contexto autenticado.
+ADMIN tiene `alcanceGlobal=true` y todos los laboratorios activos, aunque no
+tenga asignaciones explícitas. GESTOR y LECTOR tienen `alcanceGlobal=false` y
+solo laboratorios activos con una asignación activa. El GET administrativo
+representa asignaciones explícitas, también para ADMIN, y no su alcance global.
+Cambiar asignaciones no exige renovar un JWT que siga siendo válido: el servicio
+lee el estado actual. El catálogo `GET /api/laboratorios` mantiene lectura global.
+Equipo usará posteriormente este servicio; `id_responsable` **no concede alcance**.
+
+La [guía de Sprint 4E](sprints/sprint-4e-usuario-laboratorio.md) documenta el flujo,
+la concurrencia, los endpoints y su verificación manual sin asumir IDs.
