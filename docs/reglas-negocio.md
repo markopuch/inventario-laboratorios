@@ -2,8 +2,9 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Documento base para el Sprint 0  
-**Fuente de verdad futura:** migraciones Flyway y código del backend
+**Estado:** Diseño base y reglas incorporadas hasta Sprint 4B–4D
+
+**Fuente de verdad:** migraciones Flyway y código del backend
 
 ## 1. Alcance
 
@@ -16,6 +17,11 @@ El modelo considera tres roles:
 - `LECTOR`: consulta de equipos y movimientos dentro de los laboratorios que tiene asignados.
 
 La pertenencia de un usuario a uno o más laboratorios se administra mediante `usuario_laboratorio`. El campo `equipo.id_responsable` identifica al custodio del equipo, pero no concede permisos de acceso.
+
+Las reglas de alcance, Equipo, MovimientoEquipo y administración de
+UsuarioLaboratorio describen funcionalidad futura. Actualmente los catálogos
+Categoría, Subcategoría, Sede, Área y Laboratorio son globales: los tres roles
+consultan y solo ADMIN escribe. JWT y usuarios con rol ya están implementados.
 
 ## 2. Reglas de identidad, usuarios y seguridad
 
@@ -73,7 +79,18 @@ Toda subcategoría debe pertenecer a una categoría.
 
 ### RN-13. Catálogos sin duplicados lógicos
 
-No se deben repetir nombres de áreas dentro de la misma sede, códigos de laboratorios dentro de la misma área ni nombres de subcategorías dentro de la misma categoría.
+El nombre de Área es único dentro de su Sede, sin distinguir mayúsculas:
+`id_sede + UPPER(nombre)`. El nombre de Subcategoría sigue el mismo criterio
+dentro de Categoría: `id_categoria + UPPER(nombre)`.
+
+El código de Laboratorio es **único globalmente**, sin distinguir mayúsculas:
+`UPPER(codigo)`, independientemente del Área o Sede. Esta redacción corrige la
+descripción histórica por Área y conserva la decisión de V1; V9 refuerza su
+comparación sin distinguir mayúsculas. No se cambió a unicidad por Área.
+
+Las bajas lógicas conservan los nombres/códigos reservados. PUT excluye el ID
+propio al comprobar duplicados y valida el destino al mover una hija. No existe
+una regla de unicidad del nombre de Sede; no se incorpora esa restricción.
 
 ## 5. Reglas de equipos
 
@@ -188,28 +205,34 @@ Las reglas quedan correctamente implementadas cuando se demuestra que:
 - Las pruebas automatizadas cubren los casos permitidos y rechazados.
 - Postman evidencia respuestas `200`, `201`, `204`, `400`, `401`, `403`, `404` y `409`.
 
-## 10. Reglas incorporadas en Sprint 4A
+## 10. Reglas incorporadas en Sprint 4A y extendidas en Sprint 4B–4D
 
 RN-01 a RN-30 conservan su numeración y describen el diseño del sistema completo;
 su presencia no implica que las verticales de equipos, movimientos y alcance
-ya estén implementadas. En Sprint 4A se agregan estas reglas para
-**Categoría → Subcategoría**.
+ya estén implementadas. Las reglas siguientes se introdujeron en Sprint 4A para
+**Categoría → Subcategoría** y ahora también aplican a **Sede → Área** y
+**Área → Laboratorio**, conservando su numeración.
 
 ### RN-31. Padre activo
 
 Una entidad hija no puede crearse ni reasignarse bajo un padre inactivo. Para
-Subcategoría, el padre Categoría debe existir y estar activo: padre inexistente
-devuelve `404 Not Found`; padre existente pero inactivo devuelve `409 Conflict`.
-La consulta jerárquica de hijas de una categoría inexistente o inactiva devuelve
-404. Crear o mover una hija y dar de baja su padre coordinan sus escrituras
-mediante bloqueo de la categoría dentro de la transacción.
+Subcategoría requiere Categoría activa; Área requiere Sede activa; Laboratorio
+requiere Área activa. Padre inexistente devuelve `404 Not Found`; padre existente
+pero inactivo devuelve `409 Conflict` al crear o mover una hija.
+La consulta jerárquica de un padre inexistente o inactivo devuelve 404. Padre
+activo sin hijos activos devuelve `200 []`. Crear o mover una hija y dar de baja
+su padre coordinan sus escrituras mediante bloqueo del padre dentro de la
+transacción. El Mapper solo transforma; el Service resuelve y valida al padre.
 
 ### RN-32. Baja de padre con hijos activos
 
-No se puede desactivar una Categoría mientras tenga Subcategorías activas.
+No se puede desactivar una Categoría mientras tenga Subcategorías activas, una
+Sede mientras tenga Áreas activas ni un Área mientras tenga Laboratorios activos.
 La operación devuelve `409 Conflict` y conserva el padre activo. Si no tiene
-hijas activas, su baja lógica puede continuar y devuelve `204 No Content`.
-La regla se comprueba en `CategoriaService`, no en el Controller.
+hijos activos, su baja lógica puede continuar y devuelve `204 No Content`.
+La regla se comprueba en `CategoriaService`, `SedeService` y `AreaService`,
+respectivamente, consultando al Repository de la hija después de bloquear al
+padre. No se implementa en Controller ni requiere una colección bidireccional.
 
 En este sprint, la unicidad de RN-13 para Subcategoría se precisa como
 `id_categoria + UPPER(nombre)`, incluyendo nombres reservados por bajas lógicas.
@@ -217,6 +240,13 @@ El mismo nombre puede existir en categorías diferentes. Las once reglas
 RN-S4A-01 a RN-S4A-11 y sus comprobaciones se detallan en la
 [guía de Sprint 4A](sprint-4a-subcategorias.md#validación-reglas-y-transacciones).
 
-**Pendiente:** la regla «No desactivar Subcategoría con Equipos activos» se
-implementará cuando exista la vertical de Equipo. La relación
-Subcategoría → Equipo no se implementa en Sprint 4A.
+En Sprint 4B–4D, Sede, Área y Laboratorio usan `activo=false` para DELETE,
+conservan ID y fecha en PUT y ocultan inactivos en GET. PUT/DELETE de inactivos
+devuelven 404. Los índices V8/V9 protegen también los duplicados concurrentes.
+La [guía de organización](sprint-4b-organizacion.md) describe sus pruebas.
+
+**Pendientes:** las reglas «No desactivar Subcategoría con Equipos activos» y
+«No desactivar Laboratorio con Equipos activos» se implementarán con la vertical
+de Equipo. Las restricciones ligadas a UsuarioLaboratorio y el alcance por
+laboratorio también quedan pendientes. No se crean repositorios de esos módulos
+únicamente para anticipar sus reglas.

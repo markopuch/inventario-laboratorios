@@ -39,14 +39,22 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/categorias", "/api/categorias/**",
-                                "/api/subcategorias", "/api/subcategorias/**")
+                                "/api/subcategorias", "/api/subcategorias/**",
+                                "/api/sedes", "/api/sedes/**", "/api/areas", "/api/areas/**",
+                                "/api/laboratorios", "/api/laboratorios/**")
                         .hasAnyRole("ADMIN", "GESTOR", "LECTOR")
                         .requestMatchers(HttpMethod.POST, "/api/categorias", "/api/categorias/**",
-                                "/api/subcategorias", "/api/subcategorias/**").hasRole("ADMIN")
+                                "/api/subcategorias", "/api/subcategorias/**",
+                                "/api/sedes", "/api/sedes/**", "/api/areas", "/api/areas/**",
+                                "/api/laboratorios", "/api/laboratorios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/categorias", "/api/categorias/**",
-                                "/api/subcategorias", "/api/subcategorias/**").hasRole("ADMIN")
+                                "/api/subcategorias", "/api/subcategorias/**",
+                                "/api/sedes", "/api/sedes/**", "/api/areas", "/api/areas/**",
+                                "/api/laboratorios", "/api/laboratorios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categorias", "/api/categorias/**",
-                                "/api/subcategorias", "/api/subcategorias/**").hasRole("ADMIN")
+                                "/api/subcategorias", "/api/subcategorias/**",
+                                "/api/sedes", "/api/sedes/**", "/api/areas", "/api/areas/**",
+                                "/api/laboratorios", "/api/laboratorios/**").hasRole("ADMIN")
                         .anyRequest().denyAll())
                 // La API acepta JWT en Authorization; no utiliza cookies para autenticar.
                 .csrf(AbstractHttpConfigurer::disable)

@@ -80,6 +80,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 || "uq_subcategoria_categoria_nombre_ignore_case".equals(nombre)) {
             return "Ya existe una subcategoría con ese nombre en la categoría seleccionada.";
         }
+        if ("uq_area_nombre_sede".equals(nombre) || "uq_area_sede_nombre_ignore_case".equals(nombre)) {
+            return "Ya existe un área con ese nombre en la sede seleccionada.";
+        }
+        if ("uq_laboratorio_codigo".equals(nombre) || "uq_laboratorio_codigo_ignore_case".equals(nombre)) {
+            return "Ya existe un laboratorio con ese código.";
+        }
         return null;
     }
 

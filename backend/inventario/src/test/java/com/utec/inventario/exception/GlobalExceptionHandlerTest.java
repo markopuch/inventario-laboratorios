@@ -137,6 +137,34 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void restriccionesDeOrganizacionDevuelven409PorMetadatosHibernateYPostgresql() {
+        String[][] constraints = {
+            { "uq_area_nombre_sede", "Ya existe un área con ese nombre en la sede seleccionada." },
+            { "uq_area_sede_nombre_ignore_case", "Ya existe un área con ese nombre en la sede seleccionada." },
+            { "uq_laboratorio_codigo", "Ya existe un laboratorio con ese código." },
+            { "uq_laboratorio_codigo_ignore_case", "Ya existe un laboratorio con ese código." }
+        };
+        for (String[] constraint : constraints) {
+            for (boolean hibernateIdentificaConstraint : new boolean[] { true, false }) {
+                ServerErrorMessage metadata = new ServerErrorMessage(
+                        "SERROR\0VERROR\0C23505\0Mllave duplicada viola restricción de unicidad\0"
+                                + "DDetalle privado de persistencia\0n" + constraint[0] + "\0\0");
+                ConstraintViolationException cause = new ConstraintViolationException(
+                        "SQL privado", new PSQLException(metadata),
+                        hibernateIdentificaConstraint ? constraint[0] : null);
+                ResponseEntity<Object> response = handler.handleIntegrity(
+                        new DataIntegrityViolationException("Fallo interno", cause), request);
+                ApiError error = assertInstanceOf(ApiError.class, response.getBody());
+                assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+                assertEquals(constraint[1], error.getMessage());
+                assertFalse(error.toString().contains(constraint[0]));
+                assertFalse(error.toString().contains("privado"));
+                assertFalse(error.toString().contains("23505"));
+            }
+        }
+    }
+
+    @Test
     void otraRestriccionDevuelveErrorInternoGenericoSinExponerLaCausa() {
         ConstraintViolationException cause = new ConstraintViolationException(
                 "insert into tabla_privada values ('dato interno')",
