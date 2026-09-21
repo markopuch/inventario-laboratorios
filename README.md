@@ -9,6 +9,10 @@ Sede → Área → Laboratorio (Sprint 4B–4D). El
 Equipo, MovimientoEquipo, UsuarioLaboratorio, el alcance por laboratorio,
 la administración completa de usuarios y frontend quedan para sprints posteriores.
 
+Documentación visual: [ERD lógico v2](docs/erd-logico-v2.md),
+[ERD físico PostgreSQL v2](docs/erd-fisico-v2.md) y
+[cambios respecto a los ERD anteriores](docs/erd-v2-cambios.md).
+
 ## Arranque rápido en Windows
 
 Con PostgreSQL iniciado, abre una terminal en la raíz del proyecto y ejecuta:
