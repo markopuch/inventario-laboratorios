@@ -1,5 +1,7 @@
 package com.utec.inventario.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -30,6 +32,12 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
     @Query("select u.idUsuario from UsuarioEntity u where u.idUsuario = :idUsuario")
     Optional<Integer> findIdForUpdateByIdUsuario(@Param("idUsuario") Integer idUsuario);
 
+    // Equipo comparte una lectura estable del actor con las FK al responsable.
+    // El PUT de asignaciones requiere el bloqueo exclusivo y espera hasta el commit.
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select u.idUsuario from UsuarioEntity u where u.idUsuario = :idUsuario")
+    Optional<Integer> findIdForShareByIdUsuario(@Param("idUsuario") Integer idUsuario);
+
     // Proyección pública: administrar asignaciones no necesita credenciales ni la Entity usuario.
     @Query("""
             select new com.utec.inventario.domain.Usuario(
@@ -39,6 +47,15 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
             where u.idUsuario = :idUsuario
             """)
     Optional<Usuario> findPublicByIdUsuario(@Param("idUsuario") Integer idUsuario);
+
+    @Query("""
+            select new com.utec.inventario.domain.Usuario(
+                u.idUsuario, u.userName, u.nombre, u.apellido, u.email,
+                r.nombre, u.activo, u.fechaCreacion)
+            from UsuarioEntity u join u.rol r
+            where u.idUsuario in :idsUsuario
+            """)
+    List<Usuario> findPublicByIdUsuarioIn(@Param("idsUsuario") Collection<Integer> idsUsuario);
 
     @Query("""
             select new com.utec.inventario.domain.Usuario(

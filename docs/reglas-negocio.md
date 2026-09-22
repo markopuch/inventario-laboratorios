@@ -2,7 +2,7 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Diseño base y reglas incorporadas hasta Sprint 4E
+**Estado:** Diseño base y reglas incorporadas hasta Sprint 5
 
 **Fuente de verdad:** migraciones Flyway y código del backend
 
@@ -19,8 +19,9 @@ El modelo considera tres roles:
 La pertenencia de un usuario a uno o más laboratorios se administra mediante `usuario_laboratorio`. El campo `equipo.id_responsable` identifica al custodio del equipo, pero no concede permisos de acceso.
 
 UsuarioLaboratorio y el cálculo de alcance efectivo están implementados desde
-Sprint 4E. Equipo, MovimientoEquipo y la aplicación del alcance a esas verticales
-describen funcionalidad futura. Los catálogos Categoría, Subcategoría, Sede, Área
+Sprint 4E. Sprint 5 implementa Equipo y aplica alcance a su CRUD y filtros.
+MovimientoEquipo, traslados e historial describen funcionalidad futura.
+Los catálogos Categoría, Subcategoría, Sede, Área
 y Laboratorio siguen siendo globales: los tres roles consultan y solo ADMIN
 escribe. JWT y usuarios con rol están implementados; no hay administración
 completa de usuarios.
@@ -102,11 +103,17 @@ una regla de unicidad del nombre de Sede; no se incorpora esa restricción.
 
 ### RN-14. Código interno único
 
-`codigo_interno` identifica al equipo dentro del sistema y no puede repetirse.
+`codigo_interno` identifica al equipo dentro del sistema y no puede repetirse,
+incluso si otro equipo con ese código está en BAJA. Se conserva la comparación
+sensible a mayúsculas de V3; no se agregan índices UPPER ni otra migración.
 
 ### RN-15. Series únicas cuando se informan
 
-`serie_utec` y `numero_serie` no pueden repetirse cuando contienen un valor. Pueden quedar vacíos solo cuando el equipo todavía no dispone de esa información.
+`serie_utec` y `numero_serie` no pueden repetirse cuando contienen un valor.
+Cuando no se informan, o contienen solo espacios, se almacenan como `NULL`,
+no como cadenas vacías. Los valores informados se recortan y mantienen la
+unicidad sensible a mayúsculas de V3, incluyendo equipos en BAJA. PUT excluye
+el ID propio al comprobar duplicados.
 
 ### RN-16. Relaciones obligatorias
 
@@ -115,7 +122,9 @@ Todo equipo debe estar asociado a:
 - un laboratorio existente;
 - una subcategoría existente.
 
-El responsable puede ser opcional durante el registro inicial.
+El responsable es opcional tanto al registrar como al editar. Ser custodio no
+exige una asignación de laboratorio ni concede autorización; RN-39 precisa
+cuándo se valida su estado activo.
 
 ### RN-17. Estados permitidos
 
@@ -128,17 +137,26 @@ El estado del equipo debe ser uno de los siguientes:
 
 ### RN-18. Baja lógica
 
-La operación HTTP `DELETE` no elimina físicamente el registro. Cambia el estado del equipo a `BAJA` y conserva la información para trazabilidad.
+La operación HTTP `DELETE` no elimina físicamente el registro. Cambia el estado
+del equipo a `BAJA` y actualiza `fecha_actualizacion`, conservando el resto de
+la información. No se permite POST con BAJA ni cambiar a BAJA mediante PUT:
+ambos casos devuelven 409 y la baja se realiza mediante DELETE.
 
 ### RN-19. Restricciones de un equipo dado de baja
 
-Un equipo con estado `BAJA` no puede editarse ni trasladarse. Su información solo puede consultarse por usuarios autorizados.
+Un equipo con estado `BAJA` no puede editarse ni trasladarse; PUT y un segundo
+DELETE devuelven 409. GET de lista y detalle sigue pudiendo mostrarlo dentro de
+la autorización vigente, incluido el filtro `estado=BAJA`.
 
 ### RN-20. Consistencia de mantenimiento
 
 Cuando `requiere_mantenimiento = true`, el equipo debe poder identificarse mediante filtros de mantenimiento. Esta marca no reemplaza al estado del equipo.
 
 ## 6. Reglas de traslado y trazabilidad
+
+RN-21 a RN-25 describen el futuro flujo de traslado. Sprint 5 no implementa
+MovimientoEquipo ni endpoints de traslado; PUT de Equipo conserva su laboratorio
+para no eludir estas reglas.
 
 ### RN-21. Destino diferente al origen
 
@@ -214,8 +232,8 @@ Las reglas quedan correctamente implementadas cuando se demuestra que:
 ## 10. Reglas incorporadas en Sprint 4A y extendidas en Sprint 4B–4D
 
 RN-01 a RN-30 conservan su numeración y describen el diseño del sistema completo;
-su presencia no implica que las verticales de equipos y movimientos
-ya estén implementadas. Las reglas siguientes se introdujeron en Sprint 4A para
+su presencia no implica que la vertical de movimientos ya esté implementada.
+Equipo se incorpora en Sprint 5. Las reglas siguientes se introdujeron en Sprint 4A para
 **Categoría → Subcategoría** y ahora también aplican a **Sede → Área** y
 **Área → Laboratorio**, conservando su numeración.
 
@@ -251,10 +269,9 @@ conservan ID y fecha en PUT y ocultan inactivos en GET. PUT/DELETE de inactivos
 devuelven 404. Los índices V8/V9 protegen también los duplicados concurrentes.
 La [guía de organización](sprints/sprint-4b-organizacion.md) describe sus pruebas.
 
-**Pendientes:** las reglas «No desactivar Subcategoría con Equipos activos» y
-«No desactivar Laboratorio con Equipos activos» se implementarán con la vertical
-de Equipo. Desde Sprint 4E sí se impide la baja de Laboratorio con asignaciones
-activas y existe el servicio reutilizable de alcance descrito a continuación.
+**Actualización Sprint 5:** Subcategoría y Laboratorio no pueden darse de baja
+si tienen Equipos cuyo estado sea distinto de BAJA; RN-41 detalla la regla.
+Se conserva el bloqueo por asignaciones activas de UsuarioLaboratorio de Sprint 4E.
 
 ## 11. Reglas incorporadas en Sprint 4E
 
@@ -296,7 +313,66 @@ solo laboratorios activos con una asignación activa. El GET administrativo
 representa asignaciones explícitas, también para ADMIN, y no su alcance global.
 Cambiar asignaciones no exige renovar un JWT que siga siendo válido: el servicio
 lee el estado actual. El catálogo `GET /api/laboratorios` mantiene lectura global.
-Equipo usará posteriormente este servicio; `id_responsable` **no concede alcance**.
+Equipo utiliza este servicio desde Sprint 5; `id_responsable` **no concede alcance**.
+RN-40 distingue el alcance de laboratorios activos del acceso histórico global
+de ADMIN a los Equipos existentes.
 
 La [guía de Sprint 4E](sprints/sprint-4e-usuario-laboratorio.md) documenta el flujo,
 la concurrencia, los endpoints y su verificación manual sin asumir IDs.
+
+## 12. Precisiones incorporadas en Sprint 5
+
+### RN-37. Código interno inmutable
+
+`codigoInterno` se recibe al registrar y no cambia después del alta. PUT permite
+reemplazar solo los campos editables; si el JSON incluye ese campo inmutable,
+devuelve 400 sin modificar el equipo. Tampoco permite editar el ID ni las fechas
+controladas por el servidor.
+
+### RN-38. Laboratorio inmutable mediante PUT
+
+Cambiar Laboratorio representa un traslado y exige el futuro flujo de
+MovimientoEquipo. `idLaboratorio` no forma parte de UpdateEquipoRequest. Si se
+envía en PUT, la API devuelve 400 y explica que el cambio se realiza mediante
+el flujo de traslado. No se implementa todavía ese endpoint; el CRUD conserva
+el laboratorio original.
+
+### RN-39. Referencias activas
+
+POST exige Subcategoría y Laboratorio existentes y activos. PUT permite cambiar
+Subcategoría, cuyo destino también debe existir y estar activo. Si se informa
+un responsable nuevo, debe existir y estar activo; ausencia devuelve 404 e
+inactividad 409. El responsable puede retirarse con `null`; conservar el mismo
+responsable posteriormente inactivo no equivale a asignar uno nuevo y se permite.
+Nunca se consulta su asignación de laboratorio para decidir si puede ser custodio.
+No se inventan requisitos de actividad en otros ancestros que el contrato no exija.
+
+### RN-40. Alcance aplicado a Equipos
+
+ADMIN consulta todos los Equipos existentes, incluso BAJA y registros históricos
+en laboratorios posteriormente inactivos. Crear exige laboratorio activo.
+GESTOR consulta y escribe únicamente en su alcance efectivo; LECTOR solamente
+consulta dentro de ese alcance. Los listados restringen laboratorios en la
+consulta a PostgreSQL y no cargan toda la tabla para filtrar en Java.
+
+Un filtro explícito de laboratorio fuera del alcance de GESTOR/LECTOR devuelve
+403; sin filtro, alcance vacío devuelve `200 []`. Un detalle inexistente devuelve
+404 y uno existente fuera del alcance devuelve 403. ADMIN puede filtrar por un
+laboratorio existente incluso inactivo. `GET /api/laboratorios` sigue siendo un
+catálogo global; `/api/auth/me/laboratorios` conserva su contrato de laboratorios
+activos. La responsabilidad no concede alcance. Movimientos siguen pendientes.
+
+### RN-41. Catálogos con Equipos no dados de baja
+
+Subcategoría y Laboratorio no pueden darse de baja mientras tengan Equipos con
+`estado <> 'BAJA'`. Sus Services bloquean al padre y comprueban la existencia
+mediante EquipoRepository; no se resuelve en Controller ni con borrado físico.
+Con solo Equipos BAJA, Subcategoría puede darse de baja y Laboratorio puede
+hacerlo si además no tiene asignaciones activas de UsuarioLaboratorio.
+Crear Equipo y modificar su Subcategoría coordina bloqueos con esas bajas.
+Las FK RESTRICT conservan referencias históricas; no impiden por sí solas
+cambiar el estado lógico de un padre.
+
+La [guía de Sprint 5](sprints/sprint-5-equipos.md) explica contratos, filtros,
+fechas, concurrencia y comprobaciones manuales. RN-01 a RN-36 mantienen
+su numeración; las menciones a traslados siguen describiendo funcionalidad futura.

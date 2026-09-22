@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.utec.inventario.domain.Categoria;
 import com.utec.inventario.domain.Subcategoria;
+import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.entity.CategoriaEntity;
 import com.utec.inventario.entity.SubcategoriaEntity;
 import com.utec.inventario.exception.ConflictException;
@@ -35,6 +36,7 @@ import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.SubcategoriaMapper;
 import com.utec.inventario.repository.CategoriaRepository;
 import com.utec.inventario.repository.SubcategoriaRepository;
+import com.utec.inventario.repository.EquipoRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SubcategoriaServiceTest {
@@ -47,12 +49,15 @@ class SubcategoriaServiceTest {
     @Mock
     private CategoriaRepository categoriaRepository;
 
+    @Mock
+    private EquipoRepository equipoRepository;
+
     private SubcategoriaService service;
 
     @BeforeEach
     void prepararServicio() {
         this.service = new SubcategoriaService(this.subcategoriaRepository,
-                this.categoriaRepository, Mappers.getMapper(SubcategoriaMapper.class));
+                this.categoriaRepository, Mappers.getMapper(SubcategoriaMapper.class), this.equipoRepository);
     }
 
     @Test
@@ -361,6 +366,19 @@ class SubcategoriaServiceTest {
 
     private Subcategoria entrada(Integer idCategoria, String nombre) {
         return Subcategoria.builder().nombre(nombre).categoria(Categoria.builder().id(idCategoria).build()).build();
+    }
+
+    @Test
+    void equiposNoBajaImpidenDesactivarYConSoloBajaSePermite() {
+        SubcategoriaEntity entity = subcategoriaActiva();
+        when(this.subcategoriaRepository.findForUpdateByIdSubcategoriaAndActivoTrue(7)).thenReturn(Optional.of(entity));
+        when(this.equipoRepository.existsBySubcategoria_IdSubcategoriaAndEstadoNot(7, EstadoEquipo.BAJA)).thenReturn(true, false);
+        assertThrows(ConflictException.class, () -> this.service.eliminarSubcategoria(7));
+        assertTrue(entity.isActivo());
+        verify(this.subcategoriaRepository, never()).saveAndFlush(any());
+        this.service.eliminarSubcategoria(7);
+        assertFalse(entity.isActivo());
+        verify(this.subcategoriaRepository).saveAndFlush(entity);
     }
 
     private CategoriaEntity categoriaActiva(Integer id) {

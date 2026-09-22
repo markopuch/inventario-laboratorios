@@ -38,6 +38,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/equipos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/equipos", "/api/equipos/*")
+                        .hasAnyRole("ADMIN", "GESTOR", "LECTOR")
+                        .requestMatchers(HttpMethod.POST, "/api/equipos").hasAnyRole("ADMIN", "GESTOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/equipos/*").hasAnyRole("ADMIN", "GESTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/equipos/*").hasAnyRole("ADMIN", "GESTOR")
                         .requestMatchers(HttpMethod.GET, "/api/admin/usuarios/*/laboratorios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/admin/usuarios/*/laboratorios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/auth/me", "/api/auth/me/laboratorios",

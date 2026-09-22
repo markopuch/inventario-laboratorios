@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.Subcategoria;
+import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.entity.CategoriaEntity;
 import com.utec.inventario.entity.SubcategoriaEntity;
 import com.utec.inventario.exception.ConflictException;
@@ -14,6 +15,7 @@ import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.SubcategoriaMapper;
 import com.utec.inventario.repository.CategoriaRepository;
 import com.utec.inventario.repository.SubcategoriaRepository;
+import com.utec.inventario.repository.EquipoRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -22,13 +24,16 @@ public class SubcategoriaService {
     private final SubcategoriaRepository subcategoriaRepository;
     private final CategoriaRepository categoriaRepository;
     private final SubcategoriaMapper mapper;
+    private final EquipoRepository equipoRepository;
 
     @Autowired
     public SubcategoriaService(SubcategoriaRepository subcategoriaRepository,
-            CategoriaRepository categoriaRepository, SubcategoriaMapper mapper) {
+            CategoriaRepository categoriaRepository, SubcategoriaMapper mapper,
+            EquipoRepository equipoRepository) {
         this.subcategoriaRepository = subcategoriaRepository;
         this.categoriaRepository = categoriaRepository;
         this.mapper = mapper;
+        this.equipoRepository = equipoRepository;
     }
 
     public List<Subcategoria> listarSubcategorias() {
@@ -93,6 +98,10 @@ public class SubcategoriaService {
     @Transactional
     public void eliminarSubcategoria(Integer id) {
         SubcategoriaEntity subcategoria = this.buscarSubcategoriaActivaParaModificar(id);
+        if (this.equipoRepository.existsBySubcategoria_IdSubcategoriaAndEstadoNot(id, EstadoEquipo.BAJA)) {
+            throw new ConflictException(
+                    "No se puede desactivar la subcategoría porque contiene equipos no dados de baja.");
+        }
         subcategoria.setActivo(false);
         this.subcategoriaRepository.saveAndFlush(subcategoria);
     }

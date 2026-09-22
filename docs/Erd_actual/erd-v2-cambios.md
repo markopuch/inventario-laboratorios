@@ -69,7 +69,7 @@ Java esté implementada.
 | Cardinalidades | Predominaban etiquetas `1:N`; origen/destino se resumían juntos | Se explicitan `1`, `0..1` y `0..N`; origen y destino tienen relaciones separadas | Nullability y ausencia de UNIQUE sobre las FK en V1–V3 |
 | Acciones referenciales | Nota pendiente para definirlas al implementar | Las 13 FK tienen `ON UPDATE RESTRICT ON DELETE RESTRICT` | V1–V3 |
 | Índices | Nota general de crear índices para FK | Catálogo de 12 índices de FK explícitos y 5 índices UNIQUE por expresión, además de índices implícitos de PK/UQ | V1–V3 y V5–V9; la PK del puente ya cubre su primera columna |
-| Estado de implementación | Propuesta de diseño sin estado actual de verticales | Ocho Entities JPA implementadas desde Sprint 4E; Equipo y MovimientoEquipo aún sin vertical Java completa | Entities actuales, README y cierre de Sprint 4 |
+| Estado de implementación | Propuesta de diseño sin estado actual de verticales | Nueve Entities JPA implementadas tras Sprint 5; MovimientoEquipo aún sin vertical Java completa | Entities actuales, README y cierre de Sprint 4 |
 
 ## Implementación actual y diseño futuro
 
@@ -77,12 +77,13 @@ Java esté implementada.
 |---|---|---|
 | Implementadas en Java / integradas con API | Rol, Usuario, Categoria, Subcategoria, Sede, Area, Laboratorio | Rol y Usuario participan en JPA/JWT/login; esto no afirma que exista un CRUD administrativo completo de usuarios o roles. Los otros cinco catálogos tienen CRUD |
 | Implementada en Java/API desde Sprint 4E | UsuarioLaboratorio | Administración de asignaciones explícitas por ADMIN y cálculo del alcance propio; tabla V2 sin cambios |
-| Solo esquema BD / diseño futuro | Equipo, MovimientoEquipo | Sus tablas y FK existen en Flyway; sus verticales y la aplicación del alcance siguen pendientes |
+| Implementada en Java/API desde Sprint 5 | Equipo | CRUD, filtros, alcance, fechas y baja por estado BAJA; misma tabla V3, sin traslado |
+| Solo esquema BD / diseño futuro | MovimientoEquipo | Su tabla y FK existen en Flyway; vertical, traslados e historial pendientes |
 
-Sprint 4E actualiza únicamente el estado de implementación en estos ERD: ocho
-entidades integradas en Java/API y dos futuras. No necesita V10 ni cambios en
-columnas, claves, restricciones o diagramas físicos. El lógico cambia de color
-UsuarioLaboratorio. La clasificación no cambia nombres de tablas ni relaciones. Las descripciones
+Los sprints 4E y 5 actualizan únicamente el estado de implementación en estos
+ERD: nueve entidades integradas en Java/API y MovimientoEquipo futuro. No necesitan
+V10 ni cambios en columnas, claves, restricciones o diagramas físicos. El lógico
+muestra UsuarioLaboratorio y Equipo con el color de implementación. La clasificación no cambia nombres de tablas ni relaciones. Las descripciones
 de roles sembradas en V4 expresan un alcance previsto, pero no activan por sí
 solas autorización por laboratorio. Los catálogos actuales mantienen el alcance
 global descrito en README y la matriz de permisos.
@@ -104,13 +105,14 @@ Son observaciones, no cambios ejecutados ni decisiones ya aprobadas:
 1. Evaluar los índices redundantes antes de plantear cualquier retiro; esta
    versión conserva todos los de V1–V9.
 2. Definir con el usuario si se necesita unicidad de nombre de Sede. Hoy no existe.
-3. Resolver con la futura vertical Equipo la baja por estado, las restricciones
-   a bajas de Subcategoría/Laboratorio y la actualización de `fecha_actualizacion`.
+3. Sprint 5 ya implementa la baja por estado de Equipo, las restricciones de
+   Subcategoría/Laboratorio y la fecha de actualización en Java; cualquier
+   cambio físico posterior requiere una decisión aparte.
 4. Definir las reglas de MovimientoEquipo antes de añadir listas cerradas de
    tipos, exigir origen distinto de destino o relacionar movimientos con el
    laboratorio actual de Equipo. La BD actual no impone esas reglas.
-5. Aplicar a Equipo el servicio de alcance implementado en Sprint 4E. La tabla
-   UsuarioLaboratorio ya tiene vertical Java/API; no se cambió su estructura.
+5. Aplicar al futuro flujo de MovimientoEquipo las reglas de alcance. Equipo
+   ya reutiliza el servicio de Sprint 4E; las tablas conservan su estructura.
 
 ## Cobertura documental
 

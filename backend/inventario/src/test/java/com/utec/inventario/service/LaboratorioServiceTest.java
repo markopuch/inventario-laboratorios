@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.utec.inventario.domain.Area;
 import com.utec.inventario.domain.Laboratorio;
+import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.entity.AreaEntity;
 import com.utec.inventario.entity.LaboratorioEntity;
 import com.utec.inventario.exception.ConflictException;
@@ -24,16 +25,18 @@ import com.utec.inventario.mapper.LaboratorioMapper;
 import com.utec.inventario.repository.AreaRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.UsuarioLaboratorioRepository;
+import com.utec.inventario.repository.EquipoRepository;
 
 @ExtendWith(MockitoExtension.class)
 class LaboratorioServiceTest {
     @Mock private LaboratorioRepository laboratorios;
     @Mock private AreaRepository areas;
     @Mock private UsuarioLaboratorioRepository asignaciones;
+    @Mock private EquipoRepository equipos;
     private LaboratorioService service;
 
     @BeforeEach
-    void preparar() { service = new LaboratorioService(laboratorios, areas, Mappers.getMapper(LaboratorioMapper.class), asignaciones); }
+    void preparar() { service = new LaboratorioService(laboratorios, areas, Mappers.getMapper(LaboratorioMapper.class), asignaciones, equipos); }
 
     @Test
     void areaAusenteOInactivaSeDistingueAntesDePersistir() {
@@ -120,5 +123,18 @@ class LaboratorioServiceTest {
     private Laboratorio input(int parent, String code) {
         return Laboratorio.builder().nombre("Laboratorio").codigo(code)
                 .area(Area.builder().id(parent).build()).build();
+    }
+
+    @Test
+    void equiposNoBajaBloqueanAunqueNoHayaAsignacionesYSoloBajaPermiteDesactivar() {
+        LaboratorioEntity entity = LaboratorioEntity.builder().idLaboratorio(9).codigo("L500").activo(true).build();
+        when(laboratorios.findForUpdateByIdLaboratorioAndActivoTrue(9)).thenReturn(Optional.of(entity));
+        when(equipos.existsByLaboratorio_IdLaboratorioAndEstadoNot(9, EstadoEquipo.BAJA)).thenReturn(true, false);
+        assertThrows(ConflictException.class, () -> service.eliminarLaboratorio(9));
+        assertTrue(entity.isActivo());
+        verify(laboratorios, never()).saveAndFlush(any());
+        service.eliminarLaboratorio(9);
+        assertFalse(entity.isActivo());
+        verify(laboratorios).saveAndFlush(entity);
     }
 }

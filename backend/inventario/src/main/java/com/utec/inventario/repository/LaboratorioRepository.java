@@ -25,6 +25,9 @@ public interface LaboratorioRepository extends JpaRepository<LaboratorioEntity, 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<LaboratorioEntity> findForUpdateByIdLaboratorioAndActivoTrue(Integer idLaboratorio);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<LaboratorioEntity> findForUpdateByIdLaboratorio(Integer idLaboratorio);
+
     @EntityGraph(attributePaths = {"area", "area.sede"})
     List<LaboratorioEntity> findAllByArea_IdAreaAndActivoTrueOrderByIdLaboratorioAsc(Integer idArea);
 

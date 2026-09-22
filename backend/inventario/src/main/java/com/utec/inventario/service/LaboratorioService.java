@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.Laboratorio;
+import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.entity.AreaEntity;
 import com.utec.inventario.entity.LaboratorioEntity;
 import com.utec.inventario.exception.ConflictException;
@@ -15,6 +16,7 @@ import com.utec.inventario.mapper.LaboratorioMapper;
 import com.utec.inventario.repository.AreaRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.UsuarioLaboratorioRepository;
+import com.utec.inventario.repository.EquipoRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,15 +26,17 @@ public class LaboratorioService {
     private final AreaRepository areaRepository;
     private final LaboratorioMapper mapper;
     private final UsuarioLaboratorioRepository usuarioLaboratorioRepository;
+    private final EquipoRepository equipoRepository;
 
     @Autowired
     public LaboratorioService(LaboratorioRepository laboratorioRepository,
             AreaRepository areaRepository, LaboratorioMapper mapper,
-            UsuarioLaboratorioRepository usuarioLaboratorioRepository) {
+            UsuarioLaboratorioRepository usuarioLaboratorioRepository, EquipoRepository equipoRepository) {
         this.laboratorioRepository = laboratorioRepository;
         this.areaRepository = areaRepository;
         this.mapper = mapper;
         this.usuarioLaboratorioRepository = usuarioLaboratorioRepository;
+        this.equipoRepository = equipoRepository;
     }
 
     public List<Laboratorio> listarLaboratorios() {
@@ -101,6 +105,10 @@ public class LaboratorioService {
         if (this.usuarioLaboratorioRepository.existsByLaboratorio_IdLaboratorioAndActivoTrue(id)) {
             throw new ConflictException(
                     "No se puede desactivar el laboratorio porque tiene asignaciones activas de usuarios.");
+        }
+        if (this.equipoRepository.existsByLaboratorio_IdLaboratorioAndEstadoNot(id, EstadoEquipo.BAJA)) {
+            throw new ConflictException(
+                    "No se puede desactivar el laboratorio porque contiene equipos no dados de baja.");
         }
         laboratorio.setActivo(false);
         this.laboratorioRepository.saveAndFlush(laboratorio);

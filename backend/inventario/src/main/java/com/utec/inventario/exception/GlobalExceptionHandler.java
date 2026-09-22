@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -86,6 +87,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if ("uq_laboratorio_codigo".equals(nombre) || "uq_laboratorio_codigo_ignore_case".equals(nombre)) {
             return "Ya existe un laboratorio con ese código.";
         }
+        if ("uq_equipo_codigo_interno".equals(nombre)) {
+            return "Ya existe un equipo con ese código interno.";
+        }
+        if ("uq_equipo_serie_utec".equals(nombre)) {
+            return "Ya existe un equipo con esa serie UTEC.";
+        }
+        if ("uq_equipo_numero_serie".equals(nombre)) {
+            return "Ya existe un equipo con ese número de serie.";
+        }
         return null;
     }
 
@@ -93,6 +103,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleUnexpected(Exception exception, WebRequest request) {
         log.error("Error interno al procesar la solicitud", exception);
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error interno. Inténtalo más tarde.", request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof CampoEquipoNoEditableException) {
+                return error(HttpStatus.BAD_REQUEST, cause.getMessage(), request);
+            }
+        }
+        return new ResponseEntity<>(body(status,
+                "La solicitud no es válida. Revisa el JSON y los parámetros enviados.", request, Map.of()),
+                headers, status);
     }
 
     @Override
