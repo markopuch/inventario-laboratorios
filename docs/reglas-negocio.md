@@ -2,7 +2,7 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Diseño base y reglas incorporadas hasta Sprint 5
+**Estado:** Diseño base y reglas incorporadas hasta Sprint 6
 
 **Fuente de verdad:** migraciones Flyway y código del backend
 
@@ -20,7 +20,8 @@ La pertenencia de un usuario a uno o más laboratorios se administra mediante `u
 
 UsuarioLaboratorio y el cálculo de alcance efectivo están implementados desde
 Sprint 4E. Sprint 5 implementa Equipo y aplica alcance a su CRUD y filtros.
-MovimientoEquipo, traslados e historial describen funcionalidad futura.
+Sprint 6 implementa MovimientoEquipo, traslado transaccional e historial
+inmutable desde la API.
 Los catálogos Categoría, Subcategoría, Sede, Área
 y Laboratorio siguen siendo globales: los tres roles consultan y solo ADMIN
 escribe. JWT y usuarios con rol están implementados; no hay administración
@@ -154,17 +155,24 @@ Cuando `requiere_mantenimiento = true`, el equipo debe poder identificarse media
 
 ## 6. Reglas de traslado y trazabilidad
 
-RN-21 a RN-25 describen el futuro flujo de traslado. Sprint 5 no implementa
-MovimientoEquipo ni endpoints de traslado; PUT de Equipo conserva su laboratorio
-para no eludir estas reglas.
+RN-21 a RN-25 están implementadas desde Sprint 6 mediante
+`POST /api/equipos/{idEquipo}/traslados`. PUT de Equipo conserva su laboratorio:
+editar datos técnicos y trasladar siguen siendo operaciones distintas.
 
 ### RN-21. Destino diferente al origen
 
 Un equipo no puede trasladarse al mismo laboratorio en el que ya se encuentra.
+La comparación se hace contra el Equipo bloqueado: si coincide, devuelve 409
+sin crear un movimiento ni modificar el equipo. El destino debe existir (404)
+y estar activo (409), también para ADMIN. Solo el estado BAJA impide trasladar;
+OPERATIVO, MANTENIMIENTO e INOPERATIVO están permitidos.
 
 ### RN-22. Autorización sobre origen y destino
 
-Para trasladar un equipo, un `GESTOR` debe estar autorizado tanto en el laboratorio de origen como en el laboratorio de destino. `ADMIN` está exonerado de esta limitación por tener alcance global.
+Para trasladar un equipo, GESTOR debe tener alcance efectivo actual tanto en
+origen como en destino; si falta uno, devuelve 403. ADMIN tiene alcance global y
+puede mover un Equipo no BAJA desde un origen histórico/inactivo hacia un destino
+activo. LECTOR no traslada. Ser responsable no concede autorización.
 
 ### RN-23. Movimiento obligatorio
 
@@ -180,11 +188,17 @@ Todo cambio de laboratorio debe generar un registro en `movimiento_equipo` con:
 
 ### RN-24. Operación transaccional
 
-La actualización del laboratorio del equipo y la creación del movimiento deben ejecutarse dentro de una misma transacción. Si una parte falla, ninguna modificación debe persistir.
+La actualización del laboratorio, ubicación interna y fecha de actualización del
+Equipo y la creación del Movimiento se ejecutan en una misma transacción. Si
+una parte falla, ninguna modificación persiste. El bloqueo del Equipo serializa
+traslados y PUT/DELETE; el actor se coordina con la revocación de asignaciones y
+los laboratorios se bloquean en orden ascendente por ID.
 
 ### RN-25. Motivo obligatorio
 
-Todo traslado debe incluir un motivo no vacío y suficientemente descriptivo.
+Todo traslado incluye un motivo no blanco, recortado, de máximo 500 caracteres,
+conforme a `VARCHAR(500)` de V3. No se aplica un límite supuesto de TEXT ni se
+acepta el motivo desde un movimiento creado fuera del caso de uso de traslado.
 
 ## 7. Reglas de API y errores
 
@@ -217,7 +231,10 @@ Los filtros por estado, laboratorio, subcategoría o mantenimiento nunca deben p
 
 ### RN-30. Historial visible según alcance
 
-`ADMIN` puede consultar todos los movimientos. `GESTOR` y `LECTOR` solo pueden consultar movimientos relacionados con laboratorios de su alcance.
+ADMIN puede consultar todos los movimientos, incluidos los de equipos BAJA y
+laboratorios históricos inactivos. GESTOR y LECTOR solo consultan movimientos
+cuyo origen **o** destino pertenezca a su alcance efectivo actual. No se utilizan
+permisos históricos; RN-44 precisa consulta por Equipo, filtro y lista global.
 
 ## 9. Criterios de aceptación del documento
 
@@ -231,9 +248,8 @@ Las reglas quedan correctamente implementadas cuando se demuestra que:
 
 ## 10. Reglas incorporadas en Sprint 4A y extendidas en Sprint 4B–4D
 
-RN-01 a RN-30 conservan su numeración y describen el diseño del sistema completo;
-su presencia no implica que la vertical de movimientos ya esté implementada.
-Equipo se incorpora en Sprint 5. Las reglas siguientes se introdujeron en Sprint 4A para
+RN-01 a RN-30 conservan su numeración. Equipo se incorpora en Sprint 5 y el
+flujo de movimientos en Sprint 6. Las reglas siguientes se introdujeron en Sprint 4A para
 **Categoría → Subcategoría** y ahora también aplican a **Sede → Área** y
 **Área → Laboratorio**, conservando su numeración.
 
@@ -331,11 +347,11 @@ controladas por el servidor.
 
 ### RN-38. Laboratorio inmutable mediante PUT
 
-Cambiar Laboratorio representa un traslado y exige el futuro flujo de
+Cambiar Laboratorio representa un traslado y exige el flujo de
 MovimientoEquipo. `idLaboratorio` no forma parte de UpdateEquipoRequest. Si se
 envía en PUT, la API devuelve 400 y explica que el cambio se realiza mediante
-el flujo de traslado. No se implementa todavía ese endpoint; el CRUD conserva
-el laboratorio original.
+el flujo de traslado. Desde Sprint 6 se utiliza
+`POST /api/equipos/{idEquipo}/traslados`; PUT sigue conservando el laboratorio.
 
 ### RN-39. Referencias activas
 
@@ -360,7 +376,8 @@ Un filtro explícito de laboratorio fuera del alcance de GESTOR/LECTOR devuelve
 404 y uno existente fuera del alcance devuelve 403. ADMIN puede filtrar por un
 laboratorio existente incluso inactivo. `GET /api/laboratorios` sigue siendo un
 catálogo global; `/api/auth/me/laboratorios` conserva su contrato de laboratorios
-activos. La responsabilidad no concede alcance. Movimientos siguen pendientes.
+activos. La responsabilidad no concede alcance. Sprint 6 aplica RN-22/RN-44 al
+traslado y al historial.
 
 ### RN-41. Catálogos con Equipos no dados de baja
 
@@ -371,8 +388,56 @@ Con solo Equipos BAJA, Subcategoría puede darse de baja y Laboratorio puede
 hacerlo si además no tiene asignaciones activas de UsuarioLaboratorio.
 Crear Equipo y modificar su Subcategoría coordina bloqueos con esas bajas.
 Las FK RESTRICT conservan referencias históricas; no impiden por sí solas
-cambiar el estado lógico de un padre.
+cambiar el estado lógico de un padre. Los movimientos históricos, por sí solos,
+no bloquean la baja lógica de Laboratorio: conservan la referencia a su fila.
 
 La [guía de Sprint 5](sprints/sprint-5-equipos.md) explica contratos, filtros,
 fechas, concurrencia y comprobaciones manuales. RN-01 a RN-36 mantienen
-su numeración; las menciones a traslados siguen describiendo funcionalidad futura.
+su numeración. El cierre histórico de Sprint 5 conserva sus pendientes de aquel
+momento; Sprint 6 incorpora el traslado sin cambiar el contrato PUT.
+
+## 13. Precisiones incorporadas en Sprint 6
+
+### RN-42. Origen y actor controlados por el servidor
+
+El Equipo procede de la URL; el origen se obtiene de su laboratorio actual
+después de bloquearlo. El actor procede del principal autenticado y el servidor
+fija `tipoMovimiento=TRASLADO`. PostgreSQL genera `fecha_movimiento` mediante
+el DEFAULT de V3. El request solo admite destino, motivo y ubicación interna
+destino; campos ajenos, incluidos origen/actor/tipo/fecha, producen 400.
+El traslado conserva responsable, Subcategoría, código, fecha de creación y
+estado del Equipo; actualiza su fecha de modificación con el reloj Java UTC.
+
+### RN-43. Historial inmutable desde la API
+
+Un Movimiento solo se crea mediante un traslado confirmado. No existen POST
+directo, PUT ni DELETE de movimientos. Dar de baja un Equipo o Laboratorio no
+borra la historia. Sus referencias apuntan a entidades existentes; los resúmenes
+de código/nombre/actor muestran los datos actuales de esas entidades, no una
+copia versionada de los nombres al momento del traslado.
+
+### RN-44. Visibilidad y orden del historial
+
+ADMIN tiene lectura global. GESTOR/LECTOR ven movimientos si origen o destino
+pertenece a su alcance efectivo actual; la restricción se aplica en PostgreSQL.
+El orden es `fechaMovimiento DESC, idMovimiento DESC`. Origen nullable se conserva
+como permite V3; en un nuevo TRASLADO se toma el origen real del Equipo.
+
+GET por Equipo devuelve 404 si no existe. Si hay movimientos visibles, los
+devuelve aunque el laboratorio actual del Equipo quede fuera del alcance. Si
+no los hay pero el Equipo está actualmente dentro del alcance, devuelve `200 []`;
+si ambas condiciones fallan, 403. El historial de BAJA mantiene estas reglas.
+GET global sin alcance devuelve `[]`. Su filtro `idLaboratorio` coincide con
+origen o destino; fuera de alcance da 403 a GESTOR/LECTOR. ADMIN puede filtrar
+laboratorios existentes, incluidos inactivos.
+
+### RN-45. Ubicación interna tras traslado
+
+Una ubicación interna pertenece al contexto del laboratorio. Si
+`ubicacionInternaDestino` contiene texto, el Equipo recibe el valor recortado;
+si se omite, es null o queda blanco, se limpia a null. Máximo 200 caracteres,
+como `equipo.ubicacion_interna`. No se añade esa columna al Movimiento y no se
+conserva automáticamente una ubicación del laboratorio anterior.
+
+La [guía de Sprint 6](sprints/sprint-6-movimientos.md) documenta la operación
+atómica, los tres endpoints, la concurrencia y su verificación manual.

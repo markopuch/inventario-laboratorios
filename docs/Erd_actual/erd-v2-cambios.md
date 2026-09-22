@@ -69,7 +69,7 @@ Java esté implementada.
 | Cardinalidades | Predominaban etiquetas `1:N`; origen/destino se resumían juntos | Se explicitan `1`, `0..1` y `0..N`; origen y destino tienen relaciones separadas | Nullability y ausencia de UNIQUE sobre las FK en V1–V3 |
 | Acciones referenciales | Nota pendiente para definirlas al implementar | Las 13 FK tienen `ON UPDATE RESTRICT ON DELETE RESTRICT` | V1–V3 |
 | Índices | Nota general de crear índices para FK | Catálogo de 12 índices de FK explícitos y 5 índices UNIQUE por expresión, además de índices implícitos de PK/UQ | V1–V3 y V5–V9; la PK del puente ya cubre su primera columna |
-| Estado de implementación | Propuesta de diseño sin estado actual de verticales | Nueve Entities JPA implementadas tras Sprint 5; MovimientoEquipo aún sin vertical Java completa | Entities actuales, README y cierre de Sprint 4 |
+| Estado de implementación | Propuesta de diseño sin estado actual de verticales | Diez Entities JPA integradas tras Sprint 6; MovimientoEquipo incorpora traslado e historial inmutable desde la API | Entities actuales, README y cierre de Sprint 4 |
 
 ## Implementación actual y diseño futuro
 
@@ -78,12 +78,13 @@ Java esté implementada.
 | Implementadas en Java / integradas con API | Rol, Usuario, Categoria, Subcategoria, Sede, Area, Laboratorio | Rol y Usuario participan en JPA/JWT/login; esto no afirma que exista un CRUD administrativo completo de usuarios o roles. Los otros cinco catálogos tienen CRUD |
 | Implementada en Java/API desde Sprint 4E | UsuarioLaboratorio | Administración de asignaciones explícitas por ADMIN y cálculo del alcance propio; tabla V2 sin cambios |
 | Implementada en Java/API desde Sprint 5 | Equipo | CRUD, filtros, alcance, fechas y baja por estado BAJA; misma tabla V3, sin traslado |
-| Solo esquema BD / diseño futuro | MovimientoEquipo | Su tabla y FK existen en Flyway; vertical, traslados e historial pendientes |
+| Implementada en Java/API desde Sprint 6 | MovimientoEquipo | Traslado transaccional e historial inmutable desde la API, sobre la tabla V3 sin cambios |
 
-Los sprints 4E y 5 actualizan únicamente el estado de implementación en estos
-ERD: nueve entidades integradas en Java/API y MovimientoEquipo futuro. No necesitan
-V10 ni cambios en columnas, claves, restricciones o diagramas físicos. El lógico
-muestra UsuarioLaboratorio y Equipo con el color de implementación. La clasificación no cambia nombres de tablas ni relaciones. Las descripciones
+Los sprints 4E, 5 y 6 actualizan el estado de implementación en estos ERD:
+las diez entidades del dominio están integradas en Java/API. No necesitan V10
+ni cambios en columnas, claves, restricciones o diagramas físicos. El lógico
+muestra las diez con el color de implementación. No implica CRUD completo de
+usuarios ni edición/borrado de movimientos. La clasificación no cambia nombres de tablas ni relaciones. Las descripciones
 de roles sembradas en V4 expresan un alcance previsto, pero no activan por sí
 solas autorización por laboratorio. Los catálogos actuales mantienen el alcance
 global descrito en README y la matriz de permisos.
@@ -108,11 +109,12 @@ Son observaciones, no cambios ejecutados ni decisiones ya aprobadas:
 3. Sprint 5 ya implementa la baja por estado de Equipo, las restricciones de
    Subcategoría/Laboratorio y la fecha de actualización en Java; cualquier
    cambio físico posterior requiere una decisión aparte.
-4. Definir las reglas de MovimientoEquipo antes de añadir listas cerradas de
-   tipos, exigir origen distinto de destino o relacionar movimientos con el
-   laboratorio actual de Equipo. La BD actual no impone esas reglas.
-5. Aplicar al futuro flujo de MovimientoEquipo las reglas de alcance. Equipo
-   ya reutiliza el servicio de Sprint 4E; las tablas conservan su estructura.
+4. Sprint 6 controla TRASLADO, origen real y destino diferente desde Java.
+   La BD continúa sin lista cerrada de tipos ni CHECK origen distinto de destino;
+   cualquier cambio físico futuro requiere una migración justificada.
+5. Equipo y MovimientoEquipo ya reutilizan el alcance. Los resúmenes del
+   historial usan datos actuales de las entidades referenciadas; una auditoría
+   de nombres/versiones anteriores sería una capacidad diferente.
 
 ## Cobertura documental
 

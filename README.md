@@ -6,11 +6,13 @@ la base del proyecto (Sprint 1), el esquema PostgreSQL administrado por Flyway
 JWT, Subcategorías relacionadas con Categoría (Sprint 4A) y la jerarquía
 Sede → Área → Laboratorio (Sprint 4B–4D) y UsuarioLaboratorio con alcance efectivo
 de laboratorios (Sprint 4E), y la gestión de Equipo con filtros y alcance
-(Sprint 5). Los reportes de [Sprint 4](docs/sprints/sprint-4.md) y
-[Sprint 5](docs/sprints/sprint-5.md) registran el avance. Están implementados Rol,
-Usuario, JWT, Categoría, Subcategoría, Sede, Área, Laboratorio, UsuarioLaboratorio,
-alcance y Equipo. MovimientoEquipo, traslados, historial, administración completa
-de usuarios y frontend quedan para sprints posteriores.
+(Sprint 5), junto con MovimientoEquipo, traslado e historial (Sprint 6).
+Los reportes de [Sprint 4](docs/sprints/sprint-4.md),
+[Sprint 5](docs/sprints/sprint-5.md) y [Sprint 6](docs/sprints/sprint-6.md) registran
+el avance. Están implementados Rol, Usuario, JWT, Categoría, Subcategoría, Sede,
+Área, Laboratorio, UsuarioLaboratorio, alcance, Equipo, MovimientoEquipo,
+traslados e historial. Quedan pendientes administración completa de usuarios,
+mantenimiento como Entity, auditoría general, frontend y Docker.
 
 Documentación visual: [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md),
 [ERD físico PostgreSQL v2](docs/Erd_actual/erd-fisico-v2.md) y
@@ -52,8 +54,11 @@ clave compuesta, las asignaciones, el alcance, sus tres endpoints y las pruebas
 manuales. Su cierre histórico fue de **168 pruebas aprobadas**. La
 [guía de Sprint 5](docs/sprints/sprint-5-equipos.md) explica el CRUD de Equipo,
 los cuatro filtros, permisos, alcance y la secuencia manual de Postman/SQL.
-Resultado actual Sprint 5: **203 pruebas aprobadas de 203, con 35 nuevas y cero fallos, errores u omitidas**; la preservación de datos
-se registra en [Sprint 5](docs/sprints/sprint-5.md).
+Sprint 5 cerró con **203 pruebas aprobadas**. La nueva
+[guía de Sprint 6](docs/sprints/sprint-6-movimientos.md) explica traslado atómico,
+historial, alcance y 45 temas pedagógicos. Resultado actual:
+**233 pruebas aprobadas de 233: 30 nuevas, 0 fallos, 0 errores y 0 omitidas**; la preservación de datos está en el
+[reporte Sprint 6](docs/sprints/sprint-6.md).
 El código sigue convenciones de los ejemplos del curso en `Carlos_backend`:
 clases con Lombok, inyección explícita con `@Autowired`, estados HTTP declarados
 y mappers con `convert` y `copy`. Se mantiene la organización de paquetes de este
@@ -111,20 +116,22 @@ backend/inventario/
         ├── UsuarioLaboratorioConcurrenciaTests.java
         ├── EquipoIntegrationTests.java
         ├── EquipoConcurrenciaTests.java
+        ├── MovimientoEquipoIntegrationTests.java
+        ├── MovimientoEquipoConcurrenciaTests.java
         ├── entity/UsuarioLaboratorioIdTest.java
         ├── exception/GlobalExceptionHandlerTest.java
-        ├── mapper/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio y Equipo)
+        ├── mapper/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio, Equipo y MovimientoEquipo)
         ├── security/JwtServiceTest.java
-        └── service/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio, AlcanceLaboratorio y Equipo)
+        └── service/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio, AlcanceLaboratorio, Equipo y MovimientoEquipo)
 ```
 
 Los paquetes vacíos contienen `.gitkeep` para conservarlos en Git, sin clases
 ficticias. El test de arranque existente se mantiene; las pruebas incluyen
 Categoría, Subcategoría, organización, autenticación, asignaciones, alcance,
-Equipos, reglas y concurrencia. Sprint 5 conserva las 168 pruebas previas como
-regresión. Toda integración que escribe utiliza una base temporal
-`inventario_verificacion_*`; no se crean Equipos ni asignaciones demo en la
-base habitual para cerrar el sprint.
+Equipos, movimientos, reglas y concurrencia. Sprint 6 conserva las 203 pruebas
+previas como regresión. Toda integración que escribe utiliza una base temporal
+`inventario_verificacion_*`; no se crean Equipos, movimientos ni asignaciones
+demo en la base habitual para cerrar el sprint.
 
 Las dependencias incluyen Web MVC, JPA, PostgreSQL JDBC, Validation, Security,
 Flyway con su módulo PostgreSQL, Lombok y DevTools. Los starters de pruebas
@@ -264,10 +271,10 @@ los cambios posteriores deben introducirse mediante nuevas migraciones.
 `spring.jpa.hibernate.ddl-auto=validate` indica a Hibernate que valide el esquema
 frente a las entidades mapeadas, sin crear, actualizar ni borrar tablas. Ahora
 se mapean Categoría, Subcategoría, Sede, Área, Laboratorio, Usuario, Rol y
-UsuarioLaboratorio y Equipo. Solo MovimientoEquipo sigue sin Entity ni API;
-un arranque correcto no valida esa tabla mediante JPA. Sprint 4E reutiliza la
-tabla puente de V2 y Sprint 5 reutiliza Equipo de V3: **no necesitan V10** ni
-cambios físicos. No se agregan equipos ni asignaciones demo automáticamente.
+UsuarioLaboratorio, Equipo y MovimientoEquipo: las diez tablas del dominio.
+Sprint 4E reutiliza la tabla puente de V2 y Sprint 5/6 reutilizan Equipo y
+MovimientoEquipo de V3: **no necesitan V10** ni cambios físicos. No se agregan
+equipos, movimientos ni asignaciones demo automáticamente.
 
 V1–V4 ya fueron aplicadas en la base local inspeccionada y se conservaron sin
 modificaciones. V5 amplía la unicidad de nombre para impedir duplicados que solo
@@ -304,7 +311,9 @@ Decisiones del esquema:
   un catálogo cerrado de tipos de movimiento porque aún no fue especificado.
 - `equipo.fecha_actualizacion` recibe su valor inicial de PostgreSQL. Desde
   Sprint 5, EquipoService la actualiza con el reloj Java en UTC al ejecutar PUT
-  o DELETE lógico; `fecha_creacion` se conserva. No se agregó un trigger.
+  o DELETE lógico; el traslado de Sprint 6 usa esa misma política. La fecha de
+  Movimiento procede del DEFAULT PostgreSQL y `fecha_creacion` de Equipo se
+  conserva. No se agregó un trigger.
 
 V4 inserta `ADMIN`, `GESTOR`, `LECTOR`, una sede, dos áreas, los laboratorios `L201`
 y `L206`, dos categorías y cuatro subcategorías. No inserta usuarios, hashes,
@@ -487,7 +496,7 @@ continúa describiendo laboratorios activos.
 
 Código interno y laboratorio se fijan al crear. PUT solo reemplaza campos
 editables y rechaza campos desconocidos/inmutables con 400; el cambio de
-laboratorio exige el futuro flujo de traslado, todavía no implementado. Las
+laboratorio utiliza el flujo de traslado de Sprint 6; PUT sigue prohibiéndolo. Las
 series opcionales vacías se convierten en null. Los tres identificadores
 conservan UNIQUE sensible a mayúsculas de V3, también después de la baja.
 
@@ -496,6 +505,43 @@ mostrándola bajo autorización. PUT o segundo DELETE sobre BAJA devuelven 409,
 igual que intentar crear o editar hacia BAJA. Subcategoría/Laboratorio bloquean
 su propia baja si tienen Equipos no BAJA; Laboratorio además conserva el bloqueo
 por asignaciones activas. Responsable es opcional y no concede permisos.
+
+## Traslado e historial — Sprint 6
+
+| Método y ruta | Permiso | Resultado |
+|---|---|---|
+| `POST /api/equipos/{idEquipo}/traslados` | ADMIN global; GESTOR autorizado en origen Y destino | 200, Equipo actualizado y Movimiento confirmado |
+| `GET /api/equipos/{idEquipo}/movimientos` | ADMIN, GESTOR, LECTOR; historial según alcance | 200, más reciente primero |
+| `GET /api/movimientos` | ADMIN global; GESTOR/LECTOR con origen O destino en alcance | 200; filtro opcional `idLaboratorio` |
+
+El traslado recibe `idLaboratorioDestino`, `motivo` obligatorio de máximo 500
+caracteres y `ubicacionInternaDestino` opcional de máximo 200. El servidor toma
+origen del Equipo bloqueado, actor del principal, tipo TRASLADO y fecha de
+PostgreSQL. Equipo y Movimiento se confirman o revierten en una transacción.
+Se conserva código, Subcategoría, responsable, estado y fecha de creación.
+Si no se informa ubicación destino, se limpia a null; se actualiza la fecha
+de Equipo con reloj Java UTC, como en Sprint 5.
+
+BAJA, mismo destino o destino inactivo dan 409; destino inexistente, 404;
+alcance/rol insuficiente, 403; campos ajenos o entrada inválida, 400.
+ADMIN puede mover desde un origen histórico inactivo hacia un destino activo.
+GESTOR necesita alcance activo en ambos; LECTOR solo consulta. PUT de Equipo
+sigue sin permitir cambiar laboratorio.
+
+El historial usa `fechaMovimiento DESC, idMovimiento DESC`. ADMIN conserva toda
+la historia aunque Equipo o laboratorios estén de baja. GESTOR/LECTOR ven los
+movimientos relacionados con su alcance **actual** sobre origen o destino, no
+permisos históricos. Puede existir historia visible de un Equipo actualmente
+fuera de alcance; el detalle del Equipo mantiene su propia autorización.
+Sin historia visible, GET por Equipo devuelve `[]` si su ubicación actual está
+permitida y 403 si no lo está. Equipo inexistente da 404.
+
+No existen POST directo, PUT ni DELETE de movimientos. La baja lógica de un
+Laboratorio no se bloquea únicamente por historia: siguen vigentes las reglas
+de asignaciones activas y Equipos no BAJA. Los resúmenes muestran nombres actuales
+de las entidades referenciadas; no son snapshots versionados. La guía incluye
+Postman y SQL con LEFT JOIN del origen, porque V3 permite origen nulo en datos
+históricos aunque los nuevos traslados siempre registren su origen real.
 
 ## Autenticación y permisos
 
@@ -514,7 +560,7 @@ once pruebas de negocio. Subcategorías y organización usan la misma política:
 sin token válido devuelven 401; con un rol sin permiso de escritura, 403.
 Los catálogos son globales para los tres roles. Sprint 4E agrega la consulta de
 alcance propio y la administración exclusiva de asignaciones por ADMIN; la
-aplicación a Equipo se incorpora en Sprint 5. MovimientoEquipo sigue pendiente.
+aplicación a Equipo se incorpora en Sprint 5 y a traslados/historial en Sprint 6.
 
 `SecurityConfig` usa sesiones deshabilitadas y `JwtAuthFilter` consulta el usuario
 y rol vigentes mediante JPA en cada petición. El JWT se envía exclusivamente en

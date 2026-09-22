@@ -80,7 +80,8 @@ public class EquipoEntity {
     private SubcategoriaEntity subcategoria;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_laboratorio", nullable = false, updatable = false)
+    // Solo el caso de uso de traslado cambia esta relación; PUT conserva sus DTO y Mapper estrictos.
+    @JoinColumn(name = "id_laboratorio", nullable = false)
     private LaboratorioEntity laboratorio;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -96,4 +97,3 @@ public class EquipoEntity {
     @Column(name = "fecha_actualizacion", nullable = false, insertable = false)
     private OffsetDateTime fechaActualizacion;
 }
-

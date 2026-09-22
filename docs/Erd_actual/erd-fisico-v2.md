@@ -1,7 +1,7 @@
 # ERD físico PostgreSQL v2
 
 Esquema de dominio **derivado estáticamente de Flyway V1–V9**, contrastado con las
-nueve Entities JPA actuales tras Sprint 5. La revisión del ERD es estática: describe el
+diez Entities JPA actuales tras Sprint 6. La revisión del ERD es estática: describe el
 DDL resultante de esas migraciones, sin afirmar una inspección del catálogo de una
 instancia local. No modifica código, migraciones ni datos.
 
@@ -32,7 +32,7 @@ de las diez tablas del dominio.
 Contraste JPA: [directorio entity](../../backend/inventario/src/main/java/com/utec/inventario/entity/),
 con `SedeEntity`, `AreaEntity`, `LaboratorioEntity`, `CategoriaEntity`,
 `SubcategoriaEntity`, `RolEntity`, `UsuarioEntity`, `UsuarioLaboratorioEntity` y
-`EquipoEntity`. Como apoyo del estado
+`EquipoEntity` y `MovimientoEquipoEntity`. Como apoyo del estado
 implementado se revisaron el [README](../../README.md) y el [Sprint 4](../sprints/sprint-4.md).
 Los diagramas antiguos no determinan ningún atributo de este modelo.
 
@@ -66,14 +66,15 @@ declarados o su tipo físico equivalente.
 
 | Estado | Tablas |
 |---|---|
-| Implementado en Java/API | rol, usuario, categoria, subcategoria, sede, area, laboratorio, usuario_laboratorio, equipo |
-| Solo esquema BD / diseño futuro | movimiento_equipo |
+| Implementado en Java/API | rol, usuario, categoria, subcategoria, sede, area, laboratorio, usuario_laboratorio, equipo, movimiento_equipo |
+| Solo esquema BD / diseño futuro | Ninguna de las diez tablas de este modelo |
 
 Rol y Usuario participan en JPA y en autenticación/autorización JWT. Esta leyenda
 no afirma que ambos tengan un CRUD público completo. Sprint 4E implementa
 UsuarioLaboratorio y el servicio de alcance efectivo sin cambios de esquema ni
 V10. Sprint 5 implementa Equipo y aplica alcance, también sin migración nueva.
-MovimientoEquipo sigue pendiente. Ser responsable de un Equipo no concede permisos.
+Sprint 6 incorpora MovimientoEquipo, traslado e historial inmutable desde la API,
+conservando V3. Ser responsable de un Equipo no concede permisos.
 
 ## 3. Vista física completa
 
@@ -201,7 +202,7 @@ erDiagram
 
 ### 4.1. Organización, clasificación e identidad
 
-[SVG de catálogos e identidad](erd-fisico-v2-catalogos.svg). Contiene siete de las nueve
+[SVG de catálogos e identidad](erd-fisico-v2-catalogos.svg). Contiene siete de las diez
 tablas implementadas en Java/API, con todas sus columnas. UsuarioLaboratorio,
 incorporada en Sprint 4E, y Equipo, incorporado en Sprint 5, conservan su vista
 ampliada junto a inventario. Las relaciones hacia
@@ -489,7 +490,7 @@ Fuente: [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_
 
 ### movimiento_equipo — 8 columnas
 
-Fuente: [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql). Solo esquema BD / diseño futuro.
+Fuente: [V3](../../backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql). Implementada en Java/API desde Sprint 6; estructura sin cambios.
 
 | Columna | Tipo PostgreSQL | Clave / regla | Nullability | DEFAULT |
 |---|---|---|---|---|
@@ -676,8 +677,9 @@ cambios dentro de esta tarea**.
 - Ni Rol.nombre ni los identificadores de equipo tienen protección UPPER en estas
   migraciones. Los datos iniciales de roles no equivalen a un CHECK.
 - UsuarioLaboratorio tiene vertical Java/API y servicio de alcance desde Sprint 4E;
-  Equipo lo aplica desde Sprint 5. Solo MovimientoEquipo sigue como vertical
-  futura. Estos cambios de implementación no cambian el esquema.
+  Equipo lo aplica desde Sprint 5. MovimientoEquipo incorpora traslado e historial
+  desde Sprint 6. Las diez tablas están integradas en Java/API; estos cambios
+  de implementación no cambian el esquema.
 - V6 actualiza usernames de filas existentes con `'usuario_' || id_usuario`;
   ese backfill no crea un DEFAULT para nuevas filas.
 - Los índices UPPER no expresan normalización de espacios ni equivalencia de
@@ -697,7 +699,7 @@ cambios dentro de esta tarea**.
 | Índices explícitos | **17**: 12 para FK y 5 UNIQUE con UPPER de V5–V9 |
 | Tipos, NN/NULL y DEFAULT | Cubiertos columna por columna en la sección 5 |
 | Fechas | Todas las columnas de fecha del esquema son TIMESTAMPTZ |
-| Modelo físico frente a Java | Nueve tablas con Entity; MovimientoEquipo solo en BD |
+| Modelo físico frente a Java | Diez tablas con Entity e integración Java/API; sin cambio físico |
 | Alcance de comprobación | Lectura de fuentes y validación documental; sin tests Java ni acceso a PostgreSQL |
 
 Relacionado: [ERD lógico v2](erd-logico-v2.md) ·

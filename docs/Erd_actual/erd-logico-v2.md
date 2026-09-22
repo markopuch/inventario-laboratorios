@@ -66,9 +66,7 @@ flowchart LR
     Laboratorio -->|"Destino: 1 : 0..N"| MovimientoEquipo
 
     classDef implementado fill:#E7F1FF,stroke:#225EA8,stroke-width:2px,color:#102A43;
-    classDef futuro fill:#FFF3D6,stroke:#956200,stroke-width:2px,stroke-dasharray:6 4,color:#493300;
-    class Sede,Area,Laboratorio,Categoria,Subcategoria,Rol,Usuario,UsuarioLaboratorio,Equipo implementado;
-    class MovimientoEquipo futuro;
+    class Sede,Area,Laboratorio,Categoria,Subcategoria,Rol,Usuario,UsuarioLaboratorio,Equipo,MovimientoEquipo implementado;
 ```
 
 **Leyenda de cardinalidades:** `1` = exactamente una referencia obligatoria;
@@ -79,12 +77,12 @@ cero o un laboratorio de origen y cada laboratorio puede ser origen de cero o
 múltiples movimientos. El destino se representa por otra relación y es
 obligatorio.
 
-**Leyenda de estado:** azul con borde continuo = **implementado en Java/API**;
-ámbar con borde discontinuo = **solo esquema BD / diseño futuro de la API**.
-El color no cambia el modelo: las diez entidades ya tienen tabla en las
-migraciones. El elemento ámbar, MovimientoEquipo, no es una tabla por crear. Sprint 4E
-incorporó UsuarioLaboratorio y Sprint 5 incorpora Equipo en Java/API sin cambiar
-entidades, relaciones ni cardinalidades.
+**Leyenda de estado:** azul con borde continuo = **implementado en Java/API**.
+Desde Sprint 6, las diez entidades del dominio están integradas; no quedan
+entidades de este modelo marcadas como solo BD/futuras. Rol y Usuario participan
+en autenticación y autorización, sin implicar administración completa de usuarios.
+MovimientoEquipo se crea mediante traslado y se consulta como historial inmutable.
+Este estado no cambia entidades, relaciones ni cardinalidades.
 
 ## 2. Entidades y significado de negocio
 
@@ -146,7 +144,9 @@ movimiento; tampoco es una asignación de acceso.
 Desde Sprint 4E, UsuarioLaboratorio tiene administración de asignaciones por
 ADMIN y consulta del alcance efectivo propio: ADMIN global; GESTOR/LECTOR con
 asignación activa a un laboratorio activo. Sprint 5 aplica ese alcance a Equipo;
-ADMIN conserva acceso histórico global. Movimientos y traslados siguen pendientes.
+ADMIN conserva acceso histórico global. Sprint 6 incorpora traslados con alcance
+en origen y destino, e historial visible según el alcance actual sobre cualquiera
+de esos dos laboratorios.
 La autorización conserva JWT y el rol vigente. Los catálogos de Categoría,
 Subcategoría, Sede, Área y Laboratorio permiten consultas a ADMIN, GESTOR y
 LECTOR, y escritura a ADMIN; todavía no filtran por asignaciones de laboratorio.
@@ -190,9 +190,9 @@ deban apuntar a una entidad activa.
 | **Implementado en Java/API** | Categoría, Subcategoría, Sede, Área y Laboratorio | Verticales de catálogo con consulta, creación, actualización y baja lógica. |
 | **Implementado en Java/API** | UsuarioLaboratorio | Sprint 4E: asignaciones explícitas administradas por ADMIN, baja/reactivación y servicio de alcance efectivo; misma tabla de V2. |
 | **Implementado en Java/API** | Equipo | Sprint 5: CRUD, filtros, alcance y baja por estado BAJA sobre la tabla de V3, sin traslado. |
-| **Solo esquema BD / diseño futuro** | MovimientoEquipo | Tabla y relaciones creadas por V3; vertical Java/API, traslados e historial pendientes. |
+| **Implementado en Java/API** | MovimientoEquipo | Sprint 6: traslado transaccional e historial inmutable desde la API, sobre la tabla V3 sin cambios. |
 
-La clasificación se contrastó con las nueve Entities actuales y con la
+La clasificación se contrastó con las diez Entities actuales y con la
 configuración de seguridad. La existencia de una tabla no implica que ya exista
 su endpoint ni que estén vigentes todas las reglas de negocio propuestas.
 
@@ -211,9 +211,9 @@ Laboratorio con Equipos no BAJA. Estas reglas Java no alteran las cardinalidades
   decisión de negocio y una futura migración; aquí se conserva el modelo.
 - Una asignación por par usuario–laboratorio conserva su identidad aun inactiva.
   Si se necesitara historial de reasignaciones, habría que definirlo aparte.
-- El futuro flujo de MovimientoEquipo debe concretar traslados e historial;
-  Equipo ya implementa custodia opcional, ubicación fija en PUT y alcance.
-  El diagrama no agrega restricciones físicas que Flyway no impone.
+- Sprint 6 aplica las reglas de traslado e historial en Java; futuras ampliaciones
+  de tipos de movimiento o auditoría requieren definición aparte. El diagrama
+  no agrega restricciones físicas que Flyway no impone.
 - La coexistencia de protecciones de unicidad históricas y posteriores se
   conserva y se documenta en el ERD físico; no se elimina ninguna.
 
@@ -221,9 +221,9 @@ Laboratorio con Equipos no BAJA. Estas reglas Java no alteran las cardinalidades
 
 La revisión original del ERD inspeccionó las nueve migraciones y reconstruyó
 el esquema estáticamente, sin consultar PostgreSQL ni ejecutar Java. Los sprints
-4E y 5 actualizan únicamente el estado de implementación de UsuarioLaboratorio
-y Equipo en este ERD, conservando el esquema V1–V9. La evidencia del incremento
-actual está en la [guía de Sprint 5](../sprints/sprint-5-equipos.md).
+4E, 5 y 6 actualizan el estado de implementación de UsuarioLaboratorio, Equipo y
+MovimientoEquipo en este ERD, conservando el esquema V1–V9. La evidencia actual
+está en la [guía de Sprint 6](../sprints/sprint-6-movimientos.md).
 
 | Fuente | Contribución al modelo lógico |
 |---|---|
@@ -247,5 +247,7 @@ sin prioridad sobre Flyway.
 
 La revisión documental verificó las diez entidades, las trece relaciones, los
 dos extremos de cada cardinalidad, las dos referencias opcionales y la
-distinción actual entre nueve entidades integradas en Java/API y MovimientoEquipo
-como única vertical futura.
+estado actual de las diez entidades integradas en Java/API. El modelo permite
+origen opcional; el flujo TRASLADO de Sprint 6 obtiene siempre el origen real del
+Equipo. Los resúmenes del historial muestran datos actuales de las entidades
+referenciadas, no copias versionadas de sus nombres.

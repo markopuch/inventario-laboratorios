@@ -109,7 +109,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
-            if (cause instanceof CampoEquipoNoEditableException) {
+            if (cause instanceof CampoEquipoNoEditableException || cause instanceof CampoTrasladoNoEditableException) {
                 return error(HttpStatus.BAD_REQUEST, cause.getMessage(), request);
             }
         }
