@@ -1,0 +1,49 @@
+name: inventario-docker
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inventario_laboratorios
+      POSTGRES_USER: inventario
+      POSTGRES_PASSWORD: ${DOCKER_DB_PASSWORD:?Define DOCKER_DB_PASSWORD en .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  backend:
+    build: .
+    image: inventario-backend:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/inventario_laboratorios
+      DB_USER: inventario
+      DB_PASSWORD: ${DOCKER_DB_PASSWORD:?Define DOCKER_DB_PASSWORD en .env}
+      JWT_SECRET: ${DOCKER_JWT_SECRET:?Define DOCKER_JWT_SECRET en .env}
+      PORT: "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -qO-
+        - http://localhost:8080/actuator/health
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  postgres_data:

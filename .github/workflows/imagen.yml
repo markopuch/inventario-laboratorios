@@ -1,0 +1,50 @@
+name: Imagen Docker del backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/inventario/**"
+      - ".github/workflows/imagen.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  imagen:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Preparar el nombre y la etiqueta
+        shell: bash
+        run: |
+          echo "IMAGEN=ghcr.io/${GITHUB_REPOSITORY,,}-backend" >> "$GITHUB_ENV"
+          echo "CORTO=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Iniciar sesion en GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar el backend
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend/inventario
+          file: ./backend/inventario/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGEN }}:latest
+            ${{ env.IMAGEN }}:sha-${{ env.CORTO }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}

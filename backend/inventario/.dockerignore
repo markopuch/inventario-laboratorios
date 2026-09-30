@@ -1,0 +1,24 @@
+# Archivos generados y cachés locales.
+build/
+.gradle/
+target/
+bin/
+out/
+
+# Git y herramientas de desarrollo.
+.git/
+.github/
+.idea/
+.vscode/
+*.log
+
+# Variables y configuración local que no deben empaquetarse.
+.env
+.env.*
+**/application-local.properties
+
+# Archivos ajenos a la construcción de esta imagen.
+k8s/
+despliegue/
+docker-compose*.yml
+datos/
