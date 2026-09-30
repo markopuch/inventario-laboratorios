@@ -22,9 +22,13 @@ La creación de cuentas se ejecuta únicamente con el perfil **dev**. Reiniciar
 no duplica usuarios ni restablece su contraseña, rol o estado. Cambiar la
 variable `DEMO_USER_PASSWORD` no modifica las cuentas que ya existen.
 
-Estos permisos aplican a las categorías ya implementadas. Las asignaciones de
-laboratorios y los CRUD de equipos y administración de usuarios siguen pendientes;
-no se habilitan rutas inexistentes al agregar JWT.
+La tabla muestra la política de Categoría, compartida por los cinco catálogos:
+lectura global para los tres roles y escritura solo ADMIN. También están
+implementados asignaciones de laboratorio (Sprint 4E), Equipo (Sprint 5) y
+traslado/historial (Sprint 6). GESTOR escribe Equipos dentro de su alcance;
+LECTOR consulta. ADMIN administra asignaciones, pero la administración completa
+de usuarios sigue fuera del backend cerrado. Consulta la
+[matriz vigente](matriz-permisos.md) y el [cierre técnico](backend-final/resumen-backend.md).
 
 ## Cómo se relaciona con el código del profesor
 
@@ -48,7 +52,7 @@ Solicitud con Authorization: Bearer ...
 
 | Archivo | Responsabilidad |
 |---|---|
-| `controller/AuthController.java` | Login y consulta del usuario autenticado |
+| `controller/AuthController.java` | Login, perfil autenticado y alcance propio de laboratorios |
 | `dto/request/AuthRequest.java` | Entrada de acceso; excluye contraseña de `toString` y serialización |
 | `dto/response/AuthResponse.java` | Token Bearer, duración en segundos y datos públicos del usuario |
 | `dto/response/UsuarioResponse.java` | Perfil público, sin contraseña ni hash |
@@ -290,6 +294,12 @@ de verificación: los tests automáticos restauran esos estados al finalizar.
 
 ## Repetir la suite automática
 
+La opción vigente es [verificar-backend.ps1](../verificar-backend.ps1), explicada
+en el [README](../README.md#12-tests): valida el destino local de pruebas,
+ejecuta compilación, suite y JAR y exige cero fallos/errores/omitidas.
+La alternativa manual siguiente también requiere las variables externas del
+arranque y una contraseña demo compatible con las cuentas de esa base.
+
 En pgAdmin, conectado a `postgres`, crea una base de pruebas una vez:
 
 ```sql
@@ -313,6 +323,12 @@ base `inventario_verificacion_*`. El reporte queda en
 `backend/inventario/build/reports/tests/test/index.html`.
 
 ## Resultado de la implementación y verificación
+
+Este apartado conserva la evidencia histórica de la incorporación de JWT,
+anterior a los sprints 4–7. La verificación vigente se encuentra en
+[verificación final del backend](backend-final/verificacion-final.md); el cierre
+de Sprint 6 tuvo 233 pruebas. No se reinterpretan las cifras siguientes como
+estado actual.
 
 Verificación realizada el **8 de septiembre de 2026**:
 

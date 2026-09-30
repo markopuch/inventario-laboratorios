@@ -218,7 +218,7 @@ Al borrar una categoría, su Service comprueba además que no tenga hijas activa
 
 ## Postman: preparación
 
-Inicia el backend según el [README](../README.md#arranque-rápido-en-windows).
+Inicia el backend según el [README](../../README.md#arranque-rápido-en-windows).
 Debe aparecer `Started InventarioApplication` y la terminal debe permanecer
 abierta. `ECONNREFUSED` significa que Postman no logró conectar al servidor;
 no es un error de contraseña ni una respuesta 401 del backend.
@@ -806,7 +806,7 @@ CREATE DATABASE inventario_verificacion_manual_4a;
 ```
 
 En PowerShell configura `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, perfil `dev` y
-`DEMO_USER_PASSWORD` siguiendo el [README](../README.md#variables-de-entorno-y-ejecución-en-powershell).
+`DEMO_USER_PASSWORD` siguiendo el [README](../../README.md#variables-de-entorno-y-ejecución-en-powershell).
 Después, desde el backend, cambia la URL solo durante la prueba:
 
 ```powershell

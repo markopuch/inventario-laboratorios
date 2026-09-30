@@ -2,7 +2,7 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Diseño base y permisos implementados hasta Sprint 6
+**Estado:** Permisos implementados; cierre documental de Sprint 7
 
 ## 1. Principio de autorización
 
@@ -40,20 +40,18 @@ roles** y permiten escritura únicamente a ADMIN.
 | Consultar subcategorías, incluida la lista por categoría | Sí | Sí | Sí |
 | Gestionar sedes, áreas y laboratorios | Sí | No | No |
 | Consultar sedes, áreas y laboratorios | Sí | Sí | Sí |
-| Crear o editar usuarios | Sí | No | No |
-| Activar o desactivar usuarios | Sí | No | No |
 | Asignar laboratorios a usuarios | Sí | No | No |
 | Consultar asignaciones explícitas de un usuario | Sí | No | No |
 | Consultar alcance propio | Global activo | Asignaciones activas a laboratorios activos | Asignaciones activas a laboratorios activos |
-| Cambiar roles | Sí | No | No |
 
-## 3. Matriz de endpoints existentes y propuestas futuras
+## 3. Matriz de endpoints implementados
 
 Login, perfil propio, Categoría, Subcategoría, las 17 operaciones de organización,
 los tres endpoints de asignaciones/alcance, los seis de Equipo y los tres de
 traslado/historial están implementados. La administración general de usuarios
 sigue pendiente. Administrar asignaciones no implica crear usuarios ni cambiar roles.
-La sección 6 delimita el alcance.
+La sección 6 delimita el alcance. La tabla siguiente contiene exclusivamente
+operaciones implementadas; las propuestas de usuarios están en la sección 7.
 
 | Método y ruta | Operación | ADMIN | GESTOR | LECTOR | Regla de alcance |
 |---|---|---:|---:|---:|---|
@@ -96,9 +94,6 @@ La sección 6 delimita el alcance.
 | `POST /api/laboratorios` | Crear laboratorio | Sí | No | No | Área existente y activa; código global único |
 | `PUT /api/laboratorios/{id}` | Actualizar o mover laboratorio | Sí | No | No | Laboratorio activo y área destino activa |
 | `DELETE /api/laboratorios/{id}` | Dar de baja laboratorio | Sí | No | No | Rechaza con 409 si hay asignaciones activas o Equipos no BAJA; conserva código reservado |
-| `POST /api/admin/usuarios` **FUTURO** | Crear usuario | Sí | No | No | Solo administración |
-| `PUT /api/admin/usuarios/{id}` **FUTURO** | Editar usuario | Sí | No | No | Solo administración |
-| `PATCH /api/admin/usuarios/{id}/estado` **FUTURO** | Activar/desactivar usuario | Sí | No | No | Solo administración |
 | `GET /api/admin/usuarios/{idUsuario}/laboratorios` **IMPLEMENTADO** | Consultar asignaciones explícitas activas | Sí | No | No | Configuración del destinatario, incluso inactivo; no es su alcance efectivo |
 | `PUT /api/admin/usuarios/{idUsuario}/laboratorios` **IMPLEMENTADO** | Reemplazar asignaciones explícitas activas | Sí | No | No | Atómico; lista vacía válida; destinatario existente; laboratorios existentes y activos |
 | `GET /api/admin/equipos` **IMPLEMENTADO** | Consultar todos los equipos | Sí | No | No | Endpoint explícitamente global |
@@ -109,7 +104,7 @@ La sección 6 delimita el alcance.
 |---|---|
 | Solicitud protegida sin token | `401 Unauthorized` |
 | Token inválido, alterado o vencido | `401 Unauthorized` |
-| Usuario inactivo con token anterior | `401 Unauthorized` o invalidación equivalente documentada |
+| Usuario o rol inactivo con token anterior | `401 Unauthorized` al recargar la identidad vigente |
 | Usuario autenticado con rol insuficiente | `403 Forbidden` |
 | GESTOR o LECTOR consulta o reemplaza asignaciones administrativas | `403 Forbidden` |
 | ADMIN consulta sus asignaciones explícitas | `200`, solo filas activas; pueden ser cero sin limitar su alcance global |
@@ -125,14 +120,14 @@ La sección 6 delimita el alcance.
 | Sin movimientos visibles y Equipo actual dentro del alcance | GET historial `200 []` |
 | Sin movimientos visibles y Equipo actual fuera del alcance | GET historial 403 |
 
-## 5. Implementación recomendada
+## 5. Implementación existente
 
 - Spring Security valida autenticación y rol.
 - `AlcanceLaboratorioService` calcula el alcance y comprueba acceso a un laboratorio: ADMIN global activo; GESTOR/LECTOR según asignación activa.
 - El endpoint de alcance propio obtiene el principal del contexto; no recibe un ID de usuario. Los endpoints ADMIN sí reciben el ID del destinatario después de autorizar al administrador.
 - EquipoRepository aplica filtros y laboratorios permitidos en PostgreSQL; no filtra toda la tabla en memoria. El catálogo global de Laboratorio conserva su política.
 - MovimientoEquipoRepository aplica origen O destino en alcance actual; ADMIN no filtra historia por estado activo de los laboratorios.
-- Las pruebas deben cubrir al menos un caso permitido y uno rechazado por cada rol.
+- La suite cubre acceso permitido y rechazado por rol; el cierre medido se registra en [verificación final](backend-final/verificacion-final.md).
 
 ## 6. Alcance implementado hasta Sprint 6
 
@@ -176,3 +171,15 @@ para comprobar los roles con Postman. La [guía de Sprint 5](sprints/sprint-5-eq
 añade la matriz de casos de Equipo, filtros e inmutabilidad. La
 [guía de Sprint 6](sprints/sprint-6-movimientos.md) incorpora traslado, rollback,
 alcance del historial y bajas lógicas de laboratorios con historia.
+
+## 7. Backlog fuera del backend cerrado
+
+Crear/editar usuarios, activar/desactivar cuentas mediante API y cambiar roles
+son propuestas de administración futura. **No son permisos de rutas existentes**
+y no aparecen en las tablas de operación implementada. El diseño prevé ADMIN
+para esa administración, pero no existe un CRUD completo de Usuario/Rol.
+La gestión actual de asignaciones solo configura usuarios que ya existen.
+
+Mantenimiento como Entity, auditoría general, frontend, Docker y demás
+ampliaciones figuran en el [backlog](backend-final/backlog.md). El catálogo
+completo vigente contiene [42 operaciones HTTP](backend-final/endpoints.md).

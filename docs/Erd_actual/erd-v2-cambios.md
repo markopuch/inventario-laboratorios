@@ -77,7 +77,7 @@ Java esté implementada.
 |---|---|---|
 | Implementadas en Java / integradas con API | Rol, Usuario, Categoria, Subcategoria, Sede, Area, Laboratorio | Rol y Usuario participan en JPA/JWT/login; esto no afirma que exista un CRUD administrativo completo de usuarios o roles. Los otros cinco catálogos tienen CRUD |
 | Implementada en Java/API desde Sprint 4E | UsuarioLaboratorio | Administración de asignaciones explícitas por ADMIN y cálculo del alcance propio; tabla V2 sin cambios |
-| Implementada en Java/API desde Sprint 5 | Equipo | CRUD, filtros, alcance, fechas y baja por estado BAJA; misma tabla V3, sin traslado |
+| Implementada en Java/API desde Sprint 5 | Equipo | CRUD, filtros, alcance, fechas y baja por estado BAJA sobre V3; el traslado se añadió en Sprint 6 y PUT conserva su laboratorio |
 | Implementada en Java/API desde Sprint 6 | MovimientoEquipo | Traslado transaccional e historial inmutable desde la API, sobre la tabla V3 sin cambios |
 
 Los sprints 4E, 5 y 6 actualizan el estado de implementación en estos ERD:

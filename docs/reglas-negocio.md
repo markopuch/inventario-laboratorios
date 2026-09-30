@@ -2,7 +2,7 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Diseño base y reglas incorporadas hasta Sprint 6
+**Estado:** Reglas del backend cerrado; auditoría documental de Sprint 7
 
 **Fuente de verdad:** migraciones Flyway y código del backend
 
@@ -31,7 +31,10 @@ completa de usuarios.
 
 ### RN-01. Correo único
 
-Cada usuario debe registrarse con un correo electrónico único. No se permite crear dos usuarios con el mismo correo.
+El correo de Usuario es obligatorio y único por `uq_usuario_email` de V2,
+con la comparación sensible a mayúsculas existente. La unicidad está implementada
+en PostgreSQL; no implica que exista un endpoint de registro o administración
+completa de usuarios.
 
 ### RN-02. Contraseña protegida
 
@@ -43,7 +46,11 @@ Solo los usuarios activos pueden autenticarse y utilizar los endpoints protegido
 
 ### RN-04. Rol obligatorio
 
-Todo usuario debe tener exactamente un rol activo: `ADMIN`, `GESTOR` o `LECTOR`.
+Todo Usuario referencia exactamente un Rol mediante FK obligatoria. Para
+autenticarse y operar, Usuario y Rol deben estar activos. Los roles del contrato
+actual son `ADMIN`, `GESTOR` y `LECTOR`; V4 los inicializa, pero no existe un CHECK
+SQL que cierre el catálogo a esos tres nombres. Crear/cambiar roles por API queda
+fuera del backend cerrado.
 
 ### RN-05. Asignación de laboratorios
 
@@ -197,21 +204,28 @@ los laboratorios se bloquean en orden ascendente por ID.
 ### RN-25. Motivo obligatorio
 
 Todo traslado incluye un motivo no blanco, recortado, de máximo 500 caracteres,
-conforme a `VARCHAR(500)` de V3. No se aplica un límite supuesto de TEXT ni se
-acepta el motivo desde un movimiento creado fuera del caso de uso de traslado.
+conforme a `VARCHAR(500)` de V3. El evento se crea mediante el caso de uso de
+traslado; no existe un POST genérico de Movimiento.
 
 ## 7. Reglas de API y errores
 
 ### RN-26. Validación de solicitudes
 
-La API debe rechazar solicitudes con campos obligatorios vacíos, identificadores inválidos, correos mal formados o valores fuera del dominio permitido.
+La API valida los campos obligatorios, tamaños, tipos, relaciones y valores del
+dominio definidos por cada Request. Los módulos con `@Positive` rechazan IDs no
+positivos con 400; Categoría conserva su contrato histórico de 404 para un ID
+entero inexistente, incluso no positivo. La validación de formato de correo
+**NO APLICA** a los contratos HTTP actuales: no hay Request de alta/edición de
+Usuario ni entrada de email. Ese requisito corresponderá a la futura
+administración de usuarios.
 
 ### RN-27. Códigos HTTP consistentes
 
 | Situación | Código esperado |
 |---|---:|
 | Operación correcta de consulta o actualización | `200 OK` |
-| Creación correcta | `201 Created` |
+| Alta CRUD correcta | `201 Created` |
+| Traslado correcto con Equipo actualizado y Movimiento | `200 OK` |
 | Baja lógica correcta sin cuerpo | `204 No Content` |
 | Solicitud inválida | `400 Bad Request` |
 | Falta de autenticación o token inválido | `401 Unauthorized` |
@@ -441,3 +455,74 @@ conserva automáticamente una ubicación del laboratorio anterior.
 
 La [guía de Sprint 6](sprints/sprint-6-movimientos.md) documenta la operación
 atómica, los tres endpoints, la concurrencia y su verificación manual.
+
+## 14. Clasificación y evidencia del cierre
+
+La clasificación describe el alcance existente, no promete módulos adicionales:
+
+- **IMPLEMENTADA:** regla respaldada por el código o DDL actual.
+- **DOCUMENTAL/DISEÑO:** propuesta todavía sin contrato implementado.
+- **NO APLICA:** condición que no forma parte de los contratos del backend cerrado.
+- **PENDIENTE FUERA DEL BACKEND CERRADO:** ampliación del [backlog](backend-final/backlog.md).
+
+Las 45 reglas tienen implementación en su alcance vigente. RN-01 no significa
+registro HTTP; RN-04 no impone un enum SQL; RN-20 no implementa órdenes de
+mantenimiento; RN-26 excluye el formato email, que hoy NO APLICA. La propuesta
+de permisos para crear usuarios/cambiar roles es DOCUMENTAL/DISEÑO y su
+implementación está PENDIENTE FUERA DEL BACKEND CERRADO. No se renumera ninguna RN.
+
+| RN | Regla | Clasificación | Evidencia concreta |
+|---|---|---|---|
+| RN-01 | Correo único | IMPLEMENTADA | V2: `uq_usuario_email`; sin CRUD de usuarios |
+| RN-02 | Contraseña protegida | IMPLEMENTADA | AppConfig/BCrypt, DemoUsuariosConfig y DTOs públicos |
+| RN-03 | Usuario activo | IMPLEMENTADA | UsuarioService, UserInfoDetails y JwtAuthFilter |
+| RN-04 | Rol obligatorio/vigente | IMPLEMENTADA | V2 FK NOT NULL; UsuarioService y UserInfoDetails |
+| RN-05 | Asignaciones | IMPLEMENTADA | V2 PK compuesta y UsuarioLaboratorioService |
+| RN-06 | ADMIN global | IMPLEMENTADA | SecurityConfig y EquipoService |
+| RN-07 | GESTOR por alcance | IMPLEMENTADA | EquipoService y MovimientoEquipoService |
+| RN-08 | LECTOR solo consulta | IMPLEMENTADA | SecurityConfig y servicios de Equipo/Movimiento |
+| RN-09 | Rol y pertenencia | IMPLEMENTADA | SecurityConfig + AlcanceLaboratorioService |
+| RN-10 | Custodia sin permisos | IMPLEMENTADA | EquipoService separa responsable de alcance |
+| RN-11 | Jerarquía organizacional | IMPLEMENTADA | V1, AreaService y LaboratorioService |
+| RN-12 | Jerarquía de categorías | IMPLEMENTADA | V1 y SubcategoriaService |
+| RN-13 | Unicidad de catálogos | IMPLEMENTADA | V5/V7/V8/V9 y validación en Services |
+| RN-14 | Código de Equipo único | IMPLEMENTADA | V3 UNIQUE y EquipoService |
+| RN-15 | Series opcionales únicas | IMPLEMENTADA | V3 y normalización/duplicados en EquipoService |
+| RN-16 | Referencias de Equipo | IMPLEMENTADA | V3, Create/UpdateEquipoRequest y EquipoService |
+| RN-17 | Estados permitidos | IMPLEMENTADA | V3 CHECK y EstadoEquipo |
+| RN-18 | Baja lógica Equipo | IMPLEMENTADA | EquipoService.eliminarEquipo |
+| RN-19 | Equipo BAJA | IMPLEMENTADA | EquipoService y MovimientoEquipoService |
+| RN-20 | Filtro mantenimiento | IMPLEMENTADA | EquipoRepository: `requiereMantenimiento`; no módulo de mantenimiento |
+| RN-21 | Destino diferente | IMPLEMENTADA | MovimientoEquipoService bajo lock de Equipo |
+| RN-22 | Alcance en ambos extremos | IMPLEMENTADA | MovimientoEquipoService + AlcanceLaboratorioService |
+| RN-23 | Movimiento obligatorio | IMPLEMENTADA | MovimientoEquipoService y protección PUT de Equipo |
+| RN-24 | Transacción/locks | IMPLEMENTADA | MovimientoEquipoService `@Transactional` |
+| RN-25 | Motivo obligatorio | IMPLEMENTADA | TrasladarEquipoRequest y normalización del Service |
+| RN-26 | Validación de requests actuales | IMPLEMENTADA | Jakarta Validation, Controllers y handler; email NO APLICA |
+| RN-27 | HTTP consistente con cada operación | IMPLEMENTADA | Controllers, GlobalExceptionHandler y SecurityErrorHandler |
+| RN-28 | Errores públicos seguros | IMPLEMENTADA | GlobalExceptionHandler, ApiError y SecurityErrorHandler |
+| RN-29 | Filtros con alcance | IMPLEMENTADA | EquipoRepository: WHERE de IDs permitidos |
+| RN-30 | Historia con alcance | IMPLEMENTADA | MovimientoEquipoRepository: origen O destino |
+| RN-31 | Padre activo | IMPLEMENTADA | SubcategoriaService, AreaService y LaboratorioService |
+| RN-32 | Padre con hijas activas | IMPLEMENTADA | CategoriaService, SedeService y AreaService |
+| RN-33 | Laboratorio asignable | IMPLEMENTADA | UsuarioLaboratorioService valida destinos antes de escribir |
+| RN-34 | Reemplazo atómico | IMPLEMENTADA | UsuarioLaboratorioService; TreeSet, soft delete y misma PK/fecha |
+| RN-35 | Asignación activa bloquea baja | IMPLEMENTADA | LaboratorioService + UsuarioLaboratorioRepository |
+| RN-36 | Alcance efectivo actual | IMPLEMENTADA | AlcanceLaboratorioService y AuthController |
+| RN-37 | Código inmutable | IMPLEMENTADA | UpdateEquipoRequest estricto y EquipoMapper |
+| RN-38 | PUT no traslada | IMPLEMENTADA | UpdateEquipoRequest y EquipoMapper; ruta específica de traslado |
+| RN-39 | Referencias activas Equipo | IMPLEMENTADA | EquipoService, incluida excepción de custodio actual inactivo |
+| RN-40 | Alcance aplicado Equipo | IMPLEMENTADA | EquipoService y EquipoRepository |
+| RN-41 | Equipos vigentes bloquean padres | IMPLEMENTADA | SubcategoriaService y LaboratorioService |
+| RN-42 | Campos controlados por servidor | IMPLEMENTADA | TrasladarEquipoRequest y MovimientoEquipoService |
+| RN-43 | Historia inmutable en API | IMPLEMENTADA | Controllers de Movimiento sin PUT/DELETE/POST genérico |
+| RN-44 | Visibilidad y orden | IMPLEMENTADA | MovimientoEquipoRepository y listarPorEquipo/listarMovimientos |
+| RN-45 | Ubicación tras traslado | IMPLEMENTADA | MovimientoEquipoService.normalizarUbicacion |
+
+Fuentes: [migraciones](../backend/inventario/src/main/resources/db/migration/),
+[Services](../backend/inventario/src/main/java/com/utec/inventario/service/),
+[Repositories](../backend/inventario/src/main/java/com/utec/inventario/repository/),
+[Requests](../backend/inventario/src/main/java/com/utec/inventario/dto/request/),
+[seguridad](../backend/inventario/src/main/java/com/utec/inventario/security/) y
+[códigos HTTP auditados](backend-final/codigos-http.md). La evidencia dinámica
+se registra separadamente en [verificación final](backend-final/verificacion-final.md).

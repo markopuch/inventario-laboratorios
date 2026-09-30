@@ -694,7 +694,7 @@ CREATE DATABASE inventario_verificacion_manual_org;
 ```
 
 Configura `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `SPRING_PROFILES_ACTIVE=dev`
-y `DEMO_USER_PASSWORD` siguiendo los avisos seguros del [README](../README.md#variables-de-entorno-y-ejecución-en-powershell).
+y `DEMO_USER_PASSWORD` siguiendo los avisos seguros del [README](../../README.md#variables-de-entorno-y-ejecución-en-powershell).
 No guardes sus valores en archivos ni los imprimas. Luego, desde el backend:
 
 ```powershell

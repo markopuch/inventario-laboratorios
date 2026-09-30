@@ -1,189 +1,203 @@
 # Inventario de Laboratorios
 
-Backend Spring Boot ubicado en `backend/inventario`. El alcance actual comprende
-la base del proyecto (Sprint 1), el esquema PostgreSQL administrado por Flyway
-(Sprint 2), la vertical de Categoría (Sprint 3), usuarios JPA con autenticación
-JWT, Subcategorías relacionadas con Categoría (Sprint 4A) y la jerarquía
-Sede → Área → Laboratorio (Sprint 4B–4D) y UsuarioLaboratorio con alcance efectivo
-de laboratorios (Sprint 4E), y la gestión de Equipo con filtros y alcance
-(Sprint 5), junto con MovimientoEquipo, traslado e historial (Sprint 6).
-Los reportes de [Sprint 4](docs/sprints/sprint-4.md),
-[Sprint 5](docs/sprints/sprint-5.md) y [Sprint 6](docs/sprints/sprint-6.md) registran
-el avance. Están implementados Rol, Usuario, JWT, Categoría, Subcategoría, Sede,
-Área, Laboratorio, UsuarioLaboratorio, alcance, Equipo, MovimientoEquipo,
-traslados e historial. Quedan pendientes administración completa de usuarios,
-mantenimiento como Entity, auditoría general, frontend y Docker.
+## 1. Descripción
 
-Documentación visual: [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md),
-[ERD físico PostgreSQL v2](docs/Erd_actual/erd-fisico-v2.md) y
-[cambios respecto a los ERD anteriores](docs/Erd_actual/erd-v2-cambios.md).
+API REST para organizar laboratorios, clasificar equipos, controlar su ubicación
+y registrar traslados con historial. El backend de `backend/inventario` llega al
+cierre técnico de **Sprint 7**, después de las funcionalidades de Sprint 1–6.
+El proyecto conserva el estilo de JPA/JWT de los ejemplos del profesor y su
+organización actual de carpetas.
 
-## Arranque rápido en Windows
+El alcance incluye autenticación, cinco catálogos, asignaciones de laboratorios,
+Equipos y Movimientos. La administración completa de usuarios y los módulos del
+[backlog](docs/backend-final/backlog.md) quedan fuera de este cierre.
+La [verificación final](docs/backend-final/verificacion-final.md) registra las
+pruebas medidas y la preservación de la base habitual.
 
-Con PostgreSQL iniciado, abre una terminal en la raíz del proyecto y ejecuta:
+## 2. Stack
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\iniciar-backend.ps1
-```
+| Componente | Versión/configuración del proyecto |
+|---|---|
+| Java | JDK 21 |
+| Spring Boot | 4.1.1 |
+| Gradle Wrapper | 9.7.1, Kotlin DSL |
+| Persistencia | Spring Data JPA / Hibernate y PostgreSQL |
+| Migraciones | Flyway, V1–V9 |
+| Seguridad | Spring Security, BCrypt, JJWT 0.13.0 |
+| Mapeo | MapStruct 1.6.3, Lombok, lombok-mapstruct-binding 0.2.0 |
+| Validación y pruebas | Jakarta Validation, JUnit 5, Spring Boot Test |
 
-El script solicita usuario y contraseña de PostgreSQL cuando faltan y genera una
-clave JWT para esa sesión. Presiona Enter para aceptar el usuario `postgres`.
-Espera `Started InventarioApplication` y deja abierta la terminal mientras usas
-Postman en `http://localhost:8080`. Detén el backend con `Ctrl+C`.
+Se usa el wrapper incluido; no hace falta instalar Gradle por separado.
+Las versiones se mantienen respecto al código existente. PostgreSQL debe estar
+iniciado y la base de destino debe existir antes de arrancar.
 
-Las cuentas existentes `marko`, `aldo` y `romel` funcionan sin el perfil `dev`.
-Para inicializarlas en una base nueva, agrega `-CrearUsuariosDemo` al comando;
-entonces se solicita también la contraseña inicial de demostración.
-
-En este workspace de VS Code también puedes abrir **Terminal → Run Task →
-Iniciar backend de Inventario**. La tarea local usa el mismo script. Ejecutar
-Java directamente requiere configurar previamente las variables del apartado
-de configuración manual. El script no guarda contraseñas ni claves en archivos.
-
-La [guía del Sprint 3](docs/sprints/sprint-3-categorias.md) explica la arquitectura,
-las once solicitudes manuales de Postman y la comprobación de persistencia en pgAdmin.
-Comienza por la [guía de usuarios y JWT](docs/autenticacion-jwt.md) para iniciar
-sesión y obtener los tokens que requieren esas solicitudes.
-La [guía de Sprint 4A](docs/sprints/sprint-4a-subcategorias.md) explica la relación JPA,
-las nuevas reglas padre-hija y 21 pruebas manuales con Postman y SQL.
-La [guía de Sprint 4B–4D](docs/sprints/sprint-4b-organizacion.md) explica los tres CRUD
-organizacionales, sus 17 endpoints, movimientos entre padres, permisos, pruebas
-manuales y consultas SQL. Las guías anteriores conservan sus resultados históricos.
-La [guía de Sprint 4E](docs/sprints/sprint-4e-usuario-laboratorio.md) explica la
-clave compuesta, las asignaciones, el alcance, sus tres endpoints y las pruebas
-manuales. Su cierre histórico fue de **168 pruebas aprobadas**. La
-[guía de Sprint 5](docs/sprints/sprint-5-equipos.md) explica el CRUD de Equipo,
-los cuatro filtros, permisos, alcance y la secuencia manual de Postman/SQL.
-Sprint 5 cerró con **203 pruebas aprobadas**. La nueva
-[guía de Sprint 6](docs/sprints/sprint-6-movimientos.md) explica traslado atómico,
-historial, alcance y 45 temas pedagógicos. Resultado actual:
-**233 pruebas aprobadas de 233: 30 nuevas, 0 fallos, 0 errores y 0 omitidas**; la preservación de datos está en el
-[reporte Sprint 6](docs/sprints/sprint-6.md).
-El código sigue convenciones de los ejemplos del curso en `Carlos_backend`:
-clases con Lombok, inyección explícita con `@Autowired`, estados HTTP declarados
-y mappers con `convert` y `copy`. Se mantiene la organización de paquetes de este
-proyecto; la guía incluye la correspondencia con las carpetas del profesor.
-
-## Requisitos
-
-- JDK **21**, disponible en `PATH` o mediante `JAVA_HOME`.
-- PostgreSQL instalado y en ejecución; puedes usar pgAdmin para administrar la base.
-- Gradle Wrapper incluido: **9.7.1**. No necesitas instalar Gradle globalmente.
-- Spring Boot **4.1.1**, conservando la versión existente del proyecto.
-- Acceso a Internet para descargar Gradle y las dependencias si no están en caché.
-
-La configuración de Gradle utiliza Kotlin DSL. El `group` y el package base son
-`com.utec.inventario`. La clase principal es `InventarioApplication.java`.
-Las versiones existentes son compatibles según los
-[requisitos oficiales de Spring Boot](https://docs.spring.io/spring-boot/system-requirements.html).
-
-## Estructura del backend
+## 3. Arquitectura
 
 ```text
-backend/inventario/
-├── build.gradle.kts
-├── settings.gradle.kts
-├── gradlew / gradlew.bat
-├── gradle/wrapper/
-└── src/
-    ├── main/
-    │   ├── java/com/utec/inventario/
-    │   │   ├── InventarioApplication.java
-    │   │   ├── config/
-    │   │   ├── controller/
-    │   │   ├── domain/
-    │   │   ├── dto/request/
-    │   │   ├── dto/response/
-    │   │   ├── entity/
-    │   │   ├── exception/
-    │   │   ├── mapper/
-    │   │   ├── repository/
-    │   │   ├── security/
-    │   │   └── service/
-    │   └── resources/
-    │       ├── application.properties
-    │       ├── application-dev.properties
-    │       └── db/migration/
-    └── test/java/com/utec/inventario/
-        ├── InventarioApplicationTests.java
-        ├── CategoriaConcurrenciaTests.java
-        ├── AuthIntegrationTests.java
-        ├── SubcategoriaIntegrationTests.java
-        ├── SubcategoriaConcurrenciaTests.java
-        ├── OrganizacionIntegrationTests.java
-        ├── OrganizacionConcurrenciaTests.java
-        ├── UsuarioLaboratorioIntegrationTests.java
-        ├── UsuarioLaboratorioConcurrenciaTests.java
-        ├── EquipoIntegrationTests.java
-        ├── EquipoConcurrenciaTests.java
-        ├── MovimientoEquipoIntegrationTests.java
-        ├── MovimientoEquipoConcurrenciaTests.java
-        ├── entity/UsuarioLaboratorioIdTest.java
-        ├── exception/GlobalExceptionHandlerTest.java
-        ├── mapper/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio, Equipo y MovimientoEquipo)
-        ├── security/JwtServiceTest.java
-        └── service/ (Categoria, Subcategoria, Sede, Area, Laboratorio, UsuarioLaboratorio, AlcanceLaboratorio, Equipo y MovimientoEquipo)
+JWT / Spring Security
+        ↓
+Controller → Request DTO → Mapper / Domain
+                               ↓
+                            Service
+                               ↓
+                     Repository → Entity → PostgreSQL
+                               ↓
+                    Domain → Mapper → Response DTO
 ```
 
-Los paquetes vacíos contienen `.gitkeep` para conservarlos en Git, sin clases
-ficticias. El test de arranque existente se mantiene; las pruebas incluyen
-Categoría, Subcategoría, organización, autenticación, asignaciones, alcance,
-Equipos, movimientos, reglas y concurrencia. Sprint 6 conserva las 203 pruebas
-previas como regresión. Toda integración que escribe utiliza una base temporal
-`inventario_verificacion_*`; no se crean Equipos, movimientos ni asignaciones
-demo en la base habitual para cerrar el sprint.
+Controller coordina HTTP; Service valida negocio, alcance y transacciones;
+Repository consulta PostgreSQL; Entity representa persistencia. Mapper convierte
+datos sin consultar la base. Se usan DTOs públicos, relaciones JPA sin colecciones
+bidireccionales y `@Transactional` en servicios.
 
-Las dependencias incluyen Web MVC, JPA, PostgreSQL JDBC, Validation, Security,
-Flyway con su módulo PostgreSQL, Lombok y DevTools. Los starters de pruebas
-existentes incluyen `spring-boot-starter-test` transitivamente. Sprint 3 incorpora
-MapStruct **1.6.3**, su procesador de anotaciones y `lombok-mapstruct-binding:0.2.0`.
-Las versiones de Java, Spring Boot, Gradle y Lombok se conservan.
-La autenticación utiliza JJWT **0.13.0**, como los ejemplos del profesor,
-y BCrypt de Spring Security para verificar los hashes de contraseñas.
+Los paquetes de `src/main/java/com/utec/inventario/` son `config`, `controller`,
+`domain`, `dto/request`, `dto/response`, `entity`, `exception`, `mapper`,
+`repository`, `security` y `service`; todos contienen implementación.
+Consulta [arquitectura](docs/backend-final/arquitectura-backend.md) y los
+[ocho flujos principales](docs/backend-final/flujos-principales.md).
 
-## Preparar PostgreSQL
+## 4. Modelo
 
-La base esperada es `inventario_laboratorios`. Flyway crea las tablas dentro de
-una base existente; no crea el servidor, la base ni el rol PostgreSQL.
+**10 entidades, 76 columnas y 13 relaciones FK**, sin cambios de esquema en
+Sprint 7. `flyway_schema_history` es infraestructura y no integra ese conteo.
 
-1. En pgAdmin, conectado con tu administrador local, crea el rol de ejemplo
-   `inventario_app` en **Login/Group Roles**. Activa **Can login?** y configura
-   tu contraseña local en **Definition**. No necesita ser superusuario.
-2. En Query Tool, conectado a la base `postgres`, ejecuta esta sentencia por
-   separado, con autocommit habilitado, si la base todavía no existe:
+| Área del modelo | Entidades |
+|---|---|
+| Organización | Sede → Área → Laboratorio |
+| Clasificación | Categoría → Subcategoría |
+| Identidad y autorización | Rol, Usuario, UsuarioLaboratorio |
+| Inventario | Equipo |
+| Trazabilidad | MovimientoEquipo |
 
-   ```sql
-   CREATE DATABASE inventario_laboratorios OWNER inventario_app;
-   ```
+UsuarioLaboratorio resuelve Usuario N:M Laboratorio con PK compuesta. Equipo
+tiene Laboratorio y Subcategoría obligatorios y responsable opcional. Movimiento
+tiene Equipo, destino y actor obligatorios; origen permite null para datos legacy.
+Los traslados nuevos siempre toman el origen real del Equipo.
 
-3. El primer arranque debe apuntar a una base vacía. El rol de la aplicación
-   necesita conexión y permisos `USAGE` y `CREATE` sobre el esquema `public`.
-   Si usas una base existente con otro propietario, un administrador puede
-   concederlos, conectado a `inventario_laboratorios`:
+Los diez modelos están integrados en Java/API; Rol y Usuario participan en
+JWT/autorización y esto no significa que tengan CRUD administrativo completo.
+Consulta el [ERD lógico](docs/Erd_actual/erd-logico-v2.md),
+[ERD físico](docs/Erd_actual/erd-fisico-v2.md) y
+[cotejo Entity/Flyway](docs/backend-final/auditoria-entity-flyway.md).
 
-   ```sql
-   GRANT CONNECT ON DATABASE inventario_laboratorios TO inventario_app;
-   GRANT USAGE, CREATE ON SCHEMA public TO inventario_app;
-   ```
+## 5. Roles
 
-Si la base ya contiene tablas o un historial Flyway, revisa su estado antes del
-arranque. No ejecutes un SQL anterior para crear el esquema ni apliques `baseline`
-o `repair` para ocultar diferencias. Los borradores originales V1–V4 solo tenían
-comentarios: si llegaste a aplicarlos, usa una base de desarrollo vacía y conserva
-la anterior hasta revisar sus datos.
+| Operación | ADMIN | GESTOR | LECTOR |
+|---|---|---|---|
+| Leer catálogos | Global | Global | Global |
+| Escribir catálogos/asignaciones | Sí | No | No |
+| Leer Equipos | Global | Alcance vigente | Alcance vigente |
+| Crear, editar o dar de baja Equipos | Global | Alcance vigente | No |
+| Trasladar | Global | Origen y destino autorizados | No |
+| Consultar historia | Global | Origen o destino autorizado | Origen o destino autorizado |
 
-## Variables de entorno y ejecución en PowerShell
+Se comprueba el usuario y rol activos con el estado vigente de PostgreSQL.
+La [matriz de permisos](docs/matriz-permisos.md) desarrolla cada operación.
+El responsable de Equipo identifica custodia: **no concede permisos**.
 
-Abre PowerShell en la raíz del repositorio y entra al backend:
+## 6. Alcance
 
-```powershell
-Set-Location .\backend\inventario
-java -version
+`GET /api/auth/me/laboratorios` obtiene el principal autenticado. ADMIN recibe
+`alcanceGlobal=true` y laboratorios activos; GESTOR/LECTOR reciben solo asignaciones
+activas a laboratorios activos. Cambiar asignaciones no requiere renovar un JWT
+válido. El GET administrativo de asignaciones muestra configuración explícita,
+también para ADMIN; no equivale a su alcance global.
+
+ADMIN conserva lectura histórica global de Equipos BAJA y laboratorios inactivos.
+GESTOR/LECTOR consultan Equipos por su laboratorio actual e historia por origen
+**o** destino. Pueden ver movimientos autorizados de un Equipo actualmente fuera
+de su alcance, sin obtener acceso a su detalle. Los filtros se aplican en SQL.
+Los catálogos permanecen globales.
+
+## 7. Funcionalidades
+
+- Login JWT, perfil propio y consulta del alcance efectivo.
+- CRUD de Categoría, Subcategoría, Sede, Área y Laboratorio con baja lógica,
+  unicidad, jerarquías y validación de padres.
+- Reemplazo atómico de asignaciones; retiro lógico y reactivación del mismo par.
+- CRUD de Equipo, cuatro filtros combinables, responsables opcionales y estado BAJA.
+- Traslado atómico de Equipo con actor/origen/tipo/fecha controlados por servidor.
+- Historial inmutable desde la API, filtros por extremos y visibilidad actual.
+- Errores seguros, DTOs públicos y bloqueos para proteger operaciones concurrentes.
+
+PUT de Equipo rechaza código interno, laboratorio y otros campos inmutables.
+BAJA no se edita ni traslada. El traslado exige destino activo/diferente y motivo
+no blanco de máximo 500 caracteres; ubicación omitida/null/blanca se limpia.
+Los movimientos históricos no bloquean por sí solos la baja lógica de Laboratorio.
+Consulta [RN-01–45 y su evidencia](docs/reglas-negocio.md).
+
+## 8. Endpoints
+
+Se cuentan **42 combinaciones método+ruta**; los filtros no agregan endpoints.
+Las consultas jerárquicas se agrupan con el padre de la ruta.
+
+| Grupo | Cantidad |
+|---|---:|
+| AUTH | 3 |
+| CATEGORIA | 6 |
+| SUBCATEGORIA | 5 |
+| SEDE | 6 |
+| AREA | 6 |
+| LABORATORIO | 5 |
+| USUARIO_LABORATORIO | 2 |
+| EQUIPO | 6 |
+| MOVIMIENTO | 3 |
+
+El [catálogo de endpoints](docs/backend-final/endpoints.md) incluye permisos,
+parámetros y respuestas. Base local: `http://localhost:8080`. Login público:
+`POST /api/auth/login`, con `userName` y `password`; las otras rutas requieren
+`Authorization: Bearer <token>`.
+
+Alta CRUD devuelve 201; traslado devuelve 200 con Equipo actualizado y Movimiento;
+baja lógica devuelve 204. Consulta [códigos HTTP](docs/backend-final/codigos-http.md)
+para las diferencias reales, incluida la validación histórica de IDs de Categoría.
+
+## 9. PostgreSQL y Flyway
+
+Flyway administra el esquema; Hibernate usa `ddl-auto=validate`.
+`open-in-view=false` y `spring.flyway.enabled=true` permanecen configurados.
+
+| Migraciones | Contenido |
+|---|---|
+| V1–V3 | Organización, clasificación, identidad, asignaciones, Equipos y Movimientos |
+| V4 | Roles y catálogos iniciales; no crea usuarios ni Equipos |
+| V5 | Categoría sin duplicados de nombre por mayúsculas |
+| V6 | Username obligatorio y único sin distinguir mayúsculas |
+| V7 | Nombre de Subcategoría único dentro de Categoría |
+| V8 | Nombre de Área único dentro de Sede |
+| V9 | Código de Laboratorio único globalmente sin distinguir mayúsculas |
+
+No se agrega V10 ni se modifica una migración aplicada. Las 13 FK usan RESTRICT
+para operaciones físicas; las restricciones de baja lógica pertenecen a Services.
+Las fechas son TIMESTAMPTZ. La fecha de Movimiento viene del default PostgreSQL;
+`fechaActualizacion` de Equipo se actualiza en Java UTC, sin trigger.
+
+La base habitual es `inventario_laboratorios`. Si preparas una instalación nueva,
+crea una base vacía con tu usuario local antes del arranque, por ejemplo desde
+pgAdmin conectado a `postgres`:
+
+```sql
+CREATE DATABASE inventario_laboratorios;
 ```
 
-Configura la conexión y las cuentas de demostración en esa misma terminal.
-Introduce las contraseñas mediante los avisos; sus valores no se escriben en
-el historial de comandos:
+Ejecuta esa sentencia solo si no existe. No uses `repair`, `baseline` ni SQL
+manual para ocultar diferencias de un esquema ya existente. El arranque aplica
+V1–V9 en una base nueva o valida el historial de una ya preparada.
+
+## 10. Configuración
+
+<a id="variables-de-entorno-y-ejecución-en-powershell"></a>
+
+| Variable | Uso |
+|---|---|
+| DB_URL | JDBC PostgreSQL de la base elegida |
+| DB_USER / DB_PASSWORD | Credenciales locales de PostgreSQL |
+| JWT_SECRET | Clave Base64 de al menos 32 bytes |
+| JWT_EXPIRATION_SECONDS | Opcional; 1800 segundos por defecto |
+| SPRING_PROFILES_ACTIVE | `dev` solo cuando se necesitan cuentas demo |
+| DEMO_USER_PASSWORD | Secreto inicial externo del perfil dev y de pruebas |
+
+En PowerShell, antes de ejecutar Java directamente:
 
 ```powershell
 $env:DB_URL = 'jdbc:postgresql://localhost:5432/inventario_laboratorios'
@@ -203,376 +217,131 @@ if (-not $env:JWT_SECRET) {
         [Array]::Clear($jwtKeyBytes, 0, $jwtKeyBytes.Length)
     }
 }
+```
 
-$env:SPRING_PROFILES_ACTIVE = 'dev'
+Las variables pertenecen a esa terminal. `.env` no se carga automáticamente.
+Configúralas también en Run/Debug si arrancas desde el IDE. No publiques secretos
+ni tokens. Cambiar JWT_SECRET invalida tokens anteriores.
+
+El perfil dev crea marko/ADMIN, aldo/GESTOR y romel/LECTOR con una contraseña
+externa; no restablece cuentas existentes ni crea asignaciones, Equipos o
+Movimientos demo. Las cuentas existentes funcionan sin dev.
+
+## 11. Ejecución
+
+<a id="arranque-rápido-en-windows"></a>
+
+Desde la raíz, con PostgreSQL iniciado:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\iniciar-backend.ps1
+```
+
+El script solicita la conexión que falte y prepara JWT_SECRET para la sesión.
+Para inicializar las tres cuentas en una base nueva, agrega `-CrearUsuariosDemo`;
+entonces solicita la contraseña demo. Espera `Started InventarioApplication`,
+mantén la terminal abierta y usa Ctrl+C para detenerla.
+
+También puedes ejecutar `InventarioApplication.java` con Run: requiere las mismas
+variables en el IDE. El archivo ps1 es una ayuda de configuración y arranque.
+Con las variables ya definidas, otra opción desde `backend/inventario` es:
+
+```powershell
+.\gradlew.bat bootRun --no-daemon --console=plain
+```
+
+El puerto es 8080. `ECONNREFUSED` significa que no hay un servidor accesible en
+esa dirección. Si el arranque indica puerto ocupado, identifica primero el proceso:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8080 -State Listen |
+    Select-Object LocalAddress, LocalPort, OwningProcess
+```
+
+Detén desde su terminal únicamente la instancia que hayas iniciado; no arranques
+dos copias del backend en el mismo puerto.
+
+## 12. Tests
+
+Base anterior de Sprint 6: **233 pruebas**. Sprint 7 reejecutó las **233 y todas
+aprobaron**, sin fallos, errores ni omitidas; no se agregaron pruebas ni se
+modificaron las anteriores. compileJava y bootJar finalizaron correctamente.
+El JAR arrancó en 8,32 segundos y las 28 solicitudes HTTP de comprobación
+obtuvieron el estado esperado. La instancia se detuvo y la base temporal se
+eliminó después de la revisión; la base habitual quedó idéntica. El detalle está
+en [verificación final](docs/backend-final/verificacion-final.md).
+
+Para repetir la verificación, prepara una base local de pruebas ya existente con
+nombre `inventario_verificacion_*`. Desde la raíz configura DB_URL hacia esa
+base, DB_USER/DB_PASSWORD y DEMO_USER_PASSWORD externos; este último se solicita
+sin mostrarlo:
+
+```powershell
+$env:DB_URL = 'jdbc:postgresql://localhost:5432/inventario_verificacion_manual'
 $env:DEMO_USER_PASSWORD = [System.Net.NetworkCredential]::new(
-    '', (Read-Host 'Contraseña inicial de las tres cuentas demo' -AsSecureString)
+    '', (Read-Host 'Contraseña local de las cuentas de prueba' -AsSecureString)
 ).Password
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\verificar-backend.ps1
 ```
 
-Ejecuta en esa misma ventana:
+El script rechaza una base habitual/no local, genera JWT_SECRET si falta y ejecuta
+compileJava, test y bootJar. Comprueba los XML y exige cero fallos, errores y
+omitidas. **No crea ni elimina bases**. Si reutilizas una base de pruebas con
+cuentas demo, conserva su contraseña original.
 
-```powershell
-.\gradlew.bat bootRun
-```
+Reporte HTML: `backend/inventario/build/reports/tests/test/index.html`.
+JAR: `backend/inventario/build/libs/inventario-0.0.1-SNAPSHOT.jar`.
+La verificación automatizada escribe fixtures solo en la base de pruebas.
 
-La aplicación usa el puerto `8080`. Las variables anteriores pertenecen a esta
-sesión de PowerShell. Un archivo `.env` no se carga automáticamente: configura
-las variables en la terminal o en tu entorno de ejecución.
+## 13. Postman
 
-El perfil `dev` crea `marko` (ADMIN), `aldo` (GESTOR) y `romel` (LECTOR) mediante
-JPA, usando la contraseña inicial que introduzcas. Reiniciar no duplica usuarios,
-no restablece contraseñas ni cambia sus roles o estados. La contraseña de la demo
-es independiente de la de PostgreSQL. Sin `dev`, las cuentas existentes siguen
-disponibles, pero no se crean cuentas demo.
+Importa la [colección](docs/backend-final/postman/Inventario-Laboratorios.postman_collection.json)
+y el [environment](docs/backend-final/postman/Inventario-Laboratorios.postman_environment.json).
+Completa los secretos localmente; tokens e IDs iniciales están vacíos. Sigue el
+[orden guiado](docs/backend-final/endpoints.md), crea padres propios y conserva
+asignaciones anteriores antes de reemplazarlas. Los IDs deben proceder de
+respuestas o consultas reales.
 
-`JWT_SECRET` es obligatorio y contiene al menos 32 bytes aleatorios en Base64.
-Los comandos anteriores lo conservan al reiniciar en la misma terminal; si cambia
-la clave, inicia sesión otra vez. Los tokens duran 1800 segundos por defecto.
+Las guías de [asignaciones](docs/sprints/sprint-4e-usuario-laboratorio.md),
+[Equipos](docs/sprints/sprint-5-equipos.md) y
+[traslados](docs/sprints/sprint-6-movimientos.md) incluyen casos manuales y SQL.
+La colección no equivale a un Runner integral sin preparación: las bajas deben
+ejecutarse después de probar los recursos dependientes. Las verificaciones
+HTTP automatizadas y el uso manual de Postman se documentan por separado.
 
-No guardes credenciales reales en archivos versionados. `.env` y
-`application-local.properties` están excluidos de Git.
+## 14. Documentación
 
-## Flyway y Hibernate
-
-`application.properties` utiliza exclusivamente estas referencias para conectar:
-
-```properties
-spring.datasource.url=${DB_URL}
-spring.datasource.username=${DB_USER}
-spring.datasource.password=${DB_PASSWORD}
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.open-in-view=false
-spring.flyway.enabled=true
-```
-
-Flyway ejecuta automáticamente las migraciones pendientes de
-`src/main/resources/db/migration` durante el arranque, antes de inicializar JPA.
-El starter Flyway y `flyway-database-postgresql` existentes habilitan esta
-integración, conforme a la
-[documentación de Spring Boot](https://docs.spring.io/spring-boot/how-to/data-initialization.html).
-
-| Migración | Contenido |
+| Documento vigente | Contenido |
 |---|---|
-| `V1__crear_organizacion_y_catalogos.sql` | `sede`, `area`, `laboratorio`, `categoria`, `subcategoria` |
-| `V2__crear_usuarios_y_seguridad.sql` | `rol`, `usuario`, `usuario_laboratorio` |
-| `V3__crear_equipos_y_movimientos.sql` | `equipo`, `movimiento_equipo` |
-| `V4__insertar_datos_iniciales.sql` | Tres roles y organización/catálogos ficticios |
-| `V5__categoria_nombre_unico_sin_mayusculas.sql` | Índice único sobre `UPPER(categoria.nombre)`, incluyendo categorías inactivas |
-| `V6__agregar_username_usuario.sql` | Nombre de acceso único sin distinguir mayúsculas; usuarios anteriores reciben `usuario_<id_usuario>` |
-| `V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql` | Nombre de subcategoría único por categoría sobre `UPPER(nombre)`, incluyendo inactivas |
-| `V8__area_nombre_unico_por_sede_sin_mayusculas.sql` | Nombre de Área único por Sede sobre `UPPER(nombre)`, incluyendo inactivas |
-| `V9__laboratorio_codigo_unico_sin_mayusculas.sql` | Código de Laboratorio único globalmente sobre `UPPER(codigo)`, incluyendo inactivos |
+| [Resumen del backend](docs/backend-final/resumen-backend.md) | Lectura general del cierre |
+| [Inventario de auditoría](docs/backend-final/inventario-auditoria.md) | Estado inicial y hallazgos |
+| [Arquitectura](docs/backend-final/arquitectura-backend.md) | Capas y responsabilidades |
+| [Auditoría Entity/Flyway](docs/backend-final/auditoria-entity-flyway.md) | Correspondencia con PostgreSQL |
+| [Flujos principales](docs/backend-final/flujos-principales.md) | Ocho recorridos de una solicitud |
+| [Endpoints](docs/backend-final/endpoints.md) | Las 42 operaciones y Postman |
+| [Códigos HTTP](docs/backend-final/codigos-http.md) | Éxitos y errores reales |
+| [Reglas](docs/reglas-negocio.md) / [permisos](docs/matriz-permisos.md) | RN-01–45 y autorización |
+| [JWT](docs/autenticacion-jwt.md) | Login, variables y comprobaciones |
+| [Verificación final](docs/backend-final/verificacion-final.md) | Evidencia de tests, arranque y preservación |
+| [Checklist](docs/backend-final/checklist-entrega.md) | Criterios de entrega |
+| [Sprint 7](docs/sprints/sprint-7.md) | Reporte del cierre técnico |
+| [ERD lógico](docs/Erd_actual/erd-logico-v2.md) / [físico](docs/Erd_actual/erd-fisico-v2.md) | Mermaid editable y SVG |
+| [Cambios de ERD](docs/Erd_actual/erd-v2-cambios.md) | Comparación con los PDF iniciales |
 
-Flyway es la fuente oficial del esquema. Cada migración se aplica una vez y queda
-registrada con su checksum en `flyway_schema_history`. Tras aplicar estas versiones,
-los cambios posteriores deben introducirse mediante nuevas migraciones.
+Los documentos de [Sprint 3](docs/sprints/sprint-3-categorias.md),
+[Sprint 4](docs/sprints/sprint-4.md), [Sprint 5](docs/sprints/sprint-5.md) y
+[Sprint 6](docs/sprints/sprint-6.md) conservan resultados y pendientes de cada
+cierre. Sus cifras históricas no sustituyen la verificación final. Los PDF
+`docs/erd-logico.pdf` y `docs/erd-fisico.pdf` son diseños anteriores; el ERD v2 es
+el modelo vigente. En Sprint 7 solo se reparan enlaces rotos de las guías antiguas.
 
-`spring.jpa.hibernate.ddl-auto=validate` indica a Hibernate que valide el esquema
-frente a las entidades mapeadas, sin crear, actualizar ni borrar tablas. Ahora
-se mapean Categoría, Subcategoría, Sede, Área, Laboratorio, Usuario, Rol y
-UsuarioLaboratorio, Equipo y MovimientoEquipo: las diez tablas del dominio.
-Sprint 4E reutiliza la tabla puente de V2 y Sprint 5/6 reutilizan Equipo y
-MovimientoEquipo de V3: **no necesitan V10** ni cambios físicos. No se agregan
-equipos, movimientos ni asignaciones demo automáticamente.
+## 15. Backlog
 
-V1–V4 ya fueron aplicadas en la base local inspeccionada y se conservaron sin
-modificaciones. V5 amplía la unicidad de nombre para impedir duplicados que solo
-difieran en mayúsculas, incluso ante escrituras concurrentes. No se encontraron
-duplicados al inspeccionar la base. Si aparecen antes del próximo arranque, V5
-fallará hasta que se revisen; no elimina ni fusiona datos automáticamente.
-V7 aplica el mismo criterio a Subcategoría dentro de cada padre. Antes de aplicar
-V7 en una base existente, ejecuta la consulta de duplicados de la
-[guía de Sprint 4A](docs/sprints/sprint-4a-subcategorias.md#comprobación-manual-en-postgresql--pgadmin).
-Si hay duplicados, deben revisarse antes de la migración; no se eliminan datos
-ni se ejecuta `repair` automáticamente.
-V8 y V9 extienden la protección a Área por sede y código global de Laboratorio.
-Antes de aplicarlas, utiliza las consultas de duplicados de la
-[guía de organización](docs/sprints/sprint-4b-organizacion.md#22-consultas-sql-de-verificación-en-pgadmin).
-Si hay conflictos, la migración se detiene sin borrar datos. Se conservan las
-restricciones UNIQUE anteriores junto con los nuevos índices. Las tres tablas
-organizacionales ya tenían estado y fecha; no se agregan columnas redundantes.
+Quedan fuera del backend cerrado: administración completa de usuarios, gestión
+de mantenimiento como Entity, auditoría general, frontend, Docker, refresh token
+y permisos dinámicos. El estado MANTENIMIENTO y el filtro de Equipo ya existen;
+no constituyen un módulo de órdenes de mantenimiento.
 
-Decisiones del esquema:
-
-- PK simples con `SERIAL` y PK compuesta en `usuario_laboratorio`.
-- Fechas `TIMESTAMPTZ` con `DEFAULT CURRENT_TIMESTAMP`.
-- Las 13 FK usan `ON UPDATE RESTRICT ON DELETE RESTRICT` para preservar referencias.
-- 12 índices adicionales cubren las FK; `usuario_laboratorio(id_usuario)` ya queda
-  cubierto por la primera columna de su PK compuesta.
-- `laboratorio.codigo` es único globalmente, sin distinguir mayúsculas desde V9.
-  RN-13 se corrigió para expresar esta decisión; no es unicidad por Área.
-- El nombre de Área es único dentro de su Sede sin distinguir mayúsculas desde
-  V8. Sede no tiene una restricción de nombre único.
-- `equipo.id_responsable` es opcional y no representa autorización. Las series
-  opcionales ausentes se representan como `NULL`; sus valores informados son únicos.
-- Se validan los cuatro estados del equipo y el año entre 1900 y 2100 si se informa.
-- `tipo_movimiento` y `motivo` rechazan cadenas vacías o solo espacios. No se define
-  un catálogo cerrado de tipos de movimiento porque aún no fue especificado.
-- `equipo.fecha_actualizacion` recibe su valor inicial de PostgreSQL. Desde
-  Sprint 5, EquipoService la actualiza con el reloj Java en UTC al ejecutar PUT
-  o DELETE lógico; el traslado de Sprint 6 usa esa misma política. La fecha de
-  Movimiento procede del DEFAULT PostgreSQL y `fecha_creacion` de Equipo se
-  conserva. No se agregó un trigger.
-
-V4 inserta `ADMIN`, `GESTOR`, `LECTOR`, una sede, dos áreas, los laboratorios `L201`
-y `L206`, dos categorías y cuatro subcategorías. No inserta usuarios, hashes,
-equipos ni movimientos. Las relaciones de los datos iniciales se resuelven por
-nombre/código, sin asumir identificadores numéricos.
-Las cuentas demo se insertan posteriormente mediante `DemoUsuariosConfig` y
-solo con el perfil `dev`; los hashes BCrypt no forman parte de las migraciones.
-
-Los documentos de reglas y permisos distinguen diseño futuro de implementación
-vigente. Las guías de cada sprint registran sus APIs y verificaciones. No se
-encontró un `proyecto.sql` ni otro esquema SQL histórico en el código fuente.
-
-## Comprobación manual en pgAdmin
-
-Tras iniciar Spring Boot, abre Query Tool conectado a `inventario_laboratorios`:
-
-```sql
--- Deben aparecer las 10 tablas del dominio y flyway_schema_history.
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-ORDER BY table_name;
-
--- Tras iniciar la versión actual: nueve migraciones, versiones 1–9, con success = true.
-SELECT * FROM flyway_schema_history ORDER BY installed_rank;
-
--- ADMIN, GESTOR, LECTOR.
-SELECT id_rol, nombre, activo FROM rol ORDER BY nombre;
-
--- Usuarios de aplicación y sus roles; no muestra contraseñas ni hashes.
-SELECT u.id_usuario, u.username, u.nombre, r.nombre AS rol, u.activo
-FROM usuario AS u
-JOIN rol AS r ON r.id_rol = u.id_rol
-ORDER BY u.id_usuario;
-
--- Una sede, dos áreas y los laboratorios L201 y L206.
-SELECT s.nombre AS sede, a.nombre AS area, l.codigo, l.nombre AS laboratorio
-FROM sede AS s
-JOIN area AS a ON a.id_sede = s.id_sede
-JOIN laboratorio AS l ON l.id_area = a.id_area
-ORDER BY l.codigo;
-
--- Dos categorías y cuatro subcategorías.
-SELECT c.nombre AS categoria, sc.nombre AS subcategoria
-FROM categoria AS c
-JOIN subcategoria AS sc ON sc.id_categoria = c.id_categoria
-ORDER BY c.nombre, sc.nombre;
-
--- Restricciones y acciones de las claves foráneas.
-SELECT t.relname AS tabla, c.conname, pg_get_constraintdef(c.oid) AS definicion
-FROM pg_constraint AS c
-JOIN pg_class AS t ON t.oid = c.conrelid
-JOIN pg_namespace AS n ON n.oid = t.relnamespace
-WHERE n.nspname = 'public' AND c.contype IN ('p', 'u', 'f', 'c')
-ORDER BY t.relname, c.conname;
-
-SELECT tablename, indexname, indexdef
-FROM pg_indexes
-WHERE schemaname = 'public'
-ORDER BY tablename, indexname;
-```
-
-`bootRun` aplica las migraciones pendientes hasta V9. Los resultados de la
-verificación actual y los comandos para repetirla están en la
-[guía de Sprint 4B–4D](docs/sprints/sprint-4b-organizacion.md#23-tests-y-verificación-reproducible).
-La compilación de las clases principales se puede comprobar sin tests con:
-
-```powershell
-.\gradlew.bat classes -x test
-```
-
-## API de categorías — Sprint 3
-
-| Método | Ruta | Resultado correcto |
-|---|---|---|
-| GET | `/api/categorias` | 200, lista de categorías activas |
-| GET | `/api/categorias/{id}` | 200, categoría activa |
-| POST | `/api/categorias` | 201, categoría creada y cabecera `Location` |
-| PUT | `/api/categorias/{id}` | 200, reemplazo de nombre y descripción |
-| DELETE | `/api/categorias/{id}` | 204, baja lógica mediante `activo=false` |
-
-POST y PUT reciben exclusivamente el modelo editable `nombre` y `descripcion`.
-El servidor controla ID, estado y fecha. Los errores se devuelven como JSON:
-400 para entradas inválidas, 401 para autenticación ausente o inválida,
-403 para permisos insuficientes, 404 para categorías inexistentes o inactivas,
-409 para nombres duplicados y 500 con un mensaje genérico para fallos internos.
-Desde Sprint 4A, DELETE de una categoría con subcategorías activas devuelve 409.
-
-## API de subcategorías — Sprint 4A
-
-Subcategorías implementadas con relación JPA `@ManyToOne` hacia Categoría,
-DTOs, dominio, MapStruct, servicio transaccional y baja lógica.
-
-| Método | Ruta | Resultado correcto |
-|---|---|---|
-| GET | `/api/subcategorias` | 200, lista de subcategorías activas |
-| GET | `/api/subcategorias/{id}` | 200, subcategoría con resumen de su categoría |
-| GET | `/api/categorias/{idCategoria}/subcategorias` | 200, hijas activas de una categoría activa |
-| POST | `/api/subcategorias` | 201 y cabecera `Location` |
-| PUT | `/api/subcategorias/{id}` | 200, reemplazo de campos editables |
-| DELETE | `/api/subcategorias/{id}` | 204, baja lógica |
-
-POST y PUT reciben `nombre`, `descripcion` e `idCategoria`. El padre debe existir
-y estar activo; el nombre es único sin distinguir mayúsculas dentro de ese padre,
-incluso para filas inactivas. PUT permite cambiar de categoría. La
-[guía de Sprint 4A](docs/sprints/sprint-4a-subcategorias.md) incluye tests, SQL y 21 casos
-de Postman. Desde Sprint 5, Subcategoría rechaza la baja con 409 si contiene
-Equipos cuyo estado sea distinto de BAJA.
-
-## API de organización — Sprint 4B–4D
-
-Las tres verticales usan JPA, dominio separado, DTOs, MapStruct, transacciones y
-baja lógica. Área tiene `@ManyToOne` con Sede; Laboratorio con Área. Los responses
-incluyen resúmenes `{id,nombre}` del padre, sin exponer Entities.
-
-| Recurso | Rutas |
-|---|---|
-| Sede | `GET/POST /api/sedes`, `GET/PUT/DELETE /api/sedes/{id}` |
-| Área | `GET/POST /api/areas`, `GET/PUT/DELETE /api/areas/{id}` |
-| Laboratorio | `GET/POST /api/laboratorios`, `GET/PUT/DELETE /api/laboratorios/{id}` |
-| Áreas de una sede | `GET /api/sedes/{idSede}/areas` |
-| Laboratorios de un área | `GET /api/areas/{idArea}/laboratorios` |
-
-Son 17 operaciones: GET/PUT devuelven 200, POST 201 con `Location` y DELETE 204
-sin cuerpo. Las consultas solo muestran activos. PUT permite cambiar de padre;
-crear o mover exige padre existente y activo. Un padre inexistente da 404 y uno
-inactivo da 409. DELETE de Sede con Áreas activas o Área con Laboratorios activos
-da 409 y conserva al padre. Las rutas jerárquicas dan 404 para padre ausente o
-inactivo y `200 []` para padre activo sin hijos activos.
-
-Sede recibe nombre, dirección, distrito y departamento; Área nombre, descripción
-e `idSede`; Laboratorio nombre, código, ubicación e `idArea`. Nombre de Área es
-único por sede y código de Laboratorio es único global, ambos sin distinguir
-mayúsculas e incluyendo bajas lógicas. Sede no impone unicidad de nombre.
-La [guía de organización](docs/sprints/sprint-4b-organizacion.md) incluye los JSON
-exactos, errores, concurrencia y consultas SQL. Desde Sprint 4E, dar de baja un
-Laboratorio con asignaciones activas devuelve 409, incluso si el usuario asignado
-está inactivo. Desde Sprint 5 también rechaza la baja si tiene Equipos cuyo
-estado sea distinto de BAJA.
-
-## API de asignaciones y alcance — Sprint 4E
-
-| Método y ruta | Permiso | Resultado |
-|---|---|---|
-| `GET /api/admin/usuarios/{idUsuario}/laboratorios` | ADMIN | Asignaciones explícitas activas del usuario; sin asignaciones devuelve lista vacía |
-| `PUT /api/admin/usuarios/{idUsuario}/laboratorios` | ADMIN | Reemplaza atómicamente las asignaciones explícitas; devuelve el conjunto final |
-| `GET /api/auth/me/laboratorios` | ADMIN, GESTOR, LECTOR | Alcance efectivo del usuario autenticado, sin recibir ID del cliente |
-
-PUT recibe `{"idsLaboratorio":[1,2]}` usando IDs reales: elimina duplicados,
-acepta `[]`, desactiva relaciones retiradas y reactiva las anteriores sin cambiar
-su fecha original. Un usuario inexistente devuelve 404; cada laboratorio debe
-existir (404) y estar activo (409), y cualquier error conserva todo el conjunto
-anterior. ADMIN puede preparar asignaciones de un usuario inactivo, que continúa
-sin poder autenticarse. Las filas nunca se borran al desasignar.
-
-**Rol = qué; alcance = dónde.** ADMIN tiene alcance global a todos los
-laboratorios activos, independientemente de sus asignaciones explícitas.
-GESTOR/LECTOR obtienen solamente laboratorios activos con asignación activa.
-Los cambios se reflejan en la siguiente consulta con el mismo JWT válido.
-`GET /api/laboratorios` continúa siendo un catálogo global para los tres roles;
-Equipo utiliza ese servicio desde Sprint 5; los catálogos conservan su política.
-
-## API de Equipos — Sprint 5
-
-| Método y ruta | Permiso y alcance | Éxito |
-|---|---|---|
-| `GET /api/equipos` | ADMIN global; GESTOR/LECTOR en laboratorios permitidos | 200 |
-| `GET /api/equipos/{id}` | ADMIN global; GESTOR/LECTOR dentro del alcance | 200 |
-| `POST /api/equipos` | ADMIN o GESTOR autorizado en laboratorio activo | 201 + Location |
-| `PUT /api/equipos/{id}` | ADMIN o GESTOR dentro del alcance; equipo no BAJA | 200 |
-| `DELETE /api/equipos/{id}` | ADMIN o GESTOR dentro del alcance; equipo no BAJA | 204 |
-| `GET /api/admin/equipos` | Solo ADMIN; reutiliza filtros y listado global | 200 |
-
-Los listados combinan `estado`, `idLaboratorio`, `idSubcategoria` y
-`requiereMantenimiento` en consultas PostgreSQL. Un laboratorio explícitamente
-fuera de alcance devuelve 403 a GESTOR/LECTOR; sin asignaciones, GET sin filtro
-devuelve `[]`. ADMIN conserva consulta histórica global, incluso para Equipos
-BAJA en laboratorios posteriormente inactivos. El endpoint de alcance propio
-continúa describiendo laboratorios activos.
-
-Código interno y laboratorio se fijan al crear. PUT solo reemplaza campos
-editables y rechaza campos desconocidos/inmutables con 400; el cambio de
-laboratorio utiliza el flujo de traslado de Sprint 6; PUT sigue prohibiéndolo. Las
-series opcionales vacías se convierten en null. Los tres identificadores
-conservan UNIQUE sensible a mayúsculas de V3, también después de la baja.
-
-DELETE cambia el estado a BAJA y actualiza la fecha; no borra la fila. GET sigue
-mostrándola bajo autorización. PUT o segundo DELETE sobre BAJA devuelven 409,
-igual que intentar crear o editar hacia BAJA. Subcategoría/Laboratorio bloquean
-su propia baja si tienen Equipos no BAJA; Laboratorio además conserva el bloqueo
-por asignaciones activas. Responsable es opcional y no concede permisos.
-
-## Traslado e historial — Sprint 6
-
-| Método y ruta | Permiso | Resultado |
-|---|---|---|
-| `POST /api/equipos/{idEquipo}/traslados` | ADMIN global; GESTOR autorizado en origen Y destino | 200, Equipo actualizado y Movimiento confirmado |
-| `GET /api/equipos/{idEquipo}/movimientos` | ADMIN, GESTOR, LECTOR; historial según alcance | 200, más reciente primero |
-| `GET /api/movimientos` | ADMIN global; GESTOR/LECTOR con origen O destino en alcance | 200; filtro opcional `idLaboratorio` |
-
-El traslado recibe `idLaboratorioDestino`, `motivo` obligatorio de máximo 500
-caracteres y `ubicacionInternaDestino` opcional de máximo 200. El servidor toma
-origen del Equipo bloqueado, actor del principal, tipo TRASLADO y fecha de
-PostgreSQL. Equipo y Movimiento se confirman o revierten en una transacción.
-Se conserva código, Subcategoría, responsable, estado y fecha de creación.
-Si no se informa ubicación destino, se limpia a null; se actualiza la fecha
-de Equipo con reloj Java UTC, como en Sprint 5.
-
-BAJA, mismo destino o destino inactivo dan 409; destino inexistente, 404;
-alcance/rol insuficiente, 403; campos ajenos o entrada inválida, 400.
-ADMIN puede mover desde un origen histórico inactivo hacia un destino activo.
-GESTOR necesita alcance activo en ambos; LECTOR solo consulta. PUT de Equipo
-sigue sin permitir cambiar laboratorio.
-
-El historial usa `fechaMovimiento DESC, idMovimiento DESC`. ADMIN conserva toda
-la historia aunque Equipo o laboratorios estén de baja. GESTOR/LECTOR ven los
-movimientos relacionados con su alcance **actual** sobre origen o destino, no
-permisos históricos. Puede existir historia visible de un Equipo actualmente
-fuera de alcance; el detalle del Equipo mantiene su propia autorización.
-Sin historia visible, GET por Equipo devuelve `[]` si su ubicación actual está
-permitida y 403 si no lo está. Equipo inexistente da 404.
-
-No existen POST directo, PUT ni DELETE de movimientos. La baja lógica de un
-Laboratorio no se bloquea únicamente por historia: siguen vigentes las reglas
-de asignaciones activas y Equipos no BAJA. Los resúmenes muestran nombres actuales
-de las entidades referenciadas; no son snapshots versionados. La guía incluye
-Postman y SQL con LEFT JOIN del origen, porque V3 permite origen nulo en datos
-históricos aunque los nuevos traslados siempre registren su origen real.
-
-## Autenticación y permisos
-
-`POST /api/auth/login` es público y recibe `userName` y `password`. Devuelve
-`accessToken`, `tokenType`, `expiresIn` y los datos públicos del usuario.
-`GET /api/auth/me` devuelve el perfil asociado a un token válido.
-
-| Operación | ADMIN | GESTOR | LECTOR |
-|---|---|---|---|
-| Consultar categorías, subcategorías, sedes, áreas, laboratorios y perfil propio | Sí | Sí | Sí |
-| Crear, actualizar y dar de baja esos catálogos | Sí | No | No |
-
-En Postman selecciona **No Auth únicamente para el login**. En las solicitudes
-de categorías usa **Bearer Token** con el token de `marko` para completar las
-once pruebas de negocio. Subcategorías y organización usan la misma política:
-sin token válido devuelven 401; con un rol sin permiso de escritura, 403.
-Los catálogos son globales para los tres roles. Sprint 4E agrega la consulta de
-alcance propio y la administración exclusiva de asignaciones por ADMIN; la
-aplicación a Equipo se incorpora en Sprint 5 y a traslados/historial en Sprint 6.
-
-`SecurityConfig` usa sesiones deshabilitadas y `JwtAuthFilter` consulta el usuario
-y rol vigentes mediante JPA en cada petición. El JWT se envía exclusivamente en
-`Authorization`; no se usan cookies para autenticar, por lo que CSRF está
-deshabilitado. Form login, HTTP Basic y logout están deshabilitados y las otras
-rutas quedan denegadas. Los despachos internos de error están permitidos.
-
-La [guía de usuarios y JWT](docs/autenticacion-jwt.md) contiene el flujo completo,
-las pruebas de login y roles, los comandos PowerShell y las consultas SQL.
-
-`Instrumentación` ya existe por V4: un POST con ese nombre devolverá 409.
-La guía usa `Instrumentación Sprint 3` y los IDs realmente devueltos por la API.
-La guía del Sprint 3 conserva los resultados históricos de la revisión anterior
-a JWT y las correcciones de concurrencia. Sus pasos manuales se actualizaron para
-utilizar el token ADMIN. Postman queda disponible para tu comprobación manual.
+El [backlog](docs/backend-final/backlog.md) separa esas ampliaciones de mejoras
+opcionales como paginación y uniformidad futura de IDs inválidos. No hay rutas,
+tablas ni funcionalidades nuevas de negocio agregadas para cerrar Sprint 7.

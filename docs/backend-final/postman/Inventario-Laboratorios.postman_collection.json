@@ -1,0 +1,3442 @@
+{
+  "info": {
+    "_postman_id": "c1b553e8-abcb-4839-865c-bcf6806e8225",
+    "name": "Inventario de Laboratorios - Backend final",
+    "description": "Colección manual Sprint 7. Cubre las 42 operaciones implementadas con variantes de rol, filtros y casos negativos. NO ejecutar el Runner completo indiscriminadamente: los DELETE están dentro del CRUD y eliminan precondiciones. Orden guiado: login 3 → crear Categoría/Subcategoría y Sede/Área/Laboratorios → asignar Gestor ambos y Lector origen → equipo/consultas/PUT → traslado/historial → baja equipo → vaciar asignaciones → bajas de hijos a padres. Los PUT de asignaciones reemplazan la configuración completa del usuario: usar entorno de pruebas y guardar/restaurar configuración previa. Contraseñas, tokens e IDs iniciales vacíos. Documento: docs/backend-final/endpoints.md. Validación de esquema y contratos estática; no se afirma ejecución en Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Login público para los tres roles. Las contraseñas se completan localmente; tokens e IDs se guardan tras 200. Las consultas me usan exclusivamente el principal JWT.",
+      "item": [
+        {
+          "name": "Login ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Público. AuthRequest → AuthResponse. 400 por validación; 401 por credenciales incorrectas o usuario/rol inactivo. No hereda Authorization.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": {{json_userNameAdmin}},\n  \"password\": {{json_passwordAdmin}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"passwordAdmin\")) throw new Error(\"Completa passwordAdmin en el environment local.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Rol ADMIN\", function () { pm.expect(data.usuario.rol).to.eql(\"ADMIN\"); });",
+                  "  if (typeof data.accessToken === \"string\" && data.accessToken && data.usuario && data.usuario.id > 0 && data.usuario.rol === \"ADMIN\") {",
+                  "    pm.environment.set(\"tokenAdmin\", data.accessToken);",
+                  "    pm.environment.set(\"idUsuarioAdmin\", String(data.usuario.id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login GESTOR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Público. AuthRequest → AuthResponse. 400 por validación; 401 por credenciales incorrectas o usuario/rol inactivo. No hereda Authorization.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": {{json_userNameGestor}},\n  \"password\": {{json_passwordGestor}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"passwordGestor\")) throw new Error(\"Completa passwordGestor en el environment local.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Rol GESTOR\", function () { pm.expect(data.usuario.rol).to.eql(\"GESTOR\"); });",
+                  "  if (typeof data.accessToken === \"string\" && data.accessToken && data.usuario && data.usuario.id > 0 && data.usuario.rol === \"GESTOR\") {",
+                  "    pm.environment.set(\"tokenGestor\", data.accessToken);",
+                  "    pm.environment.set(\"idUsuarioGestor\", String(data.usuario.id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login LECTOR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Público. AuthRequest → AuthResponse. 400 por validación; 401 por credenciales incorrectas o usuario/rol inactivo. No hereda Authorization.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": {{json_userNameLector}},\n  \"password\": {{json_passwordLector}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"passwordLector\")) throw new Error(\"Completa passwordLector en el environment local.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Rol LECTOR\", function () { pm.expect(data.usuario.rol).to.eql(\"LECTOR\"); });",
+                  "  if (typeof data.accessToken === \"string\" && data.accessToken && data.usuario && data.usuario.id > 0 && data.usuario.rol === \"LECTOR\") {",
+                  "    pm.environment.set(\"tokenLector\", data.accessToken);",
+                  "    pm.environment.set(\"idUsuarioLector\", String(data.usuario.id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Mi usuario - Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "200 UsuarioResponse público; no expone passwordHash.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Mi alcance - Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me/laboratorios",
+            "description": "200 AlcanceLaboratoriosResponse. ADMIN global de laboratorios activos; GESTOR/LECTOR solo asignaciones activas a laboratorios activos. Se consulta de nuevo en cada petición.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Mi usuario - Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "200 UsuarioResponse público; no expone passwordHash.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Mi alcance - Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me/laboratorios",
+            "description": "200 AlcanceLaboratoriosResponse. ADMIN global de laboratorios activos; GESTOR/LECTOR solo asignaciones activas a laboratorios activos. Se consulta de nuevo en cada petición.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Mi usuario - Lector",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "200 UsuarioResponse público; no expone passwordHash.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Mi alcance - Lector",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me/laboratorios",
+            "description": "200 AlcanceLaboratoriosResponse. ADMIN global de laboratorios activos; GESTOR/LECTOR solo asignaciones activas a laboratorios activos. Se consulta de nuevo en cada petición.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Sin JWT - me devuelve 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Caso negativo: ausencia de token. Auth noauth explícito.\n\nHTTP esperado: 401. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "description": "CRUD ADMIN; lecturas globales para los tres roles. Dejar la baja para el final: requiere todas las subcategorías inactivas.",
+      "item": [
+        {
+          "name": "Listar Categoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/categorias",
+            "description": "LECTOR de ejemplo; A/G/L pueden leer globalmente. 200 lista de CategoriaResponse. Solo activos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener Categoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/categorias/{{idCategoria}}",
+            "description": "GESTOR de ejemplo; A/G/L. 200 CategoriaResponse. 404 si no existe o está inactivo.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idCategoria\") || \"\"))) throw new Error(\"Falta ID válido: idCategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear Categoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/categorias",
+            "description": "ADMIN. Crea fixture propio y guarda idCategoria. 201 CategoriaResponse y Location. 409 nombre reservado (global, ignora mayúsculas), incluso tras baja. DELETE 409 si tiene subcategorías activas.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Categoria-{{sufijo}}\",\n  \"descripcion\": \"Fixture manual Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idCategoria\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar Categoría",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/categorias/{{idCategoria}}",
+            "description": "ADMIN. PUT completo de editables, no PATCH. 200 CategoriaResponse. 404 si no existe/inactivo. 409 nombre reservado (global, ignora mayúsculas), incluso tras baja. DELETE 409 si tiene subcategorías activas.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Categoria-{{sufijo}} Editado\",\n  \"descripcion\": \"Fixture manual Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idCategoria\") || \"\"))) throw new Error(\"Falta ID válido: idCategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja Categoría - ejecutar al final",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/categorias/{{idCategoria}}",
+            "description": "ADMIN. Baja lógica 204, sin cuerpo. 404 si no existe/ya inactivo. 409 nombre reservado (global, ignora mayúsculas), incluso tras baja. DELETE 409 si tiene subcategorías activas. Ejecutar después de los demás flujos; no borra físicamente.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idCategoria\") || \"\"))) throw new Error(\"Falta ID válido: idCategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Subcategorías de Categoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/categorias/{{idCategoria}}/subcategorias",
+            "description": "200 lista de SubcategoriaResponse activas. Padre inexistente/inactivo 404; padre activo sin hijas 200 [].\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idCategoria\") || \"\"))) throw new Error(\"Falta ID válido: idCategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Subcategorias",
+      "description": "CRUD ADMIN; lecturas globales. Crear primero Categoría. La baja exige que sus equipos están BAJA.",
+      "item": [
+        {
+          "name": "Listar Subcategoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/subcategorias",
+            "description": "LECTOR de ejemplo; A/G/L pueden leer globalmente. 200 lista de SubcategoriaResponse. Solo activos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener Subcategoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/subcategorias/{{idSubcategoria}}",
+            "description": "GESTOR de ejemplo; A/G/L. 200 SubcategoriaResponse. 404 si no existe o está inactivo.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear Subcategoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/subcategorias",
+            "description": "ADMIN. Crea fixture propio y guarda idSubcategoria. 201 SubcategoriaResponse y Location. 404 padre inexistente; 409 padre inactivo o nombre repetido dentro de categoría. DELETE 409 si hay equipos no BAJA.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Subcategoria-{{sufijo}}\",\n  \"descripcion\": \"Fixture manual Postman\",\n  \"idCategoria\": {{idCategoria}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idCategoria\") || \"\"))) throw new Error(\"Falta ID válido: idCategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idSubcategoria\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar Subcategoría",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/subcategorias/{{idSubcategoria}}",
+            "description": "ADMIN. PUT completo de editables, no PATCH. 200 SubcategoriaResponse. 404 si no existe/inactivo. 404 padre inexistente; 409 padre inactivo o nombre repetido dentro de categoría. DELETE 409 si hay equipos no BAJA.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Subcategoria-{{sufijo}} Editado\",\n  \"descripcion\": \"Fixture manual Postman\",\n  \"idCategoria\": {{idCategoria}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idCategoria\") || \"\"))) throw new Error(\"Falta ID válido: idCategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja Subcategoría - ejecutar al final",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/subcategorias/{{idSubcategoria}}",
+            "description": "ADMIN. Baja lógica 204, sin cuerpo. 404 si no existe/ya inactivo. 404 padre inexistente; 409 padre inactivo o nombre repetido dentro de categoría. DELETE 409 si hay equipos no BAJA. Ejecutar después de los demás flujos; no borra físicamente.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organizacion",
+      "description": "Orden de creación: Sede → Área → Laboratorio origen y destino. Todos los GET de catálogo son globales. Ejecutar bajas al final y de hijos a padres.",
+      "item": [
+        {
+          "name": "Listar Sede",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/sedes",
+            "description": "LECTOR de ejemplo; A/G/L pueden leer globalmente. 200 lista de SedeResponse. Solo activos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener Sede",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/sedes/{{idSede}}",
+            "description": "GESTOR de ejemplo; A/G/L. 200 SedeResponse. 404 si no existe o está inactivo.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSede\") || \"\"))) throw new Error(\"Falta ID válido: idSede. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear Sede",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/sedes",
+            "description": "ADMIN. Crea fixture propio y guarda idSede. 201 SedeResponse y Location. El nombre puede repetirse. DELETE 409 si hay Áreas activas.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Sede-{{sufijo}}\",\n  \"direccion\": \"Calle de pruebas\",\n  \"distrito\": \"Barranco\",\n  \"departamento\": \"Lima\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idSede\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar Sede",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/sedes/{{idSede}}",
+            "description": "ADMIN. PUT completo de editables, no PATCH. 200 SedeResponse. 404 si no existe/inactivo. El nombre puede repetirse. DELETE 409 si hay Áreas activas.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Sede-{{sufijo}} Editado\",\n  \"direccion\": \"Calle de pruebas\",\n  \"distrito\": \"Barranco\",\n  \"departamento\": \"Lima\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSede\") || \"\"))) throw new Error(\"Falta ID válido: idSede. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja Sede - ejecutar al final",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/sedes/{{idSede}}",
+            "description": "ADMIN. Baja lógica 204, sin cuerpo. 404 si no existe/ya inactivo. El nombre puede repetirse. DELETE 409 si hay Áreas activas. Ejecutar después de los demás flujos; no borra físicamente.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSede\") || \"\"))) throw new Error(\"Falta ID válido: idSede. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Áreas de Sede",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/sedes/{{idSede}}/areas",
+            "description": "200 lista de AreaResponse activas; 404 padre inexistente/inactivo; 200 [] si no hay hijas.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSede\") || \"\"))) throw new Error(\"Falta ID válido: idSede. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Listar Área",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/areas",
+            "description": "LECTOR de ejemplo; A/G/L pueden leer globalmente. 200 lista de AreaResponse. Solo activos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener Área",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/areas/{{idArea}}",
+            "description": "GESTOR de ejemplo; A/G/L. 200 AreaResponse. 404 si no existe o está inactivo.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear Área",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/areas",
+            "description": "ADMIN. Crea fixture propio y guarda idArea. 201 AreaResponse y Location. 404 sede inexistente; 409 sede inactiva o nombre repetido en sede. DELETE 409 si hay laboratorios activos.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Area-{{sufijo}}\",\n  \"descripcion\": \"Fixture manual Postman\",\n  \"idSede\": {{idSede}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSede\") || \"\"))) throw new Error(\"Falta ID válido: idSede. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idArea\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar Área",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/areas/{{idArea}}",
+            "description": "ADMIN. PUT completo de editables, no PATCH. 200 AreaResponse. 404 si no existe/inactivo. 404 sede inexistente; 409 sede inactiva o nombre repetido en sede. DELETE 409 si hay laboratorios activos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Area-{{sufijo}} Editado\",\n  \"descripcion\": \"Fixture manual Postman\",\n  \"idSede\": {{idSede}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSede\") || \"\"))) throw new Error(\"Falta ID válido: idSede. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja Área - ejecutar al final",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/areas/{{idArea}}",
+            "description": "ADMIN. Baja lógica 204, sin cuerpo. 404 si no existe/ya inactivo. 404 sede inexistente; 409 sede inactiva o nombre repetido en sede. DELETE 409 si hay laboratorios activos. Ejecutar después de los demás flujos; no borra físicamente.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Laboratorios de Área",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/areas/{{idArea}}/laboratorios",
+            "description": "200 lista de LaboratorioResponse activos; 404 padre inexistente/inactivo; 200 [] si no hay hijos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Listar Laboratorio origen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios",
+            "description": "LECTOR de ejemplo; A/G/L pueden leer globalmente. 200 lista de LaboratorioResponse. Solo activos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener Laboratorio origen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios/{{idLaboratorio}}",
+            "description": "GESTOR de ejemplo; A/G/L. 200 LaboratorioResponse. 404 si no existe o está inactivo.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear Laboratorio origen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios",
+            "description": "ADMIN. Crea fixture propio y guarda idLaboratorio. 201 LaboratorioResponse y Location. 404 Área inexistente; 409 Área inactiva o código reservado global. DELETE 409 si hay asignaciones activas o equipos no BAJA.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Lab-origen-{{sufijo}}\",\n  \"codigo\": \"PM-O-{{sufijo}}\",\n  \"ubicacion\": \"Piso 1\",\n  \"idArea\": {{idArea}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idLaboratorio\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar Laboratorio origen",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios/{{idLaboratorio}}",
+            "description": "ADMIN. PUT completo de editables, no PATCH. 200 LaboratorioResponse. 404 si no existe/inactivo. 404 Área inexistente; 409 Área inactiva o código reservado global. DELETE 409 si hay asignaciones activas o equipos no BAJA.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Lab-origen-{{sufijo}} Editado\",\n  \"codigo\": \"PM-O-{{sufijo}}\",\n  \"ubicacion\": \"Piso 1\",\n  \"idArea\": {{idArea}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja Laboratorio origen - ejecutar al final",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios/{{idLaboratorio}}",
+            "description": "ADMIN. Baja lógica 204, sin cuerpo. 404 si no existe/ya inactivo. 404 Área inexistente; 409 Área inactiva o código reservado global. DELETE 409 si hay asignaciones activas o equipos no BAJA. Ejecutar después de los demás flujos; no borra físicamente.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear Laboratorio destino",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios",
+            "description": "Segundo fixture necesario para traslado. Mismo endpoint de alta, código distinto. Guarda idLaboratorioDestino.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Lab-destino-{{sufijo}}\",\n  \"codigo\": \"PM-D-{{sufijo}}\",\n  \"ubicacion\": \"Piso 2\",\n  \"idArea\": {{idArea}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idArea\") || \"\"))) throw new Error(\"Falta ID válido: idArea. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idLaboratorioDestino\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja Laboratorio destino - ejecutar al final",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/laboratorios/{{idLaboratorioDestino}}",
+            "description": "Tras dar de baja el equipo y vaciar asignaciones. Los movimientos históricos no bloquean la baja. 409 mientras existan equipos no BAJA/asignaciones activas.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UsuarioLaboratorio",
+      "description": "ADMIN administra asignaciones explícitas. Cada PUT reemplaza TODA la lista, no agrega. Usar entorno de pruebas y conservar configuración previa de Gestor/Lector para restaurarla. Me/laboratorios está en Auth.",
+      "item": [
+        {
+          "name": "Asignaciones del Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/usuarios/{{idUsuarioGestor}}/laboratorios",
+            "description": "200 UsuarioLaboratoriosResponse. 404 usuario inexistente. Admite usuario inactivo como destinatario de configuración.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idUsuarioGestor\") || \"\"))) throw new Error(\"Falta ID válido: idUsuarioGestor. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Asignar origen y destino al Gestor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/usuarios/{{idUsuarioGestor}}/laboratorios",
+            "description": "200 UsuarioLaboratoriosResponse. 400 lista inválida; 404 usuario/laboratorio inexistente; 409 laboratorio inactivo. Cambio atómico visible con el mismo JWT.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idsLaboratorio\": [{{idLaboratorio}}, {{idLaboratorioDestino}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idUsuarioGestor\") || \"\"))) throw new Error(\"Falta ID válido: idUsuarioGestor. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Asignar solo origen al Lector",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/usuarios/{{idUsuarioLector}}/laboratorios",
+            "description": "Fixture de alcance: el Lector podrá ver el evento de salida por origen, pero no el detalle del equipo una vez trasladado a destino.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idsLaboratorio\": [{{idLaboratorio}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idUsuarioLector\") || \"\"))) throw new Error(\"Falta ID válido: idUsuarioLector. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Vaciar asignaciones Gestor - ejecutar al final",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/usuarios/{{idUsuarioGestor}}/laboratorios",
+            "description": "Lista vacía válida: 200 UsuarioLaboratoriosResponse con laboratorios []. Se necesita antes de desactivar los laboratorios del fixture; restaura después las asignaciones previas si correspondía.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idsLaboratorio\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idUsuarioGestor\") || \"\"))) throw new Error(\"Falta ID válido: idUsuarioGestor. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Vaciar asignaciones Lector - ejecutar al final",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/usuarios/{{idUsuarioLector}}/laboratorios",
+            "description": "Lista vacía válida: 200 UsuarioLaboratoriosResponse con laboratorios []. Se necesita antes de desactivar los laboratorios del fixture; restaura después las asignaciones previas si correspondía.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idsLaboratorio\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idUsuarioLector\") || \"\"))) throw new Error(\"Falta ID válido: idUsuarioLector. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Gestor no administra asignaciones - 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/usuarios/{{idUsuarioGestor}}/laboratorios",
+            "description": "Solo ADMIN puede consultar o reemplazar asignaciones explícitas, incluso si el ID corresponde al propio Gestor.\n\nHTTP esperado: 403. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idUsuarioGestor\") || \"\"))) throw new Error(\"Falta ID válido: idUsuarioGestor. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Equipos",
+      "description": "Crear después de asignar origen/destino al Gestor. A global; G/L según laboratorio actual autorizado. Conservar el equipo vigente para Movimientos: DELETE se ejecuta al final.",
+      "item": [
+        {
+          "name": "Listar equipos - Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos",
+            "description": "200 lista de EquipoResponse dentro de alcance. Sin asignaciones: []. Incluye BAJA si no se filtra estado.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener equipo - Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}",
+            "description": "200 EquipoResponse; 404 inexistente; 403 fuera de alcance. BAJA sigue consultable.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear equipo - Gestor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos",
+            "description": "Requiere subcategoría/laboratorio activos y alcance. Guarda idEquipo. 404 referencias inexistentes; 409 inactivas/duplicados/BAJA; 403 alcance.\n\nHTTP esperado: 201. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoInterno\": \"PM-EQ-{{sufijo}}\",\n  \"idLaboratorio\": {{idLaboratorio}},\n  \"nombre\": \"PM-Equipo-{{sufijo}}\",\n  \"serieUtec\": null,\n  \"numeroSerie\": null,\n  \"marca\": \"Prueba\",\n  \"modelo\": \"Modelo 1\",\n  \"estado\": \"OPERATIVO\",\n  \"anio\": 2026,\n  \"ordenCompra\": null,\n  \"ubicacionInterna\": \"Mesa 1\",\n  \"comentario\": \"Fixture manual Postman\",\n  \"requiereMantenimiento\": false,\n  \"idSubcategoria\": {{idSubcategoria}},\n  \"idResponsable\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"ID positivo\", function () { pm.expect(data.id).to.be.a(\"number\").and.above(0); });",
+                  "  if (Number.isInteger(data.id) && data.id > 0) pm.environment.set(\"idEquipo\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar equipo - Gestor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}",
+            "description": "PUT completo. Limpia comentario con null. Conserva código, laboratorio, ID y fecha de creación. No admite equipo BAJA. No reenviar código/laboratorio dentro del cuerpo.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Equipo-{{sufijo}} Editado\",\n  \"serieUtec\": null,\n  \"numeroSerie\": null,\n  \"marca\": \"Prueba\",\n  \"modelo\": \"Modelo 1\",\n  \"estado\": \"OPERATIVO\",\n  \"anio\": 2026,\n  \"ordenCompra\": null,\n  \"ubicacionInterna\": \"Mesa 1\",\n  \"comentario\": null,\n  \"requiereMantenimiento\": false,\n  \"idSubcategoria\": {{idSubcategoria}},\n  \"idResponsable\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Baja equipo - ejecutar DESPUÉS del traslado",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}",
+            "description": "204 sin cuerpo; establece BAJA, no borra físicamente. Gestor necesita alcance del laboratorio actual. Repetir DELETE produce 409. Consultas históricas siguen disponibles.\n\nHTTP esperado: 204. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 204\", function () { pm.response.to.have.status(204); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Listado global - alias ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/equipos",
+            "description": "200 lista global, incluido histórico en laboratorio inactivo. GESTOR/LECTOR obtienen 403 en este alias.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Filtros combinados - Gestor origen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos?estado=OPERATIVO&idLaboratorio={{idLaboratorio}}&idSubcategoria={{idSubcategoria}}&requiereMantenimiento=false",
+            "description": "Antes de traslado incluye el fixture operativo; después ya no, porque cambió de laboratorio. Filtros se combinan con AND. Filtro fuera del alcance 403.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Filtro BAJA - ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/equipos?estado=BAJA&idLaboratorio={{idLaboratorioDestino}}",
+            "description": "Ejecutar después de traslado y baja. Mantiene histórico aunque el laboratorio destino se desactive.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Lector no escribe equipos - 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos",
+            "description": "Caso negativo de rol: LECTOR solo consulta. No crea registros.\n\nHTTP esperado: 403. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoInterno\": \"PM-EQ-{{sufijo}}\",\n  \"idLaboratorio\": {{idLaboratorio}},\n  \"nombre\": \"PM-Equipo-{{sufijo}}\",\n  \"serieUtec\": null,\n  \"numeroSerie\": null,\n  \"marca\": \"Prueba\",\n  \"modelo\": \"Modelo 1\",\n  \"estado\": \"OPERATIVO\",\n  \"anio\": 2026,\n  \"ordenCompra\": null,\n  \"ubicacionInterna\": \"Mesa 1\",\n  \"comentario\": \"Fixture manual Postman\",\n  \"requiereMantenimiento\": false,\n  \"idSubcategoria\": {{idSubcategoria}},\n  \"idResponsable\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Sin JWT equipos - 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/api/equipos",
+            "description": "Caso negativo de autenticación, con noauth explícito.\n\nHTTP esperado: 401. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT no traslada - 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}",
+            "description": "Caso negativo: idLaboratorio es desconocido/no editable en UpdateEquipoRequest. Devuelve 400 y explica el flujo de traslado; no cambia el equipo.\n\nHTTP esperado: 400. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PM-Equipo-{{sufijo}} Editado\",\n  \"serieUtec\": null,\n  \"numeroSerie\": null,\n  \"marca\": \"Prueba\",\n  \"modelo\": \"Modelo 1\",\n  \"estado\": \"OPERATIVO\",\n  \"anio\": 2026,\n  \"ordenCompra\": null,\n  \"ubicacionInterna\": \"Mesa 1\",\n  \"comentario\": null,\n  \"requiereMantenimiento\": false,\n  \"idSubcategoria\": {{idSubcategoria}},\n  \"idResponsable\": null,\n  \"idLaboratorio\": {{idLaboratorioDestino}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idSubcategoria\") || \"\"))) throw new Error(\"Falta ID válido: idSubcategoria. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Lector fuera del detalle tras traslado - 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}",
+            "description": "Ejecutar DESPUÉS del traslado, con Lector asignado SOLO a origen. El equipo está en destino, por lo que no puede ver su detalle actual.\n\nHTTP esperado: 403. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Movimientos",
+      "description": "Requiere equipo vigente en origen, Gestor asignado a origen+destino y Lector solo a origen. El traslado cambia el estado del fixture: repetir hacia el mismo destino da 409. No hay CRUD directo del evento.",
+      "item": [
+        {
+          "name": "Trasladar equipo - Gestor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}/traslados",
+            "description": "200 TrasladoEquipoResponse {equipo,movimiento}; equipo actualizado y evento en misma transacción. 404 inexistente; 409 BAJA/mismo destino/destino inactivo; 403 falta origen o destino. Actor y origen se calculan en servidor.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLaboratorioDestino\": {{idLaboratorioDestino}},\n  \"motivo\": \"{{motivoTraslado}}\",\n  \"ubicacionInternaDestino\": \"{{ubicacionDestino}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test(\"Destino actualizado\", function () { pm.expect(data.equipo.laboratorio.id).to.eql(Number(pm.environment.get(\"idLaboratorioDestino\"))); });",
+                  "  pm.test(\"Origen real y actor Gestor\", function () { pm.expect(data.movimiento.laboratorioOrigen.id).to.eql(Number(pm.environment.get(\"idLaboratorio\"))); pm.expect(data.movimiento.actor.id).to.eql(Number(pm.environment.get(\"idUsuarioGestor\"))); });",
+                  "  if (data.movimiento && Number.isInteger(data.movimiento.id) && data.movimiento.id > 0) pm.environment.set(\"idMovimiento\", String(data.movimiento.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Historial del equipo - Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}/movimientos",
+            "description": "200 lista de MovimientoEquipoResponse visible por origen O destino. Orden fecha descendente e ID descendente.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Listar movimientos - ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/movimientos",
+            "description": "200 historia global, incluidos equipos BAJA, laboratorios inactivos y actores posteriormente inactivos.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"tokenAdmin\")) throw new Error(\"Falta tokenAdmin. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Movimientos filtrados por origen - Lector",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/movimientos?idLaboratorio={{idLaboratorio}}",
+            "description": "Con Lector asignado solo a origen, el evento de salida es visible aunque el equipo ya está en destino. El filtro compara origen O destino.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorio\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorio. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Movimientos filtrados por destino - Gestor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/movimientos?idLaboratorio={{idLaboratorioDestino}}",
+            "description": "Gestor asignado a destino puede consultar este filtro. Un laboratorio fuera del alcance devuelve 403.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenGestor\")) throw new Error(\"Falta tokenGestor. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Historial del equipo - Lector conserva evento de origen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}/movimientos",
+            "description": "Después del traslado: 200 subconjunto histórico visible por origen, aunque GET del detalle actual del equipo sea 403. Sin evento visible ni alcance actual: 403.\n\nHTTP esperado: 200. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Lector no traslada - 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenLector}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/equipos/{{idEquipo}}/traslados",
+            "description": "El rol LECTOR no puede trasladar, aunque tenga alguna asignación. Debe rechazarse antes de modificar equipo o historial.\n\nHTTP esperado: 403. Seleccionar el environment local. Véase ../endpoints.md para el contrato completo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLaboratorioDestino\": {{idLaboratorioDestino}},\n  \"motivo\": \"{{motivoTraslado}}\",\n  \"ubicacionInternaDestino\": \"{{ubicacionDestino}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idEquipo\") || \"\"))) throw new Error(\"Falta ID válido: idEquipo. Ejecuta la creación/login correspondiente.\");",
+                  "if (!/^[1-9][0-9]*$/.test(String(pm.environment.get(\"idLaboratorioDestino\") || \"\"))) throw new Error(\"Falta ID válido: idLaboratorioDestino. Ejecuta la creación/login correspondiente.\");",
+                  "if (!pm.environment.get(\"tokenLector\")) throw new Error(\"Falta tokenLector. Ejecuta su login primero.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP esperado 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Respuesta sin contraseñas ni hashes\", function () { pm.expect(pm.response.text()).not.to.match(/\"password(?:Hash)?\"\\s*:/i); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get(\"baseUrl\")) throw new Error(\"Selecciona el environment Inventario Laboratorios - Local.\");",
+          "if (!pm.environment.get(\"sufijo\")) pm.environment.set(\"sufijo\", Date.now().toString(36) + Math.random().toString(36).slice(2, 6));",
+          "[\"Admin\", \"Gestor\", \"Lector\"].forEach(function (rol) {",
+          "  [\"userName\", \"password\"].forEach(function (prefijo) {",
+          "    const key = prefijo + rol;",
+          "    pm.variables.set(\"json_\" + key, JSON.stringify(String(pm.environment.get(key) || \"\")));",
+          "  });",
+          "});"
+        ]
+      }
+    }
+  ]
+}

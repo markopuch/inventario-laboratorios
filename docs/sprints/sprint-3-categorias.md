@@ -8,7 +8,7 @@ la revisión posterior. Se añadieron pruebas de regresión con la autorización
 de ejecutar las comprobaciones necesarias.
 
 La versión actual añade usuarios JPA y autenticación JWT sobre esta vertical.
-Sigue primero la [guía de usuarios y JWT](autenticacion-jwt.md) para obtener un
+Sigue primero la [guía de usuarios y JWT](../autenticacion-jwt.md) para obtener un
 token ADMIN de `marko`; las once pruebas de categorías siguientes lo requieren.
 La arquitectura de negocio del Sprint 3 se conserva y los resultados históricos
 anteriores a JWT se identifican al final de este documento.
@@ -251,7 +251,7 @@ deshabilitado porque la autenticación usa el encabezado `Authorization` y no
 cookies. Los despachos internos de error están permitidos.
 
 En Postman usa **No Auth solamente para el login**. Sigue la
-[guía de usuarios y JWT](autenticacion-jwt.md#postman-login-y-autorización), inicia
+[guía de usuarios y JWT](../autenticacion-jwt.md#postman-login-y-autorización), inicia
 sesión con `marko` y guarda `accessToken` en la variable de colección `tokenAdmin`.
 Usa **Authorization → Bearer Token → `{{tokenAdmin}}`** en categorías.
 
@@ -536,7 +536,7 @@ mientras la consulta SQL sigue mostrando la fila con `activo=false`.
 Las cifras de esta sección corresponden a la revisión de categorías realizada
 antes de agregar autenticación. No representan el total de la suite actual.
 Los resultados y las pruebas de seguridad actuales se documentan en la
-[guía de usuarios y JWT](autenticacion-jwt.md).
+[guía de usuarios y JWT](../autenticacion-jwt.md).
 
 La revisión incluyó compilación, arranque de la aplicación empaquetada y **32
 comprobaciones correctas de 32** mediante HTTP real y consultas SQL sobre una
@@ -628,7 +628,7 @@ La suite arranca su servidor en un puerto aleatorio. Flyway prepara la base de
 pruebas en el primer arranque. El reporte HTML se genera en
 `backend/inventario/build/reports/tests/test/index.html`.
 La suite actual también incluye `AuthIntegrationTests` y `security/JwtServiceTest`;
-la [guía de usuarios y JWT](autenticacion-jwt.md#repetir-la-suite-automática)
+la [guía de usuarios y JWT](../autenticacion-jwt.md#repetir-la-suite-automática)
 explica sus comprobaciones y condiciones de ejecución.
 
 Para tu comprobación manual de negocio, vuelve a la sección de arranque y a las
