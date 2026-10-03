@@ -1,0 +1,185 @@
+# Frontend Jason — Inventario de Laboratorios
+
+Aplicación React/Vite conectada al backend Spring Boot del repositorio. Esta versión
+está en `frontend/version-jason/frontend/`; la versión Marko se conserva por separado.
+
+## Ejecución local en Windows
+
+Se necesitan Node.js con npm y Docker Desktop en ejecución. Los comandos siguientes
+parten de la raíz del repositorio `inventario-laboratorios` y usan PowerShell.
+
+En una terminal, usa el entorno Docker habitual del backend y su configuración local
+existente:
+
+```powershell
+Set-Location backend/inventario
+docker compose up -d
+docker compose ps
+Invoke-RestMethod http://localhost:8080/actuator/health | Select-Object status
+```
+
+El Compose contiene los servicios `db` y `backend`; el backend debe estar saludable
+y la consulta de salud debe devolver `UP`. Si ya están levantados y saludables, basta
+con comprobar ese estado. La configuración privada del backend permanece allí.
+
+En otra terminal, de nuevo desde la raíz del repositorio:
+
+```powershell
+Set-Location frontend/version-jason/frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+Abre `http://localhost:5173`. Vite usa ese puerto con `strictPort`: si está ocupado,
+el comando falla y muestra el conflicto, en lugar de cambiar de puerto silenciosamente.
+El navegador solicita `/api` al mismo origen y Vite lo reenvía al backend en 8080.
+
+## Configuración de la conexión
+
+Los valores por defecto ya permiten ejecutar la aplicación localmente; no es necesario
+crear un archivo de entorno. [`.env.example`](.env.example) muestra estas opciones:
+
+| Variable | Valor por defecto | Uso |
+|---|---|---|
+| `VITE_API_URL` | `/api` | Base pública de las solicitudes del navegador. |
+| `API_PROXY_TARGET` | `http://127.0.0.1:8080` | Destino del proxy del servidor de desarrollo Vite; no se incorpora al bundle del navegador. |
+
+Si existe `.env` o `.env.local`, conserva su contenido y ajusta únicamente la opción
+que necesites. No copies `.env.example` encima de `.env.local`. Reinicia Vite después
+de cambiar la configuración. Para usar otro backend de desarrollo basta con mantener
+`VITE_API_URL=/api` y cambiar `API_PROXY_TARGET` a su origen.
+
+Las variables `VITE_*` son públicas en el navegador: no deben contener contraseñas,
+credenciales de base de datos, JWT ni claves de firma. El frontend no necesita acceso
+directo a PostgreSQL. El proxy configurado aquí corresponde a `npm.cmd run dev`; un
+despliegue del build necesita que su servidor también enrute `/api` al backend.
+
+## Sesión, roles y datos iniciales
+
+El login utiliza **usuario**, no correo institucional. Se ingresa con una cuenta
+existente del backend; no hay registro público ni directorio de usuarios en esta UI.
+No se documentan ni precargan contraseñas.
+
+El JWT y el usuario se conservan únicamente en memoria. Recargar la página, cerrar
+la pestaña o cerrar sesión requiere iniciar sesión otra vez. Se eliminan las claves
+antiguas de almacenamiento local; no existe Recordarme ni recuperación de contraseña
+implementados. Un 401 de una solicitud de la sesión vigente cierra esa sesión.
+
+| Rol | Recorridos de interfaz |
+|---|---|
+| `ADMIN` | Alcance global, catálogos/ubicaciones, gestión de equipos y asignaciones. |
+| `GESTOR` | Consulta y gestión de equipos dentro de los laboratorios asignados. |
+| `LECTOR` | Consulta de equipos y movimientos dentro de su alcance, sin acciones de escritura. |
+
+Los tres roles pueden leer los catálogos y la organización global. El alcance por
+laboratorio restringe equipos y movimientos, no la lectura de todos los laboratorios
+del catálogo. El alcance de menú/filtros se obtiene al iniciar sesión; el contador
+del dashboard vuelve a consultar `/auth/me/laboratorios` en cada entrada.
+
+El backend autoriza cada operación. La lectura de catálogos y organización es global para los tres roles; el alcance por laboratorio restringe equipos y movimientos. Los movimientos pueden seguir siendo visibles por su origen aunque el equipo haya salido de ese laboratorio. Las rutas `/asignaciones`, `/usuarios` (alias)
+y `/configuracion` además están protegidas por rol en el frontend.
+
+En la comprobación del entorno habitual del 3 de octubre de 2026 existían `marko`
+(`ADMIN`), `aldo` (`GESTOR`) y `romel` (`LECTOR`), con cero asignaciones y cero equipos.
+Es una fotografía de ese entorno: una pantalla vacía puede ser el resultado correcto.
+Las asignaciones y equipos creados para verificar escrituras se probaron en un
+entorno aislado, separado de ese inventario habitual.
+
+## Alcance y pendientes
+
+La integración implementa login/alcance, dashboard, equipos, categorías/subcategorías,
+sedes/áreas/laboratorios, historial de movimientos y asignación administrativa de
+laboratorios. Asignaciones permite consultar por ID y seleccionar laboratorios activos;
+guardar una lista vacía retira las asignaciones del usuario consultado.
+
+Mantenimientos, Reportes y Configuración siguen siendo módulos pendientes, identificados
+como Próximamente en el menú. No se implementaron su calendario, reportes/exportación,
+preferencias ni seguridad configurable. Los estados de proceso de movimientos y el
+estado Mantenimiento de laboratorio que aparecen en algunos mockups no tienen contrato
+en el backend actual. No se simulan como operaciones funcionales.
+
+La aplicación conserva el lenguaje visual Jason, pero no es una reproducción 1:1 de
+los mockups. La [auditoría de integración](../../../docs/sprints_realizados-frontend-Jason/auditoria-integracion.md)
+separa las diferencias de diseño, el trabajo pendiente y la evidencia de pruebas.
+
+## Comprobaciones
+
+Desde esta carpeta:
+
+```powershell
+npm.cmd test
+npm.cmd run build
+```
+
+Resultado final del 3 de octubre de 2026: **27/27 pruebas automatizadas aprobadas**
+(10 de autenticación/sesión, 5 de contratos de equipos/catálogos, 5 de movimientos
+y 7 de asignaciones). Son pruebas de lógica y contratos; no certifican todos los
+recorridos de navegador. El build final también pasó: **1670 módulos, 10.85 s**.
+
+Se comprobaron **42 solicitudes HTTP con aserciones a través del proxy**; no son 42
+endpoints distintos. Cubrieron autenticación/roles/alcance, CRUD de cinco catálogos,
+asignaciones, equipos e historial, incluidos rechazos 400/401/403/409. En navegador
+se verificaron login de los tres roles, asignaciones, creación/edición/traslado/baja
+de equipos, filtros, catálogos, laboratorios, errores, logout, recarga y vista móvil.
+
+Las escrituras usaron exclusivamente `inventario_verificacion_jason_91d7ac79`, backend
+18080 y frontend 5174. Ese entorno temporal, su base, contenedor y credencial temporal
+ya se eliminaron. El frontend actual en **5173** apunta al Docker habitual en **8080**;
+ambos servicios Docker están saludables y el dashboard mostró 2 laboratorios,
+0 equipos y 0 movimientos. Los conteos del inventario habitual permanecieron iguales.
+
+Conclusión: **integración local operativa en las funcionalidades implementadas**.
+Continúan pendientes FE-08–FE-10, la fidelidad visual 1:1 y la revisión exhaustiva de
+accesibilidad. La [evidencia final](../../../docs/sprints_realizados-frontend-Jason/evidencias/verificacion-2026-10-03.json)
+y la auditoría detallan los escenarios comprobados; no se declara una reejecución
+completa de la suite backend histórica.
+
+Versiones verificadas: Node 24.16.0, npm 11.13.0, Docker 29.8.0, React 18.3.1,
+Vite 6.4.3, Axios 1.20.0, React Router 7.18.4, plugin React 4.7.0 y Lucide 0.468.0.
+
+## Recorrido manual reproducible
+
+Los pasos de escritura son acciones explícitas sobre un entorno propio destinado
+a pruebas. Usa cuentas y credenciales autorizadas; esta documentación no las expone.
+El entorno temporal empleado en la verificación ya no existe.
+
+1. Levanta el backend y Jason con los comandos anteriores, comprueba salud `UP` y
+   abre 5173. Identifica los datos iniciales del entorno que vas a utilizar.
+2. Inicia sesión como ADMIN y comprueba dashboard, laboratorios y ausencia de errores.
+   Las cifras deben corresponder a los datos reales, incluso cuando sean cero.
+3. En Asignaciones, consulta el ID de un GESTOR. Selecciona explícitamente los
+   laboratorios de prueba y pulsa Guardar asignaciones para modificar ese usuario.
+   Repite con un LECTOR si deseas preparar esa cuenta. Comprueba la respuesta mostrada.
+4. Tras consultar un usuario, cambia el ID: su resumen y Guardar deben desaparecer.
+   Consulta nuevamente antes de guardar. Para retirar asignaciones de tu usuario de
+   prueba, desmarca todas y guarda la lista vacía de forma explícita.
+5. Crea y edita una categoría/subcategoría y un laboratorio de prueba con relaciones
+   válidas. Comprueba que la sede y el árbol correspondan al área elegida.
+6. Crea un equipo con código único y datos de prueba, edítalo y trasládalo entre
+   laboratorios autorizados. Comprueba historial con fecha, tipo, actor y motivo;
+   después realiza su baja explícita y verifica que deje de ofrecer acciones.
+7. Prueba filtros de estado y laboratorio. Un INOPERATIVO no debe sumar al KPI
+   Operativos; un filtro sin coincidencias debe mostrar vacío sin inventar datos.
+8. Cierra sesión e ingresa como GESTOR y LECTOR: verifica sus laboratorios de alcance,
+   equipos/movimientos autorizados y ausencia de escritura en LECTOR. Los catálogos
+   globales siguen siendo consultables. Recarga: debes volver a Login.
+9. Comprueba mensaje ante credenciales incorrectas y, en tu entorno de pruebas,
+   fallo/reintento de conexión sin convertir errores en ceros. Revisa móvil a
+   390 × 844, menú y tablas; documenta cualquier diferencia adicional encontrada.
+
+Después de cambiar asignaciones, vuelve a iniciar sesión con el usuario afectado para actualizar las selecciones de la interfaz. El backend verifica los permisos vigentes en cada solicitud; el contador de laboratorios del Dashboard consulta el alcance actualizado al entrar.
+
+Esta revisión dejó el entorno habitual ejecutándose en 5173/8080. Si ya responde, basta con abrir el navegador. Para detener servidores iniciados desde tus terminales usa Ctrl+C en Vite y, desde backend/inventario, docker compose stop; esto conserva los datos de PostgreSQL.
+
+## Estructura
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/componentes/` | Layout, navegación, protección, tablas, tarjetas y controles comunes. |
+| `src/contextos/` | Estado de la sesión y permisos de interfaz. |
+| `src/pantallas/` | Recorridos por módulo. |
+| `src/servicios/` | Cliente Axios, contratos HTTP y coordinación de sesión. |
+| `src/utilidades/` | Payloads, validación, selección, fechas y pruebas de lógica. |
+
+Documentación: [sprints Jason](../../../docs/sprints_realizados-frontend-Jason/README.md)
+y [referencias visuales](../../../docs/frontend/mockup/).

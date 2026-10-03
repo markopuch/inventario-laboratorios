@@ -1,5 +1,8 @@
 # Inventario de Laboratorios
 
+Frontend de trabajo actual: [versión Jason — ejecución local y pruebas manuales](frontend/version-jason/frontend/README.md), conectado al backend Docker del [Sprint 8](docs/sprints_realizados-backend/sprint-8.md). La [auditoría de integración](docs/sprints_realizados-frontend-Jason/auditoria-integracion.md) registra el estado comprobado; la versión Marko se conserva por separado.
+
+
 ## 1. Descripción
 
 API REST para organizar laboratorios, clasificar equipos, controlar su ubicación
@@ -302,9 +305,9 @@ Completa los secretos localmente; tokens e IDs iniciales están vacíos. Sigue e
 asignaciones anteriores antes de reemplazarlas. Los IDs deben proceder de
 respuestas o consultas reales.
 
-Las guías de [asignaciones](docs/sprints/sprint-4e-usuario-laboratorio.md),
-[Equipos](docs/sprints/sprint-5-equipos.md) y
-[traslados](docs/sprints/sprint-6-movimientos.md) incluyen casos manuales y SQL.
+Las guías de [asignaciones](docs/sprints_realizados-backend/sprint-4e-usuario-laboratorio.md),
+[Equipos](docs/sprints_realizados-backend/sprint-5-equipos.md) y
+[traslados](docs/sprints_realizados-backend/sprint-6-movimientos.md) incluyen casos manuales y SQL.
 La colección no equivale a un Runner integral sin preparación: las bajas deben
 ejecutarse después de probar los recursos dependientes. Las verificaciones
 HTTP automatizadas y el uso manual de Postman se documentan por separado.
@@ -324,13 +327,13 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 | [JWT](docs/autenticacion-jwt.md) | Login, variables y comprobaciones |
 | [Verificación final](docs/backend-final/verificacion-final.md) | Evidencia de tests, arranque y preservación |
 | [Checklist](docs/backend-final/checklist-entrega.md) | Criterios de entrega |
-| [Sprint 7](docs/sprints/sprint-7.md) | Reporte del cierre técnico |
+| [Sprint 7](docs/sprints_realizados-backend/sprint-7.md) | Reporte del cierre técnico |
 | [ERD lógico](docs/Erd_actual/erd-logico-v2.md) / [físico](docs/Erd_actual/erd-fisico-v2.md) | Mermaid editable y SVG |
 | [Cambios de ERD](docs/Erd_actual/erd-v2-cambios.md) | Comparación con los PDF iniciales |
 
-Los documentos de [Sprint 3](docs/sprints/sprint-3-categorias.md),
-[Sprint 4](docs/sprints/sprint-4.md), [Sprint 5](docs/sprints/sprint-5.md) y
-[Sprint 6](docs/sprints/sprint-6.md) conservan resultados y pendientes de cada
+Los documentos de [Sprint 3](docs/sprints_realizados-backend/sprint-3-categorias.md),
+[Sprint 4](docs/sprints_realizados-backend/sprint-4.md), [Sprint 5](docs/sprints_realizados-backend/sprint-5.md) y
+[Sprint 6](docs/sprints_realizados-backend/sprint-6.md) conservan resultados y pendientes de cada
 cierre. Sus cifras históricas no sustituyen la verificación final. Los PDF
 `docs/erd-logico.pdf` y `docs/erd-fisico.pdf` son diseños anteriores; el ERD v2 es
 el modelo vigente. En Sprint 7 solo se reparan enlaces rotos de las guías antiguas.

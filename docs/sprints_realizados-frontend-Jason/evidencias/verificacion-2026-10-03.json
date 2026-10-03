@@ -1,0 +1,367 @@
+{
+  "fecha": "2026-10-03",
+  "baseTemporal": "inventario_verificacion_jason_91d7ac79",
+  "baseTemporalEliminada": true,
+  "conexionesAntesBorrar": 0,
+  "contenedorTemporalEliminado": true,
+  "credencialesTemporalesEliminadas": true,
+  "baseHabitual": "inventario_laboratorios (Docker)",
+  "conteosAntes": {
+    "usuario": 3,
+    "usuario_laboratorio": 0,
+    "categoria": 2,
+    "subcategoria": 4,
+    "sede": 1,
+    "area": 2,
+    "laboratorio": 2,
+    "equipo": 0,
+    "movimiento_equipo": 0
+  },
+  "conteosDespues": {
+    "usuario": 3,
+    "usuario_laboratorio": 0,
+    "categoria": 2,
+    "subcategoria": 4,
+    "sede": 1,
+    "area": 2,
+    "laboratorio": 2,
+    "equipo": 0,
+    "movimiento_equipo": 0
+  },
+  "fixturesTemporalesFinales": {
+    "usuario": 3,
+    "usuario_laboratorio": 3,
+    "categoria": 4,
+    "subcategoria": 6,
+    "sede": 2,
+    "area": 3,
+    "laboratorio": 4,
+    "equipo": 2,
+    "movimiento_equipo": 2
+  },
+  "consistenciaSQL": [
+    {
+      "comprobacion": "flyway_exitosas",
+      "valor": 9
+    },
+    {
+      "comprobacion": "equipo_no_baja_subcategoria_inactiva",
+      "valor": 0
+    },
+    {
+      "comprobacion": "equipo_no_baja_laboratorio_inactivo",
+      "valor": 0
+    },
+    {
+      "comprobacion": "asignacion_activa_laboratorio_inactivo",
+      "valor": 0
+    },
+    {
+      "comprobacion": "movimientos_huerfanos",
+      "valor": 0
+    },
+    {
+      "comprobacion": "traslado_mismo_origen_destino",
+      "valor": 0
+    }
+  ],
+  "pruebasFrontend": {
+    "total": 27,
+    "aprobadas": 27,
+    "fallidas": 0,
+    "omitidas": 0
+  },
+  "solicitudesHTTP": [
+    {
+      "method": "POST",
+      "route": "/auth/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/auth/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/auth/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/laboratorios",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/subcategorias",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/categorias",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/equipos",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/equipos",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "method": "GET",
+      "route": "/equipos",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "method": "GET",
+      "route": "/equipos/1",
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "method": "GET",
+      "route": "/equipos/1/movimientos",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/equipos",
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "method": "GET",
+      "route": "/admin/usuarios/2/laboratorios",
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "method": "GET",
+      "route": "/equipos?idLaboratorio=2",
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "method": "POST",
+      "route": "/categorias",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "PUT",
+      "route": "/categorias/3",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/subcategorias",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "PUT",
+      "route": "/subcategorias/5",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "DELETE",
+      "route": "/categorias/3",
+      "status": 409,
+      "expected": 409
+    },
+    {
+      "method": "POST",
+      "route": "/sedes",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "PUT",
+      "route": "/sedes/2",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/areas",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "PUT",
+      "route": "/areas/3",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/laboratorios",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "PUT",
+      "route": "/laboratorios/3",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "route": "/equipos/1/traslados",
+      "status": 403,
+      "expected": 403
+    },
+    {
+      "method": "POST",
+      "route": "/equipos",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "PUT",
+      "route": "/equipos/2",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PUT",
+      "route": "/equipos/2",
+      "status": 400,
+      "expected": 400
+    },
+    {
+      "method": "POST",
+      "route": "/equipos/2/traslados",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/equipos?estado=OPERATIVO&idLaboratorio=2&idSubcategoria=5&requiereMantenimiento=false",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "DELETE",
+      "route": "/equipos/2",
+      "status": 204,
+      "expected": 204
+    },
+    {
+      "method": "GET",
+      "route": "/equipos/2",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/equipos/2/movimientos",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PUT",
+      "route": "/equipos/2",
+      "status": 409,
+      "expected": 409
+    },
+    {
+      "method": "DELETE",
+      "route": "/subcategorias/5",
+      "status": 204,
+      "expected": 204
+    },
+    {
+      "method": "DELETE",
+      "route": "/categorias/3",
+      "status": 204,
+      "expected": 204
+    },
+    {
+      "method": "DELETE",
+      "route": "/laboratorios/3",
+      "status": 204,
+      "expected": 204
+    },
+    {
+      "method": "DELETE",
+      "route": "/areas/3",
+      "status": 204,
+      "expected": 204
+    },
+    {
+      "method": "DELETE",
+      "route": "/sedes/2",
+      "status": 204,
+      "expected": 204
+    },
+    {
+      "method": "GET",
+      "route": "/equipos/1",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "route": "/equipos/1/movimientos",
+      "status": 200,
+      "expected": 200
+    }
+  ],
+  "nota": "Las 42 solicitudes HTTP son adicionales al recorrido UI. No representan 42 endpoints diferentes ni una nueva ejecución de la suite Gradle.",
+  "build": {
+    "comando": "npm.cmd run build",
+    "resultado": "correcto",
+    "modulos": 1670,
+    "duracionSegundos": 10.85
+  },
+  "versiones": {
+    "node": "24.16.0",
+    "npm": "11.13.0",
+    "docker": "29.8.0",
+    "react": "18.3.1",
+    "vite": "6.4.3",
+    "axios": "1.20.0",
+    "reactRouterDom": "7.18.4"
+  },
+  "entornoFinal": {
+    "frontend": "http://localhost:5173",
+    "backend": "http://localhost:8080",
+    "docker": "db y backend healthy",
+    "loginAdminNavegador": "correcto",
+    "puertosTemporalesDetenidos": [
+      5174,
+      18080
+    ]
+  },
+  "recorridosNavegador": [
+    "Login ADMIN/GESTOR/LECTOR en entorno aislado",
+    "Asignaciones gestor 2 laboratorios y lector 1; cambio ID invalida resultado",
+    "Equipo: crear, editar con codigo y laboratorio bloqueados, trasladar, baja y verificar BAJA sin acciones",
+    "Operativos excluye INOPERATIVO; filtros OPERATIVO vacio y BAJA con 2 registros",
+    "Historial con fecha/tipo/origen/destino/actor/motivo; filtro laboratorio",
+    "LECTOR no ve escrituras ni Asignaciones y conserva historial por origen",
+    "Categoria crear/editar, subcategoria relacionada, laboratorio crear/editar y arbol",
+    "Movil 390x844 sin desbordamiento global; menu abre y cierra al navegar",
+    "Logout, recarga vuelve Login, credencial incorrecta muestra error",
+    "Backend temporal detenido: errores y reintento; indicadores de equipos no son cero ficticio",
+    "Login ADMIN desde5173 al Docker habitual; dashboard2laboratorios y0equipos"
+  ]
+}

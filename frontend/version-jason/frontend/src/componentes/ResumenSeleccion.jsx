@@ -1,0 +1,1 @@
+export default function ResumenSeleccion({ titulo, valor, detalle }) { return <div className="resumen-seleccion"><span>{titulo}</span><strong>{valor}</strong>{detalle && <small>{detalle}</small>}</div>; }

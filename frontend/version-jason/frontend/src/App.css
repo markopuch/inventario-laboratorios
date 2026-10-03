@@ -1,0 +1,23 @@
+/* Los estilos globales del frontend viven en index.css. */
+.encabezado-contexto { display: flex; align-items: center; gap: 10px; color: var(--navy); font-weight: 600; }
+.nav-pendiente { opacity: .65; cursor: default; }
+.nav-pendiente small { display: block; margin-top: 3px; font-size: 10px; font-weight: 400; }
+.menu-fondo { display: none; }
+button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid #1299df; outline-offset: 3px; }
+button:disabled { cursor: not-allowed; opacity: .6; }
+.mensaje-exito { padding: 12px; border: 1px solid #a7e4c8; border-radius: 9px; background: #effcf5; color: #176c48; }
+.asignaciones-panel { padding: 24px; }
+.asignaciones-selector { border: 1px solid #dbe7f1; border-radius: 12px; padding: 16px; margin: 20px 0; }
+.asignaciones-selector legend { padding: 0 8px; font-weight: 600; }
+.asignaciones-lista { display: grid; gap: 10px; }
+.asignacion-opcion { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 8px; background: #f6faff; }
+.asignacion-opcion input { width: 18px; height: 18px; flex-shrink: 0; accent-color: #1299df; }
+@media (max-width: 800px) {
+  .menu-fondo { display: block; position: fixed; inset: 0; z-index: 19; background: #12324f66; border: 0; }
+  .barra-lateral { z-index: 20; }
+  .encabezado-contexto { font-size: 12px; }
+}
+@media (max-width: 480px) {
+  .encabezado-contexto span { display: none; }
+  .encabezado { gap: 10px; padding: 12px; }
+}

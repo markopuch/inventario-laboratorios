@@ -1,0 +1,1 @@
+export default function Boton({ children, variante='primario', tipo='button', disabled=false, onClick, className='' }) { return <button type={tipo} disabled={disabled} onClick={onClick} className={`btn btn-${variante} ${className}`}>{children}</button>; }
