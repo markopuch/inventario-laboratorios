@@ -45,5 +45,19 @@ services:
       retries: 10
       start_period: 60s
 
+  frontend:
+    build:
+      context: ../../frontend/version-jason/frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    image: inventario-frontend-jason:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   postgres_data:

@@ -13,12 +13,13 @@ existente:
 
 ```powershell
 Set-Location backend/inventario
-docker compose up -d
+docker compose up -d db backend
 docker compose ps
 Invoke-RestMethod http://localhost:8080/actuator/health | Select-Object status
 ```
 
-El Compose contiene los servicios `db` y `backend`; el backend debe estar saludable
+El Compose contiene `db`, `backend` y `frontend` (Jason). Para desarrollar con Vite,
+el comando anterior levanta solamente `db` y `backend`; el backend debe estar saludable
 y la consulta de salud debe devolver `UP`. Si ya están levantados y saludables, basta
 con comprobar ese estado. La configuración privada del backend permanece allí.
 
@@ -33,6 +34,60 @@ npm.cmd run dev
 Abre `http://localhost:5173`. Vite usa ese puerto con `strictPort`: si está ocupado,
 el comando falla y muestra el conflicto, en lugar de cambiar de puerto silenciosamente.
 El navegador solicita `/api` al mismo origen y Vite lo reenvía al backend en 8080.
+
+## Frontend Jason en Docker
+
+Se utiliza un solo archivo Compose: `backend/inventario/docker-compose.yml`.
+Cada aplicación tiene su contenedor: PostgreSQL, Spring Boot y React servido por Nginx.
+La versión Marko no se construye ni se publica con este flujo.
+
+Desde la raíz del repositorio, en PowerShell:
+
+```powershell
+Set-Location backend/inventario
+docker compose config --quiet
+docker compose up -d --build frontend
+docker compose ps
+Invoke-RestMethod http://localhost:3000/health
+Invoke-RestMethod http://localhost:8080/actuator/health | Select-Object status
+```
+
+Abre `http://localhost:3000`. El puerto 3000 del equipo apunta al 80 de Nginx;
+el backend conserva 8080 y PostgreSQL no publica un puerto al equipo. El 5173
+se reserva para el servidor de desarrollo Vite y no es necesario para este modo.
+Las rutas de React siguen funcionando al recargar y `/api` se reenvía a
+`backend:8080` dentro de la red Docker, conservando el JWT y la ruta completa.
+
+El Dockerfile usa el lockfile con `npm ci` y ejecuta el build;
+la imagen final contiene Nginx y los archivos de `dist`, no Node ni `node_modules`.
+`.dockerignore` excluye archivos `.env*` y archivos generados. `VITE_API_URL=/api`
+es una configuración pública de compilación, no una contraseña. La configuración
+privada del backend permanece en su carpeta; no se copia al frontend.
+
+Las 27 pruebas se ejecutan con `npm.cmd test` desde esta carpeta del repositorio
+completo y tambien en GitHub Actions antes de publicar Jason. Algunas verifican
+los contratos leyendo los DTO Java del backend, por lo que no se ejecutan dentro
+del contexto aislado del Dockerfile del frontend.
+
+Después de cambiar el frontend, repite `docker compose up -d --build frontend`.
+Para detener solamente este servicio usa `docker compose stop frontend`.
+Se mantiene el proyecto `inventario-docker` y el volumen existente de PostgreSQL;
+no uses `docker compose down -v` si quieres conservar sus datos.
+`/health` verifica Nginx: no certifica por sí solo que la API o el login funcionen.
+
+### Publicación de las imágenes
+
+`.github/workflows/imagen.yml` construye y publica dos imágenes independientes
+cuando se suben cambios a `main` en el backend, Jason o el propio workflow;
+también permite ejecución manual desde GitHub Actions en `main`:
+
+- `ghcr.io/markopuch/inventario-laboratorios-backend`
+- `ghcr.io/markopuch/inventario-laboratorios-frontend-jason`
+
+Cada imagen recibe `latest` y `sha-<7 caracteres del commit>`. GitHub Actions
+usa `GITHUB_TOKEN`, sin incorporar credenciales a los archivos del proyecto.
+El Compose local sigue construyendo las imágenes `:local`; publicar en GHCR
+no sustituye automáticamente los contenedores que ya están ejecutándose.
 
 ## Configuración de la conexión
 
@@ -124,7 +179,7 @@ de equipos, filtros, catálogos, laboratorios, errores, logout, recarga y vista 
 
 Las escrituras usaron exclusivamente `inventario_verificacion_jason_91d7ac79`, backend
 18080 y frontend 5174. Ese entorno temporal, su base, contenedor y credencial temporal
-ya se eliminaron. El frontend actual en **5173** apunta al Docker habitual en **8080**;
+ya se eliminaron. Durante esa verificación, el frontend en **5173** apuntó al Docker habitual en **8080**;
 ambos servicios Docker están saludables y el dashboard mostró 2 laboratorios,
 0 equipos y 0 movimientos. Los conteos del inventario habitual permanecieron iguales.
 
@@ -169,7 +224,10 @@ El entorno temporal empleado en la verificación ya no existe.
 
 Después de cambiar asignaciones, vuelve a iniciar sesión con el usuario afectado para actualizar las selecciones de la interfaz. El backend verifica los permisos vigentes en cada solicitud; el contador de laboratorios del Dashboard consulta el alcance actualizado al entrar.
 
-Esta revisión dejó el entorno habitual ejecutándose en 5173/8080. Si ya responde, basta con abrir el navegador. Para detener servidores iniciados desde tus terminales usa Ctrl+C en Vite y, desde backend/inventario, docker compose stop; esto conserva los datos de PostgreSQL.
+La verificación de integración anterior dejó el entorno de desarrollo en 5173/8080.
+Para el nuevo modo Docker, abre 3000 y sigue la sección Frontend Jason en Docker.
+Para detener Vite usa Ctrl+C en su terminal; `docker compose stop` desde
+backend/inventario detiene los servicios Docker y conserva los datos de PostgreSQL.
 
 ## Estructura
 
