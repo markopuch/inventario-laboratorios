@@ -7,8 +7,15 @@ Compilación y regresión: **233 aprobadas de 233**, cero fallos, errores u
 omitidas, cero pruebas nuevas. Arranque real y smoke test correctos.
 No se modificó código Java, migraciones, dependencias ni reglas de negocio.
 
+**Referencia posterior, 3 de octubre de 2026:** el
+[reporte Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+documenta el flujo integrado con Jason, 33 solicitudes HTTP adicionales,
+24 aserciones y ambas imágenes GHCR confirmadas. Las cifras siguientes conservan
+la ejecución histórica de Sprint 7: no representan una nueva suite Gradle
+durante la validación Docker ni durante la actualización documental.
+
 La fase previa consta en [inventario de auditoría](inventario-auditoria.md).
-El [reporte Sprint 7](../sprints/sprint-7.md) reúne el cierre y los archivos.
+El [reporte Sprint 7](../sprints_realizados-backend/sprint-7.md) reúne el cierre y los archivos.
 
 ## 1. Compilación y suite
 
@@ -164,7 +171,7 @@ la base temporal dieron:
 
 No se modificaron filas para convertir un resultado inconsistente en correcto.
 Los constraints principales se verificaron en pg_constraint y pg_indexes.
-Las [consultas manuales de Sprint 6](../sprints/sprint-6-movimientos.md#41-sql-de-verificación)
+Las [consultas manuales de Sprint 6](../sprints_realizados-backend/sprint-6-movimientos.md#41-sql-de-verificación)
 permiten revisar equipos, movimientos, actores, esquema y migraciones.
 
 ## 7. Limpieza de la base temporal

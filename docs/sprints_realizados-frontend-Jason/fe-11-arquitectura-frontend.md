@@ -2,7 +2,29 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: implementación realizada. La aplicación cuenta con rutas, contexto de autenticación, cliente HTTP, componentes comunes, navegación lateral y estructura compartida; la verificación integral de accesibilidad, responsive y contratos continúa pendiente.**
+**Estado actualizado: arquitectura, proxy `/api`, sesión en memoria y rutas por rol integrados; flujo completo con Nginx y publicación en Actions comprobados. Build y 27 pruebas del frontend aprobados. La fidelidad visual y accesibilidad exhaustivas conservan sus pendientes.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+confirma tres contenedores habituales saludables y frontend Nginx en 3000, con
+proxy `/api` hacia `backend:8080` y fallback de rutas SPA. La sesión conserva
+JWT/usuario en memoria; recarga, logout y reingreso fueron comprobados. El cliente
+Axios usa `/api` y Bearer de la sesión vigente, sin persistir JWT en `localStorage`.
+
+La validación aislada aprobó 33/33 comprobaciones HTTP adicionales y 24/24
+aserciones de flujo y consistencia, sin errores ni advertencias de consola.
+Actions sobre `9956939` aprobó 27/27 pruebas de Jason y publicó imágenes backend y
+frontend-jason con `latest`/`sha-9956939`, verificadas en GHCR. Publicación no
+equivale a despliegue en la nube ni suma pruebas a la suite histórica del backend.
+
+La [auditoría de integración](auditoria-integracion.md) conserva la comprobación
+de escritorio/móvil y los límites de teclado, foco y lectores de pantalla.
+
+## Registro de entrega original (histórico)
+
+Las secciones siguientes describen la estructura inicial; la mención de Bearer
+desde `localStorage` ya no corresponde a la implementación vigente.
 
 ## Avance comprobado en archivos
 

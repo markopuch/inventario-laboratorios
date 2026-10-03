@@ -1,0 +1,445 @@
+{
+  "fecha": "2026-10-03T16:21:54.485Z",
+  "baseTemporal": "inventario_verificacion_docker_26e35749",
+  "proyectoTemporal": "inventario-verificacion-docker-26e35749",
+  "imagenes": {
+    "db": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+    "backend": "sha256:16db45157ddbc601e5b66a18dc697a7a443683322d22718f15ce3ce85f2bbbf8",
+    "frontend": "sha256:1764b6489c947dc0607913233dc9f01cd954f381cb6e9c62fd6544a9505f5d7a"
+  },
+  "conteosHabitualesAntes": {
+    "usuario": 3,
+    "usuario_laboratorio": 0,
+    "categoria": 2,
+    "subcategoria": 4,
+    "sede": 1,
+    "area": 2,
+    "laboratorio": 2,
+    "equipo": 0,
+    "movimiento_equipo": 0
+  },
+  "resultado": "FLUJO DOCKER VALIDADO",
+  "fin": "2026-10-03T16:30:59.776Z",
+  "puertosTemporales": {
+    "frontend": 3001,
+    "backend": 18081
+  },
+  "escenariosNavegador": [
+    "Login ADMIN, GESTOR y LECTOR",
+    "Crear equipo ADMIN desde Nginx",
+    "Editar con código y laboratorio bloqueados",
+    "Trasladar L201 a L206",
+    "Consultar historial con actor y motivo",
+    "Dar de baja y comprobar BAJA sin acciones",
+    "GESTOR ve dos laboratorios y equipo histórico",
+    "LECTOR no ve escrituras ni equipo en destino no asignado; sí historial por origen",
+    "Recarga de ruta SPA requiere login y conserva los datos al reingresar"
+  ],
+  "peticionesHTTP": {
+    "total": 33,
+    "aprobadas": 33,
+    "fallidas": 0,
+    "detalle": [
+      {
+        "metodo": "POST",
+        "ruta": "/auth/login",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/auth/login",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/auth/login",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/laboratorios",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/subcategorias",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "PUT",
+        "ruta": "/admin/usuarios/2/laboratorios",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "PUT",
+        "ruta": "/admin/usuarios/3/laboratorios",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos",
+        "esperado": 401,
+        "obtenido": 401
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos",
+        "esperado": 401,
+        "obtenido": 401
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/auth/login",
+        "esperado": 401,
+        "obtenido": 401
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/auth/me/laboratorios",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/equipos",
+        "esperado": 403,
+        "obtenido": 403
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/equipos/1/traslados",
+        "esperado": 409,
+        "obtenido": 409
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1/movimientos",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1",
+        "esperado": 403,
+        "obtenido": 403
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1/movimientos",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos?idLaboratorio=2",
+        "esperado": 403,
+        "obtenido": 403
+      },
+      {
+        "metodo": "PUT",
+        "ruta": "/equipos/1",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "PUT",
+        "ruta": "/equipos/1",
+        "esperado": 403,
+        "obtenido": 403
+      },
+      {
+        "metodo": "PUT",
+        "ruta": "/equipos/1",
+        "esperado": 400,
+        "obtenido": 400
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos?estado=OPERATIVO&idLaboratorio=2&idSubcategoria=1&requiereMantenimiento=false",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/equipos/1/traslados",
+        "esperado": 400,
+        "obtenido": 400
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1/movimientos",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos/1/movimientos",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "PUT",
+        "ruta": "/equipos/1",
+        "esperado": 409,
+        "obtenido": 409
+      },
+      {
+        "metodo": "POST",
+        "ruta": "/equipos/1/traslados",
+        "esperado": 409,
+        "obtenido": 409
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/equipos?estado=BAJA&idLaboratorio=2",
+        "esperado": 200,
+        "obtenido": 200
+      },
+      {
+        "metodo": "GET",
+        "ruta": "/movimientos?idLaboratorio=1",
+        "esperado": 200,
+        "obtenido": 200
+      }
+    ]
+  },
+  "aserciones": [
+    {
+      "comprobacion": "Login marko devuelve JWT",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Login aldo devuelve JWT",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Login romel devuelve JWT",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Alta UI persistida en API",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Edición UI persistida",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "PUT conserva código y laboratorio",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Traslado UI cambia laboratorio y ubicación",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Historial contiene un único traslado",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "LECTOR conserva historia por origen autorizado",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Historial registra tipo, actor autenticado y origen/destino correctos",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Filtro combinado devuelve el equipo trasladado",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Rechazos no generan movimientos extras",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Baja UI persistida sin borrar el equipo",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Baja conserva historial de traslado",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Filtro BAJA muestra el equipo histórico",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "LECTOR ve traslado histórico después de baja",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Flyway V1–V9 exitosas en la base temporal",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "SQL sin inconsistencias en equipos, asignaciones ni movimientos",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Base habitual preservada: nueve conteos iguales",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Volumen de limpieza pertenece exclusivamente a esta verificación",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Cero conexiones a la base temporal antes de eliminarla",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Base temporal eliminada y ausencia confirmada en PostgreSQL",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Contenedores, volumen y red temporales eliminados",
+      "aprobada": true
+    },
+    {
+      "comprobacion": "Conteos habituales iguales después de la limpieza",
+      "aprobada": true
+    }
+  ],
+  "flyway": [
+    {
+      "version": "1",
+      "script": "V1__crear_organizacion_y_catalogos.sql",
+      "checksum": -1224790997,
+      "success": true
+    },
+    {
+      "version": "2",
+      "script": "V2__crear_usuarios_y_seguridad.sql",
+      "checksum": 930089448,
+      "success": true
+    },
+    {
+      "version": "3",
+      "script": "V3__crear_equipos_y_movimientos.sql",
+      "checksum": -889347868,
+      "success": true
+    },
+    {
+      "version": "4",
+      "script": "V4__insertar_datos_iniciales.sql",
+      "checksum": -30934170,
+      "success": true
+    },
+    {
+      "version": "5",
+      "script": "V5__categoria_nombre_unico_sin_mayusculas.sql",
+      "checksum": 1571040130,
+      "success": true
+    },
+    {
+      "version": "6",
+      "script": "V6__agregar_username_usuario.sql",
+      "checksum": 1971342152,
+      "success": true
+    },
+    {
+      "version": "7",
+      "script": "V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql",
+      "checksum": 932004306,
+      "success": true
+    },
+    {
+      "version": "8",
+      "script": "V8__area_nombre_unico_por_sede_sin_mayusculas.sql",
+      "checksum": 2043234542,
+      "success": true
+    },
+    {
+      "version": "9",
+      "script": "V9__laboratorio_codigo_unico_sin_mayusculas.sql",
+      "checksum": -204147188,
+      "success": true
+    }
+  ],
+  "consistenciaSQL": {
+    "equipo_no_baja_subcategoria_inactiva": 0,
+    "equipo_no_baja_laboratorio_inactivo": 0,
+    "asignacion_activa_laboratorio_inactivo": 0,
+    "movimientos_huerfanos": 0,
+    "traslados_mismo_origen_destino": 0
+  },
+  "fixturesTemporalesFinales": {
+    "usuario": 3,
+    "usuario_laboratorio": 3,
+    "categoria": 2,
+    "subcategoria": 4,
+    "sede": 1,
+    "area": 2,
+    "laboratorio": 2,
+    "equipo": 1,
+    "movimiento_equipo": 1
+  },
+  "conteosHabitualesDespues": {
+    "usuario": 3,
+    "usuario_laboratorio": 0,
+    "categoria": 2,
+    "subcategoria": 4,
+    "sede": 1,
+    "area": 2,
+    "laboratorio": 2,
+    "equipo": 0,
+    "movimiento_equipo": 0
+  },
+  "limpieza": {
+    "conexionesAntesBorrar": 0,
+    "baseTemporalEliminada": true,
+    "contenedoresEliminados": true,
+    "volumenEliminado": true,
+    "redEliminada": true
+  },
+  "consolaNavegador": {
+    "errores": 0,
+    "advertencias": 0
+  },
+  "nota": "33 solicitudes HTTP adicionales al recorrido UI; no se ejecutó la suite Gradle ni se modificó código, Dockerfiles, Actions o documentación del proyecto.",
+  "evidencias": [
+    "equipo-baja.png",
+    "historial-conservado.png",
+    "flujo-docker-validado.png"
+  ],
+  "notaTrazabilidad": "El flujo se ejecutó con los IDs de las imágenes locales habituales registrados en imagenes; no se ejecutaron las imágenes remotas de GHCR. Las validaciones HTTP y aserciones de este archivo no son pruebas JUnit.",
+  "commitRepositorioAlVerificar": "99569392035fc975171d2df6929a1aa26111b139"
+}

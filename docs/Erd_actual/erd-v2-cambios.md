@@ -32,7 +32,7 @@ Esta verificación es documental y estática: **no se abrió ninguna conexión a
 PostgreSQL, no se ejecutaron migraciones ni tests Java**. El esquema descrito es
 el generado por los archivos V1–V9, no una nueva inspección de una base en vivo.
 La comprobación de Flyway en la base habitual registrada en el cierre de
-[Sprint 4](../sprints/sprint-4.md) es evidencia histórica de aquel sprint.
+[Sprint 4](../sprints_realizados-backend/sprint-4.md) es evidencia histórica de aquel sprint.
 
 ## Comparación v1 → v2
 

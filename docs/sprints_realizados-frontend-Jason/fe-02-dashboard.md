@@ -2,7 +2,25 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: implementación frontend realizada. Dashboard conectado a equipos, laboratorios y movimientos; queda pendiente la verificación funcional con datos reales y la validación visual final.**
+**Estado actualizado: dashboard conectado y comprobado en los recorridos de integración y Docker. Contadores e historial usan datos reales; errores e indisponibilidad se distinguen de ceros. La fidelidad visual y accesibilidad exhaustivas continúan pendientes.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [auditoría de integración](auditoria-integracion.md) comprobó resúmenes,
+historial y fallo/reintento. El contador de laboratorios consulta
+`GET /api/auth/me/laboratorios` al entrar, también para ADMIN; no confunde la
+lectura global del catálogo con el alcance del usuario.
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+comprobó login y navegación con las imágenes del entorno habitual, que ahora
+sirve Jason en 3000 y backend en 8080. Actions confirmó el build y publicación
+de Jason con 27/27 pruebas del frontend. Esto no certifica cada combinación de
+datos del dashboard ni agrega un mockup de Dashboard que no fue aportado.
+
+## Registro de entrega original (histórico)
+
+Las tablas y contratos siguientes corresponden a la inspección inicial. La
+auditoría y el estado vigente precisan las correcciones de carga/error y alcance.
 
 El usuario implementó la pantalla inicial del inventario y sus componentes de resumen.
 Este documento registra lo realizado sin presentar datos ficticios como evidencia de

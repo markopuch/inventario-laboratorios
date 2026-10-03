@@ -4,6 +4,11 @@ Fecha de inicio: 1 de octubre de 2026.
 
 **Estado: estructura visual preparada; módulo funcional pendiente. La ruta y la superficie visual existen, pero no se implementaron indicadores propios, filtros avanzados ni exportación en la versión entregada.**
 
+Actualización del 3 de octubre de 2026: la
+[validación Docker y publicación de Jason](../despliegue/verificacion-docker-actions-2026-10-03.md)
+no añade contratos ni funciones de reportes. FE-09 conserva sus pendientes de
+indicadores, filtros y exportación; el éxito de Actions no cierra este módulo.
+
 ## Avance comprobado en archivos
 
 | Elemento | Estado comprobado en archivos |

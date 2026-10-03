@@ -11,6 +11,15 @@ añadieron tests. El JAR arrancó en 8,32 segundos, validó JPA y las nueve
 migraciones, y superó 28 peticiones HTTP de comprobación. Los resultados
 detallados corresponden a [verificación final](verificacion-final.md).
 
+**Evidencia adicional de despliegue — 2026-10-03:** después del cierre funcional
+se validó Docker completo y se confirmó la publicación en GHCR de backend y
+frontend Jason con ambos trabajos de Actions en verde. Las 33 comprobaciones
+HTTP y 24 aserciones de ese flujo, y las 27 pruebas frontend de Actions, se
+registran por separado de las 233 Gradle. La
+[evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md)
+documenta la base temporal, su eliminación y la preservación de la base habitual.
+Esta actualización no cambia ni reejecuta las 26 comprobaciones de Sprint 7.
+
 Los endpoints de demostración se ejecutan en la base temporal de verificación,
 con IDs y tokens obtenidos durante la preparación de fixtures. `<id>` y los
 otros nombres entre ángulos son marcadores que se sustituyen; no son IDs fijos
@@ -61,3 +70,18 @@ Se confirmó la ausencia de `inventario_verificacion_s7_cierre_20260921_a73f`.
 Las nueve tablas auditadas de la base habitual conservaron conteos y huellas.
 La reproducción de la demostración requiere preparar una nueva base temporal;
 la empleada en este cierre ya no permanece disponible.
+
+## Verificación posterior del empaquetado
+
+| Evidencia | Estado | Referencia |
+|---|---|---|
+| Docker local completo | VERIFICADO | PostgreSQL 18, backend y frontend Jason/Nginx saludables; flujo validado con las mismas imágenes en una base temporal aislada |
+| Flujo de inventario y seguridad en Docker | VERIFICADO | Login ADMIN/GESTOR/LECTOR, alcance, creación, consulta, edición, traslado, historial, baja y filtros; 33/33 comprobaciones HTTP y 24/24 aserciones |
+| Conservación de datos y limpieza | VERIFICADO | Nueve conteos habituales idénticos; base `inventario_verificacion_docker_26e35749`, contenedores, red y volumen temporales eliminados |
+| Actions del backend | VERIFICADO | Run 37136137900, commit `9956939`, job 111240944686 exitoso; construye con `bootJar -x test`, no ejecuta la regresión Gradle |
+| Actions del frontend | VERIFICADO | Mismo run, job 111240944823 exitoso; 27/27 pruebas, construcción y publicación |
+| Imágenes GHCR | VERIFICADO | Backend y frontend Jason con `latest`/`sha-9956939`; digests confirmados en la [evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md) |
+| Render/base gestionada | SIN EVIDENCIA DE DESPLIEGUE | Siguiente etapa; no forma parte del cierre funcional ni de la publicación de imágenes verificada |
+
+El [Sprint 8](../sprints_realizados-backend/sprint-8.md) recoge este estado.
+Las cifras HTTP, aserciones y tests frontend no se añaden al total JUnit de 233.

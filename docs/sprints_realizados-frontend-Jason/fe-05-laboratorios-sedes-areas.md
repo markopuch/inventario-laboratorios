@@ -2,7 +2,25 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: implementación frontend realizada. La pantalla separa Laboratorios, Sedes y Áreas, muestra sus contadores y permite crear/editar/dar de baja; Laboratorios incluye jerarquía Sede → Área → Laboratorio y estados Activo/Inactivo/En mantenimiento según el tipo.**
+**Estado actualizado: organización, CRUD HTTP y creación/edición de laboratorio por UI comprobados en la auditoría. La jerarquía Sede → Área → Laboratorio está disponible. La UI respeta `activo` real; no ofrece Mantenimiento como estado de laboratorio. Docker y publicación confirmados.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [auditoría de integración](auditoria-integracion.md) comprobó relación con
+sede/área, árbol expandible y CRUD de organización. Las respuestas contienen
+`activo`; los DTO de alta/edición no permiten un estado libre. La opción visual
+En mantenimiento entregada originalmente no tenía contrato y se retiró.
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+comprobó el traslado entre laboratorios de fixtures 201 y 206, alcance y filtros
+con frontend Nginx. Flyway conservó V1–V9 y los conteos habituales no cambiaron.
+Esto no agrega búsqueda del árbol, ficha detallada ni filtros combinados del mockup.
+
+## Registro de entrega original (histórico)
+
+Las declaraciones siguientes de estados Activo/Inactivo/En mantenimiento reflejan
+la inspección inicial y se conservan como antecedente del defecto corregido; no
+deben usarse como especificación actual del contrato.
 
 ## Avance comprobado en archivos
 

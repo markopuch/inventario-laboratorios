@@ -2,7 +2,27 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: implementación frontend realizada. Listado, filtros, alta, edición, baja y traslado están conectados al cliente API; la certificación de reglas de negocio depende del backend y de pruebas funcionales.**
+**Estado actualizado: alta, consulta, edición, filtros, traslado y baja lógica comprobados mediante UI y HTTP en Docker. Se mantiene la autorización del backend y el alcance por laboratorio; quedan diferencias visuales y revisión exhaustiva de accesibilidad.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+ejecutó crear/leer/editar un equipo conservando código y laboratorio, traslado
+201 → 206, consulta de historial y baja sin acciones disponibles. Comprobó filtros,
+roles y alcance: LECTOR recibió 403 para el equipo fuera de su laboratorio actual.
+Se usó una base temporal eliminada; no se alteraron equipos del inventario habitual.
+
+La ejecución aprobó 33/33 HTTP adicionales y 24/24 aserciones del recorrido completo,
+sin presentarlas como una nueva suite de Equipos. Actions aprobó las 27 pruebas
+automatizadas de Jason antes de publicar. La comparación visual conserva una
+diferencia real: Jason usa tarjetas/modal mientras el mockup propone tabla/página;
+faltan ficha completa, adjuntos, paginación y exportación.
+
+## Registro de entrega original (histórico)
+
+La inspección inicial siguiente conserva sus afirmaciones. La
+[auditoría de integración](auditoria-integracion.md) precisa los defectos corregidos
+de permisos, campos inmutables y KPI de estado, y las diferencias con la referencia.
 
 ## Avance comprobado en archivos
 

@@ -1,5 +1,12 @@
 # Resumen del backend — cierre técnico de Sprint 7
 
+Este documento conserva el cierre funcional y las mediciones de Sprint 7.
+**Actualización de contexto — 2026-10-03:** después de ese cierre se integró el
+frontend de Jason, se validó el flujo completo con PostgreSQL/backend/frontend
+en Docker y se publicaron ambas imágenes en GHCR mediante Actions. La
+[evidencia posterior](../despliegue/verificacion-docker-actions-2026-10-03.md)
+registra esos resultados sin atribuir una nueva ejecución de la suite Gradle.
+
 ## Qué entrega el proyecto
 
 Inventario de Laboratorios es una API REST para organizar laboratorios,
@@ -141,10 +148,19 @@ InventarioApplication si el IDE tiene esas variables. La opción de crear cuenta
 demo es explícita; no cambia cuentas existentes ni agrega Equipos/Movimientos.
 El [README](../../README.md) contiene configuración, ejecución y enlaces vigentes.
 
-El siguiente trabajo corresponde a nuevas prioridades de producto: frontend,
-administración completa de usuarios, mantenimiento, auditoría general o despliegue.
-Son ampliaciones fuera del backend cerrado, junto con refresh token y permisos
-dinámicos. La revisión no añade esas funciones para aumentar el alcance del cierre.
+El frontend de Jason y Docker local ya se implementaron después de Sprint 7;
+la publicación de backend/frontend en GHCR está confirmada para el commit
+`9956939`. La verificación Docker obtuvo 33/33 comprobaciones HTTP y 24/24
+aserciones, y el trabajo frontend de Actions aprobó 27 pruebas. Son evidencias
+distintas de las 233 pruebas Gradle del cierre funcional, no una suma de suites.
+La base temporal Docker y sus recursos se eliminaron, con la base habitual
+preservada. Render y una base gestionada aún no tienen evidencia de despliegue.
+
+Administración completa de usuarios, mantenimiento, auditoría general, refresh
+token y permisos dinámicos permanecen fuera del backend cerrado. No se agregan
+esas funciones para ampliar artificialmente el cierre. Las nuevas prioridades
+pueden centrarse en el despliegue remoto o en una ampliación autorizada del producto.
 Los reportes de sprints anteriores se conservan como evidencia histórica, con sus
-resultados y pendientes de aquel momento; [Sprint 7](../sprints/sprint-7.md)
-concentra el cierre actual.
+resultados y pendientes de aquel momento; [Sprint 7](../sprints_realizados-backend/sprint-7.md)
+concentra el cierre funcional y [Sprint 8](../sprints_realizados-backend/sprint-8.md)
+documenta el empaquetado y la publicación posteriores.

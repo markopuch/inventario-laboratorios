@@ -4,6 +4,11 @@ Fecha de inicio: 1 de octubre de 2026.
 
 **Estado: estructura visual preparada; módulo funcional pendiente. La pantalla existe y está integrada en navegación, pero la versión entregada no implementa programación, calendario ni operaciones de mantenimiento contra endpoints específicos.**
 
+Actualización del 3 de octubre de 2026: la
+[validación Docker y publicación de Jason](../despliegue/verificacion-docker-actions-2026-10-03.md)
+acredita las funcionalidades existentes. FE-08 conserva este estado; construir o
+publicar su placeholder no implementa mantenimiento ni cierra este módulo.
+
 ## Avance comprobado en archivos
 
 | Elemento | Estado comprobado en archivos |

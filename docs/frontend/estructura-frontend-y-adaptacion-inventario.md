@@ -4,7 +4,18 @@ Fecha de revisión: **1 de octubre de 2026**.
 
 Este documento explica la organización de **Tech Store v2**, desarrollada como referencia del **Taller 3 — Parte 2**, y cómo aplicar sus conceptos al frontend de Inventario de Laboratorios.
 
-**Estado del documento:** guía de arquitectura y propuesta de implementación. La estructura de Tech Store descrita fue revisada en su código. Las carpetas y configuraciones propuestas para el inventario todavía deben implementarse: este documento no crea la aplicación ni modifica el backend.
+**Estado del documento:** guía de arquitectura y propuesta inicial de implementación. La estructura de Tech Store descrita fue revisada en su código. Las carpetas y configuraciones propuestas para el inventario pertenecen a ese diseño histórico; la nota siguiente remite a la implementación activa y su evidencia. Esta guía no crea la aplicación ni modifica el backend.
+
+**Estado del proyecto actualizado — 3 de octubre de 2026:** la propuesta de esta
+guía se conserva como referencia del curso. La versión activa está en
+`frontend/version-jason/frontend`, con React Router, Axios, sesión en memoria y
+los módulos compatibles con la API. Su flujo completo en Docker y la publicación
+de backend/frontend en GitHub Actions están
+[verificados con evidencia](../despliegue/verificacion-docker-actions-2026-10-03.md).
+La versión Marko permanece separada. Las diferencias entre la propuesta inicial,
+Jason y los mockups se registran en la
+[auditoría de integración](../sprints_realizados-frontend-Jason/auditoria-integracion.md);
+no se afirma fidelidad visual 1:1 ni implementación de Mantenimientos/Reportes/Configuración.
 
 ## 1. Contexto y alcance
 

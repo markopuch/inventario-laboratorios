@@ -1,6 +1,14 @@
 # Estado de los sprints del frontend
 
-Actualizado: 1 de octubre de 2026.
+Registro histórico: 1 de octubre de 2026. Revisión de estado: 3 de octubre de 2026.
+
+**Nota de estado — 3 de octubre de 2026:** este registro corresponde únicamente
+a la versión Marko, conservada en `frontend/version-marko/inventario-frontend`.
+La tutoría permanece en pausa; la versión de trabajo y el despliegue Docker
+actual son de [Jason](../sprints_realizados-frontend-Jason/README.md).
+La [validación Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+no certifica las funciones pendientes de la versión Marko. Los resultados del
+1 de octubre y las rutas originales que aparecen abajo son históricos.
 
 Esta carpeta registra el avance real del frontend. Su nombre no implica que los
 sprints aquí mencionados estén terminados. FE-01 es independiente del Sprint 1
@@ -10,7 +18,7 @@ La implementación será guiada: el usuario crea el código, guarda los archivos
 ejecuta los comandos. La autorización inicial para escribir documentación se
 limita al registro de estado solicitado en esta carpeta.
 
-| Sprint | Alcance | Estado actual |
+| Sprint | Alcance | Estado registrado el 1 de octubre |
 |---|---|---|
 | FE-00 | Preparación, contratos y base técnica | Base y cliente HTTP implementados; GET protegido mediante proxy comprobado con 401. Repetir lint/build sobre los siguientes cambios |
 | [FE-01](fe-01-login-sesion.md) | Diseño común, login y sesión | En curso: próximo bloque composición visual de Login; autenticación y panel pendientes |
@@ -31,8 +39,9 @@ limita al registro de estado solicitado en esta carpeta.
 
 Al iniciar este registro, `frontend/` contenía únicamente `readme.md`, vacío.
 Después, el usuario creó la aplicación en `frontend/inventario-frontend/`
-mediante Vite e instaló sus dependencias. Esa es ahora la carpeta desde la que
-se ejecutan los comandos npm.
+mediante Vite e instaló sus dependencias. La carpeta actual de esa versión es
+`frontend/version-marko/inventario-frontend`; su traslado no implica que sus
+sprints pendientes estén terminados.
 
 En la revisión posterior, App, estilos, HTML, puerto 5173 con `strictPort`,
 proxy `/api` hacia 8080 y archivos de entorno ya están preparados. Existe

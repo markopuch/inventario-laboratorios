@@ -2,7 +2,13 @@
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
 **Versión:** 1.0  
-**Estado:** Permisos implementados; cierre documental de Sprint 7
+**Estado:** Permisos implementados; cierre funcional de Sprint 7, comprobados también en el flujo Docker del 2026-10-03
+
+El empaquetado y la publicación posteriores no modificaron esta matriz. La
+[evidencia Docker/Actions](despliegue/verificacion-docker-actions-2026-10-03.md)
+registra login de los tres roles, alcance y operaciones de inventario verificadas
+en una base temporal. Son comprobaciones adicionales; no una nueva ejecución de
+las 233 pruebas Gradle ni permisos nuevos.
 
 ## 1. Principio de autorización
 
@@ -49,7 +55,8 @@ roles** y permiten escritura únicamente a ADMIN.
 Login, perfil propio, Categoría, Subcategoría, las 17 operaciones de organización,
 los tres endpoints de asignaciones/alcance, los seis de Equipo y los tres de
 traslado/historial están implementados. La administración general de usuarios
-sigue pendiente. Administrar asignaciones no implica crear usuarios ni cambiar roles.
+está fuera del alcance del backend entregado. Administrar asignaciones no implica
+crear usuarios ni cambiar roles.
 La sección 6 delimita el alcance. La tabla siguiente contiene exclusivamente
 operaciones implementadas; las propuestas de usuarios están en la sección 7.
 
@@ -139,7 +146,7 @@ las rutas reales están enumeradas arriba.
 Todas estas rutas, salvo el login, requieren un JWT válido: ausencia o token
 inválido devuelve 401; rol sin permiso devuelve 403.
 
-La administración completa de usuarios sigue pendiente. Sprint 6 incorpora
+La administración completa de usuarios queda fuera del backend entregado. Sprint 6 incorpora
 traslado transaccional e historial inmutable desde la API. Equipo tiene CRUD, filtros, baja lógica
 BAJA y listado administrativo global. Sprint 4E implementa GET/PUT de
 asignaciones, GET del alcance propio y la regla de no desactivar Laboratorio
@@ -164,12 +171,12 @@ Los movimientos históricos no bloquean la baja lógica de Laboratorio por sí
 solos. Los nombres del historial provienen de las entidades actuales; no son
 una auditoría versionada de sus nombres.
 
-Consulta las guías de [Sprint 4A](sprints/sprint-4a-subcategorias.md),
-[organización](sprints/sprint-4b-organizacion.md#paso-16--jwt-y-roles-401-y-403) y
-[Sprint 4E](sprints/sprint-4e-usuario-laboratorio.md#28-postman-secuencia-manual)
-para comprobar los roles con Postman. La [guía de Sprint 5](sprints/sprint-5-equipos.md)
+Consulta las guías de [Sprint 4A](sprints_realizados-backend/sprint-4a-subcategorias.md),
+[organización](sprints_realizados-backend/sprint-4b-organizacion.md#paso-16--jwt-y-roles-401-y-403) y
+[Sprint 4E](sprints_realizados-backend/sprint-4e-usuario-laboratorio.md#28-postman-secuencia-manual)
+para comprobar los roles con Postman. La [guía de Sprint 5](sprints_realizados-backend/sprint-5-equipos.md)
 añade la matriz de casos de Equipo, filtros e inmutabilidad. La
-[guía de Sprint 6](sprints/sprint-6-movimientos.md) incorpora traslado, rollback,
+[guía de Sprint 6](sprints_realizados-backend/sprint-6-movimientos.md) incorpora traslado, rollback,
 alcance del historial y bajas lógicas de laboratorios con historia.
 
 ## 7. Backlog fuera del backend cerrado
@@ -180,6 +187,11 @@ y no aparecen en las tablas de operación implementada. El diseño prevé ADMIN
 para esa administración, pero no existe un CRUD completo de Usuario/Rol.
 La gestión actual de asignaciones solo configura usuarios que ya existen.
 
-Mantenimiento como Entity, auditoría general, frontend, Docker y demás
-ampliaciones figuran en el [backlog](backend-final/backlog.md). El catálogo
-completo vigente contiene [42 operaciones HTTP](backend-final/endpoints.md).
+Mantenimiento como Entity, auditoría general y otras ampliaciones de negocio
+figuran en el [backlog](backend-final/backlog.md). Frontend Jason y Docker local
+ya se implementaron después del cierre funcional; ambas imágenes están publicadas
+en GHCR. Ese avance de despliegue mantiene los permisos actuales y no habilita
+CRUD administrativo de usuarios. Render/base gestionada siguen sin evidencia de
+despliegue. El catálogo funcional contiene
+[42 operaciones HTTP](backend-final/endpoints.md); los endpoints técnicos de salud
+no son operaciones nuevas del negocio.

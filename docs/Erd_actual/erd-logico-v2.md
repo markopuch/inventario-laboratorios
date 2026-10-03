@@ -223,7 +223,7 @@ La revisión original del ERD inspeccionó las nueve migraciones y reconstruyó
 el esquema estáticamente, sin consultar PostgreSQL ni ejecutar Java. Los sprints
 4E, 5 y 6 actualizan el estado de implementación de UsuarioLaboratorio, Equipo y
 MovimientoEquipo en este ERD, conservando el esquema V1–V9. La evidencia actual
-está en la [guía de Sprint 6](../sprints/sprint-6-movimientos.md).
+está en la [guía de Sprint 6](../sprints_realizados-backend/sprint-6-movimientos.md).
 
 | Fuente | Contribución al modelo lógico |
 |---|---|
@@ -239,9 +239,9 @@ está en la [guía de Sprint 6](../sprints/sprint-6-movimientos.md).
 
 Contraste de implementación: [Entities JPA](../../backend/inventario/src/main/java/com/utec/inventario/entity),
 [SecurityConfig](../../backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java),
-[README](../../README.md), [Sprint 4](../sprints/sprint-4.md),
-[Sprint 4A](../sprints/sprint-4a-subcategorias.md) y
-[Sprint 4B–4D](../sprints/sprint-4b-organizacion.md).
+[README](../../README.md), [Sprint 4](../sprints_realizados-backend/sprint-4.md),
+[Sprint 4A](../sprints_realizados-backend/sprint-4a-subcategorias.md) y
+[Sprint 4B–4D](../sprints_realizados-backend/sprint-4b-organizacion.md).
 El [ERD lógico anterior](../erd-logico.pdf) se conserva como documento histórico,
 sin prioridad sobre Flyway.
 

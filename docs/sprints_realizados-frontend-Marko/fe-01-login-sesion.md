@@ -2,7 +2,15 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: tutoría en curso. Base y cliente HTTP implementados por el usuario; build previo y consulta protegida con 401 acreditados por salidas compartidas. Siguiente bloque: composición visual de Login. Autenticación y sesión pendientes.**
+**Nota de estado — 3 de octubre de 2026:** este sprint conserva la tutoría histórica
+de la versión Marko, ahora en `frontend/version-marko/inventario-frontend`, y
+permanece en pausa. El desarrollo activo es de
+[Jason](../sprints_realizados-frontend-Jason/README.md). Sus comprobaciones
+[Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+no completan automáticamente los entregables de este sprint. Las rutas y
+resultados del 1 de octubre que siguen describen aquel registro.
+
+**Estado histórico del 1 de octubre: tutoría en curso. Base y cliente HTTP implementados por el usuario; build previo y consulta protegida con 401 acreditados por salidas compartidas. Siguiente bloque: composición visual de Login. Autenticación y sesión pendientes.**
 
 El usuario implementará cada bloque y aportará su resultado antes de continuar.
 Este documento registra el avance y conserva la inspección inicial como historia;

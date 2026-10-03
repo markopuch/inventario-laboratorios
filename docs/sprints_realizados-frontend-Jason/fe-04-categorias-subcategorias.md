@@ -2,7 +2,24 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: implementación frontend realizada. Categorías y subcategorías están separadas de Sedes, Áreas y Laboratorios y cuentan con CRUD visual/API; la persistencia de estado debe considerarse pendiente de validación según el contrato backend.**
+**Estado actualizado: CRUD de categorías/subcategorías y conflicto de baja de padre con hijas comprobados en la auditoría de integración. La UI refleja `activo` real y respeta los DTO. Docker y publicación de Jason confirmados; se conservan las diferencias con el mockup.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [auditoría de integración](auditoria-integracion.md) registra creación/edición
+de categoría y subcategoría relacionada por UI, y CRUD/conflictos por HTTP.
+El selector libre de estado entregado originalmente era inoperante y se retiró;
+las respuestas usan `activo`, y la baja usa DELETE según el contrato real.
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+usó catálogos de fixtures para el flujo de equipos, confirmó el entorno completo
+y la publicación de Jason tras 27/27 pruebas. No declara una repetición por UI
+de cada baja de catálogo ni completa la vista maestro/detalle del mockup.
+
+## Registro de entrega original (histórico)
+
+Las menciones siguientes al estado visual y persistencia pendiente describen la
+entrega inicial; el criterio vigente es el contrato y las correcciones auditadas.
 
 ## Avance comprobado en archivos
 

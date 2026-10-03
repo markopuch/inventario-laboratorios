@@ -4,6 +4,12 @@ Fecha de inicio: 1 de octubre de 2026.
 
 **Estado: estructura visual preparada; módulo funcional pendiente. La navegación y pantalla existen, pero no se implementaron preferencias persistentes ni controles de seguridad específicos dentro de esta pantalla.**
 
+Actualización del 3 de octubre de 2026: la
+[validación Docker y publicación de Jason](../despliegue/verificacion-docker-actions-2026-10-03.md)
+comprobó autenticación, roles y alcance del sistema existente, no preferencias de
+esta pantalla. La ruta tiene guardia ADMIN; FE-10 permanece como Próximamente y
+su configuración general/de seguridad no se declara implementada.
+
 ## Avance comprobado en archivos
 
 | Elemento | Estado comprobado en archivos |

@@ -2,7 +2,26 @@
 
 Fecha de inicio: 1 de octubre de 2026.
 
-**Estado: frontend parcial implementado. La ruta Usuarios presenta actualmente la gestión de asignaciones de laboratorios por ID de usuario; no existe un CRUD completo de usuarios en la versión entregada.**
+**Estado actualizado: asignaciones implementadas y comprobadas, con consulta por ID y selección de laboratorios. `/asignaciones` es la ruta principal y `/usuarios` su alias ADMIN. La administración completa de usuarios y roles queda fuera del alcance funcional actual.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [auditoría de integración](auditoria-integracion.md) comprobó por UI asignaciones
+de 2 laboratorios a GESTOR y 1 a LECTOR, selector real y protección al cambiar el
+ID consultado. Las 7 pruebas de asignaciones forman parte de las 27 automatizadas
+de Jason que Actions volvió a aprobar antes de publicar la imagen.
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+comprobó los tres roles con asignaciones de fixtures en una base temporal eliminada.
+Confirmó permisos de escritura/lectura, 403 por alcance y lectura histórica por
+origen. No acredita vaciar asignaciones por UI ni implementa directorio, creación
+de cuentas o cambio administrativo de rol: siguen fuera del alcance actual.
+La ruta principal es `/asignaciones`, con `/usuarios` conservada como alias ADMIN.
+
+## Registro de entrega original (histórico)
+
+Las secciones siguientes conservan el estado entregado. Las correcciones del
+selector y de identidad al guardar se detallan en la auditoría.
 
 ## Avance comprobado en archivos
 

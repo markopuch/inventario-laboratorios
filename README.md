@@ -2,6 +2,12 @@
 
 Frontend de trabajo actual: [versión Jason — Docker, ejecución local y pruebas manuales](frontend/version-jason/frontend/README.md), conectado al backend Docker del [Sprint 8](docs/sprints_realizados-backend/sprint-8.md). El Compose de `backend/inventario` levanta PostgreSQL, backend y Jason (puerto 3000); `imagen.yml` publica backend y frontend Jason por separado. La [auditoría de integración](docs/sprints_realizados-frontend-Jason/auditoria-integracion.md) registra el estado comprobado; la versión Marko se conserva por separado.
 
+**Estado verificado al 3 de octubre de 2026:** flujo completo en Docker local comprobado,
+ambos trabajos de GitHub Actions en verde y ambas imágenes publicadas en GHCR para
+el commit `9956939`. El [reporte de Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+incluye resultados, manifiestos, capturas y preservación de la base habitual.
+El despliegue de PostgreSQL/backend/frontend en la nube queda pendiente.
+
 
 ## 1. Descripción
 
@@ -29,6 +35,9 @@ pruebas medidas y la preservación de la base habitual.
 | Seguridad | Spring Security, BCrypt, JJWT 0.13.0 |
 | Mapeo | MapStruct 1.6.3, Lombok, lombok-mapstruct-binding 0.2.0 |
 | Validación y pruebas | Jakarta Validation, JUnit 5, Spring Boot Test |
+| Frontend activo | React 18.3.1, Vite 6.4.3, React Router y Axios; versión Jason |
+| Docker local | PostgreSQL 18 Alpine, backend Java 21 y frontend servido por Nginx |
+| Automatización | GitHub Actions: matriz backend/frontend Jason; imágenes en GHCR |
 
 Se usa el wrapper incluido; no hace falta instalar Gradle por separado.
 Las versiones se mantienen respecto al código existente. PostgreSQL debe estar
@@ -222,8 +231,10 @@ if (-not $env:JWT_SECRET) {
 }
 ```
 
-Las variables pertenecen a esa terminal. `.env` no se carga automáticamente.
-Configúralas también en Run/Debug si arrancas desde el IDE. No publiques secretos
+Las variables pertenecen a esa terminal. En Java/IDE, `.env` no se carga automáticamente.
+Docker Compose sí usa el `.env` local de `backend/inventario` para
+`DOCKER_DB_PASSWORD` y `DOCKER_JWT_SECRET`. Configura las variables también en
+Run/Debug si arrancas desde el IDE. No publiques secretos
 ni tokens. Cambiar JWT_SECRET invalida tokens anteriores.
 
 El perfil dev crea marko/ADMIN, aldo/GESTOR y romel/LECTOR con una contraseña
@@ -233,6 +244,28 @@ Movimientos demo. Las cuentas existentes funcionan sin dev.
 ## 11. Ejecución
 
 <a id="arranque-rápido-en-windows"></a>
+
+### 11.1. Docker — modo integrado actual
+
+Con Docker Desktop iniciado y la configuración privada del backend preparada:
+
+```powershell
+Set-Location backend/inventario
+docker compose config --quiet
+docker compose up -d db backend frontend
+docker compose ps
+Invoke-RestMethod http://localhost:3000/health
+Invoke-RestMethod http://localhost:8080/actuator/health | Select-Object status
+```
+
+Abre `http://localhost:3000`. Nginx sirve React y reenvía `/api` al backend dentro
+de Docker. PostgreSQL conserva su volumen y no publica un puerto al equipo.
+El puerto 5173 corresponde a la alternativa de desarrollo con Vite. Las instrucciones
+de construcción y ejecución están en el [README de Jason](frontend/version-jason/frontend/README.md).
+Los secretos permanecen fuera de Git; iniciar Docker no cambia las contraseñas
+de cuentas existentes. Conserva el volumen habitual al detener los servicios.
+
+### 11.2. Java, PowerShell o IDE — alternativa local
 
 Desde la raíz, con PostgreSQL iniciado:
 
@@ -273,6 +306,23 @@ El JAR arrancó en 8,32 segundos y las 28 solicitudes HTTP de comprobación
 obtuvieron el estado esperado. La instancia se detuvo y la base temporal se
 eliminó después de la revisión; la base habitual quedó idéntica. El detalle está
 en [verificación final](docs/backend-final/verificacion-final.md).
+
+### Evidencia posterior: frontend, Docker y CI
+
+| Ejecución | Resultado | Alcance |
+|---|---|---|
+| Integración Jason con Vite, 3 de octubre | 27 pruebas del frontend y 42 solicitudes HTTP aprobadas | Auditoría inicial y recorridos UI documentados |
+| Flujo integrado en Docker, 3 de octubre | 33/33 solicitudes HTTP adicionales y 24/24 aserciones de verificación | Login de tres roles, alta/consulta/edición/traslado/historial/baja, filtros, SQL y limpieza |
+| GitHub Actions del commit `9956939` | Backend y frontend Jason en verde; 27/27 pruebas frontend | Construcción y publicación de ambas imágenes en GHCR |
+
+Son ejecuciones distintas: no se suman solicitudes HTTP o aserciones al total
+JUnit ni se presenta la publicación del backend como una nueva regresión de 233
+pruebas. El job backend usa `bootJar -x test`. La verificación Docker utilizó
+solo una base `inventario_verificacion_*`, eliminada al terminar; los nueve
+conteos habituales permanecieron iguales. Consulta el
+[reporte consolidado](docs/despliegue/verificacion-docker-actions-2026-10-03.md).
+
+### Repetir la suite del backend
 
 Para repetir la verificación, prepara una base local de pruebas ya existente con
 nombre `inventario_verificacion_*`. Desde la raíz configura DB_URL hacia esa
@@ -328,6 +378,10 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 | [Verificación final](docs/backend-final/verificacion-final.md) | Evidencia de tests, arranque y preservación |
 | [Checklist](docs/backend-final/checklist-entrega.md) | Criterios de entrega |
 | [Sprint 7](docs/sprints_realizados-backend/sprint-7.md) | Reporte del cierre técnico |
+| [Sprint 8](docs/sprints_realizados-backend/sprint-8.md) | Docker local y publicación GHCR verificados |
+| [Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md) | Flujo completo, ambos trabajos verdes, imágenes y evidencias persistentes |
+| [Sprints Jason](docs/sprints_realizados-frontend-Jason/README.md) | Estado actual de la implementación frontend y sus límites |
+| [Frontend](frontend/readme.md) | Versiones Jason/Marko y modos de ejecución |
 | [ERD lógico](docs/Erd_actual/erd-logico-v2.md) / [físico](docs/Erd_actual/erd-fisico-v2.md) | Mermaid editable y SVG |
 | [Cambios de ERD](docs/Erd_actual/erd-v2-cambios.md) | Comparación con los PDF iniciales |
 
@@ -340,9 +394,12 @@ el modelo vigente. En Sprint 7 solo se reparan enlaces rotos de las guías antig
 
 ## 15. Backlog
 
-Quedan fuera del backend cerrado: administración completa de usuarios, gestión
-de mantenimiento como Entity, auditoría general, frontend, Docker, refresh token
-y permisos dinámicos. El estado MANTENIMIENTO y el filtro de Equipo ya existen;
+Quedan fuera del alcance implementado: administración completa de usuarios, gestión
+de mantenimiento como Entity, auditoría general, refresh token y permisos dinámicos.
+Frontend Jason, Docker local y publicación GHCR se implementaron después del
+cierre funcional de Sprint 7; ya no son pendientes generales del proyecto.
+Siguen pendientes el despliegue en la nube y los módulos frontend de
+Mantenimientos, Reportes y Configuración. El estado MANTENIMIENTO y el filtro de Equipo ya existen;
 no constituyen un módulo de órdenes de mantenimiento.
 
 El [backlog](docs/backend-final/backlog.md) separa esas ampliaciones de mejoras

@@ -1,0 +1,287 @@
+{
+    "fechaVerificacion":  "2026-10-03T16:49:49.7636816Z",
+    "zonaDocumental":  "America/Lima",
+    "repositorio":  "https://github.com/markopuch/inventario-laboratorios",
+    "commit":  "99569392035fc975171d2df6929a1aa26111b139",
+    "workflow":  ".github/workflows/imagen.yml",
+    "ejecucion":  {
+                      "conclusion":  "success",
+                      "createdAt":  "2026-10-03T16:14:48Z",
+                      "event":  "push",
+                      "headSha":  "99569392035fc975171d2df6929a1aa26111b139",
+                      "jobs":  [
+                                   {
+                                       "completedAt":  "2026-10-03T16:16:17Z",
+                                       "conclusion":  "success",
+                                       "databaseId":  111240944686,
+                                       "name":  "Publicar backend",
+                                       "startedAt":  "2026-10-03T16:14:50Z",
+                                       "status":  "completed",
+                                       "steps":  [
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:53Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Set up job",
+                                                         "number":  1,
+                                                         "startedAt":  "2026-10-03T16:14:51Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:54Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Descargar el codigo",
+                                                         "number":  2,
+                                                         "startedAt":  "2026-10-03T16:14:53Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:55Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Preparar el nombre y la etiqueta",
+                                                         "number":  3,
+                                                         "startedAt":  "2026-10-03T16:14:54Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:55Z",
+                                                         "conclusion":  "skipped",
+                                                         "name":  "Preparar Node para las pruebas de Jason",
+                                                         "number":  4,
+                                                         "startedAt":  "2026-10-03T16:14:55Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:55Z",
+                                                         "conclusion":  "skipped",
+                                                         "name":  "Comprobar contratos y logica del frontend Jason",
+                                                         "number":  5,
+                                                         "startedAt":  "2026-10-03T16:14:55Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:01Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Preparar Docker Buildx",
+                                                         "number":  6,
+                                                         "startedAt":  "2026-10-03T16:14:55Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:01Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Iniciar sesion en GHCR",
+                                                         "number":  7,
+                                                         "startedAt":  "2026-10-03T16:15:01Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:16:12Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Construir y publicar backend",
+                                                         "number":  8,
+                                                         "startedAt":  "2026-10-03T16:15:01Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:16:14Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Construir y publicar backend",
+                                                         "number":  13,
+                                                         "startedAt":  "2026-10-03T16:16:12Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:16:14Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Iniciar sesion en GHCR",
+                                                         "number":  14,
+                                                         "startedAt":  "2026-10-03T16:16:14Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:16:16Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Preparar Docker Buildx",
+                                                         "number":  15,
+                                                         "startedAt":  "2026-10-03T16:16:14Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:16:16Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Descargar el codigo",
+                                                         "number":  16,
+                                                         "startedAt":  "2026-10-03T16:16:16Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:16:16Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Complete job",
+                                                         "number":  17,
+                                                         "startedAt":  "2026-10-03T16:16:16Z",
+                                                         "status":  "completed"
+                                                     }
+                                                 ],
+                                       "url":  "https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900/job/111240944686"
+                                   },
+                                   {
+                                       "completedAt":  "2026-10-03T16:15:28Z",
+                                       "conclusion":  "success",
+                                       "databaseId":  111240944823,
+                                       "name":  "Publicar frontend-jason",
+                                       "startedAt":  "2026-10-03T16:14:50Z",
+                                       "status":  "completed",
+                                       "steps":  [
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:54Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Set up job",
+                                                         "number":  1,
+                                                         "startedAt":  "2026-10-03T16:14:51Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:55Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Descargar el codigo",
+                                                         "number":  2,
+                                                         "startedAt":  "2026-10-03T16:14:54Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:55Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Preparar el nombre y la etiqueta",
+                                                         "number":  3,
+                                                         "startedAt":  "2026-10-03T16:14:55Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:56Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Preparar Node para las pruebas de Jason",
+                                                         "number":  4,
+                                                         "startedAt":  "2026-10-03T16:14:55Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:14:58Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Comprobar contratos y logica del frontend Jason",
+                                                         "number":  5,
+                                                         "startedAt":  "2026-10-03T16:14:56Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:09Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Preparar Docker Buildx",
+                                                         "number":  6,
+                                                         "startedAt":  "2026-10-03T16:14:58Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:09Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Iniciar sesion en GHCR",
+                                                         "number":  7,
+                                                         "startedAt":  "2026-10-03T16:15:09Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:22Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Construir y publicar frontend-jason",
+                                                         "number":  8,
+                                                         "startedAt":  "2026-10-03T16:15:09Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:24Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Construir y publicar frontend-jason",
+                                                         "number":  12,
+                                                         "startedAt":  "2026-10-03T16:15:22Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:24Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Iniciar sesion en GHCR",
+                                                         "number":  13,
+                                                         "startedAt":  "2026-10-03T16:15:24Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:26Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Preparar Docker Buildx",
+                                                         "number":  14,
+                                                         "startedAt":  "2026-10-03T16:15:24Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:26Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Preparar Node para las pruebas de Jason",
+                                                         "number":  15,
+                                                         "startedAt":  "2026-10-03T16:15:26Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:26Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Post Descargar el codigo",
+                                                         "number":  16,
+                                                         "startedAt":  "2026-10-03T16:15:26Z",
+                                                         "status":  "completed"
+                                                     },
+                                                     {
+                                                         "completedAt":  "2026-10-03T16:15:26Z",
+                                                         "conclusion":  "success",
+                                                         "name":  "Complete job",
+                                                         "number":  17,
+                                                         "startedAt":  "2026-10-03T16:15:26Z",
+                                                         "status":  "completed"
+                                                     }
+                                                 ],
+                                       "url":  "https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900/job/111240944823"
+                                   }
+                               ],
+                      "name":  "Imagenes Docker del backend y frontend Jason",
+                      "status":  "completed",
+                      "updatedAt":  "2026-10-03T16:16:18Z",
+                      "url":  "https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900"
+                  },
+    "imagenes":  [
+                     {
+                         "componente":  "backend",
+                         "imagen":  "ghcr.io/markopuch/inventario-laboratorios-backend",
+                         "digests":  {
+                                         "latest":  "sha256:4fd197318d82d79c185bcf4d42744b3483c743442418cf37b11daf6b90d9754a",
+                                         "sha-9956939":  "sha256:4fd197318d82d79c185bcf4d42744b3483c743442418cf37b11daf6b90d9754a"
+                                     },
+                         "plataforma":  "linux/amd64",
+                         "comprobacion":  "docker buildx imagetools inspect: consulta remota de manifiestos, sin ejecutar las imagenes"
+                     },
+                     {
+                         "componente":  "frontend-jason",
+                         "imagen":  "ghcr.io/markopuch/inventario-laboratorios-frontend-jason",
+                         "digests":  {
+                                         "latest":  "sha256:96bc7cb6efe81bbc77ca24430c42037b3ca21ce7880593f1ce2a3591aed4ecf9",
+                                         "sha-9956939":  "sha256:96bc7cb6efe81bbc77ca24430c42037b3ca21ce7880593f1ce2a3591aed4ecf9"
+                                     },
+                         "plataforma":  "linux/amd64",
+                         "comprobacion":  "docker buildx imagetools inspect: consulta remota de manifiestos, sin ejecutar las imagenes"
+                     }
+                 ],
+    "pruebasFrontend":  {
+                            "total":  27,
+                            "aprobadas":  27,
+                            "fallidas":  0,
+                            "fuente":  "Logs del paso Comprobar contratos y logica del frontend Jason"
+                        },
+    "regresionBackendReejecutadaEnCI":  false,
+    "nota":  "Backend compila/publica con bootJar -x test. GHCR no equivale a despliegue en Render ni reemplaza el Compose local. No se almacenan logs completos, contrasenas ni tokens."
+}

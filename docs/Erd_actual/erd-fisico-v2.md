@@ -33,7 +33,7 @@ Contraste JPA: [directorio entity](../../backend/inventario/src/main/java/com/ut
 con `SedeEntity`, `AreaEntity`, `LaboratorioEntity`, `CategoriaEntity`,
 `SubcategoriaEntity`, `RolEntity`, `UsuarioEntity`, `UsuarioLaboratorioEntity` y
 `EquipoEntity` y `MovimientoEquipoEntity`. Como apoyo del estado
-implementado se revisaron el [README](../../README.md) y el [Sprint 4](../sprints/sprint-4.md).
+implementado se revisaron el [README](../../README.md) y el [Sprint 4](../sprints_realizados-backend/sprint-4.md).
 Los diagramas antiguos no determinan ningún atributo de este modelo.
 
 ## 2. Leyenda y convenciones

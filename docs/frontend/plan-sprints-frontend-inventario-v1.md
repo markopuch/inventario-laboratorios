@@ -6,6 +6,18 @@
 
 **Identificación:** FE-00 a FE-08, independiente de la numeración de los sprints del backend.
 
+**Actualización de estado — 3 de octubre de 2026:** este documento conserva el
+plan inicial basado en Tech Store. La implementación activa es
+[frontend Jason](../../frontend/version-jason/frontend/README.md), que usa
+React Router y Axios y dispone de dashboard. Su
+[índice de sprints](../sprints_realizados-frontend-Jason/README.md) y la
+[evidencia Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+registran el avance real: flujo Docker validado y ambas imágenes publicadas.
+Los identificadores FE de este plan no equivalen a los FE de Jason; por ejemplo,
+FE-08 aquí propone consolidación y FE-08 de Jason describe Mantenimientos pendiente.
+Las decisiones propuestas abajo no deben interpretarse como el estado actual
+ni como una obligación de reemplazar la arquitectura de Jason.
+
 ## 1. Objetivo y límites
 
 Construir una primera versión funcional que conserve el diseño de los mockups y consuma el backend existente. No ampliar automáticamente el backend para reproducir controles que todavía no tienen soporte.

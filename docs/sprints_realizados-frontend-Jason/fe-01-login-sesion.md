@@ -4,9 +4,29 @@ Fecha de inicio: 1 de octubre de 2026.
 
 Nota del 3 de octubre de 2026: este documento conserva el registro de la entrega.
 La [auditoría de integración](auditoria-integracion.md) documenta los defectos
-detectados posteriormente y sus comprobaciones pendientes.
+detectados posteriormente y las correcciones comprobadas.
 
-**Estado: frontend implementado en el código entregado. Login, sesión y protección de rutas ya cuentan con implementación; quedan comprobaciones funcionales y visuales de cierre. La documentación conserva la inspección inicial como historia y distingue implementación de verificación.**
+**Estado actualizado: login de ADMIN/GESTOR/LECTOR, logout, recarga a Login y reingreso comprobados en Docker. Sesión únicamente en memoria, sin Recordarme ni recuperación. Permanecen los límites de accesibilidad y cobertura exhaustiva descritos en la auditoría.**
+
+## Evidencia vigente al 3 de octubre de 2026
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+comprobó el recorrido con frontend Nginx y backend aislados. Se aprobaron 33/33
+HTTP adicionales y 24/24 aserciones de flujo y consistencia del conjunto; no son
+24 pruebas de este sprint. Actions confirmó 27/27 pruebas automatizadas de Jason
+antes de publicar, incluidas las 10 de lógica de sesión.
+
+El cliente usa `/api`, conserva JWT/usuario en memoria y limpia la sesión vigente
+ante 401. Recargar exige iniciar sesión nuevamente; no restaura JWT desde
+`localStorage`. Los controles decorativos de acceso de prueba, Recordarme y
+recuperación se retiraron. El login sigue usando `{ userName, password }` de una
+cuenta del backend; ninguna contraseña se documenta o precarga.
+
+## Registro de entrega original (histórico)
+
+Las secciones siguientes describen la inspección inicial, anterior a las
+correcciones. Las menciones a `localStorage`, acceso de prueba y base URL directa
+no describen el estado vigente; se conservan para explicar el cambio auditado.
 
 El usuario implementó el frontend y aportó el resultado para revisión.
 Este documento registra el avance real del bloque y conserva la inspección inicial

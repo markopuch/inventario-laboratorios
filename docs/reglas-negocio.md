@@ -292,12 +292,12 @@ En este sprint, la unicidad de RN-13 para Subcategoría se precisa como
 `id_categoria + UPPER(nombre)`, incluyendo nombres reservados por bajas lógicas.
 El mismo nombre puede existir en categorías diferentes. Las once reglas
 RN-S4A-01 a RN-S4A-11 y sus comprobaciones se detallan en la
-[guía de Sprint 4A](sprints/sprint-4a-subcategorias.md#validación-reglas-y-transacciones).
+[guía de Sprint 4A](sprints_realizados-backend/sprint-4a-subcategorias.md#validación-reglas-y-transacciones).
 
 En Sprint 4B–4D, Sede, Área y Laboratorio usan `activo=false` para DELETE,
 conservan ID y fecha en PUT y ocultan inactivos en GET. PUT/DELETE de inactivos
 devuelven 404. Los índices V8/V9 protegen también los duplicados concurrentes.
-La [guía de organización](sprints/sprint-4b-organizacion.md) describe sus pruebas.
+La [guía de organización](sprints_realizados-backend/sprint-4b-organizacion.md) describe sus pruebas.
 
 **Actualización Sprint 5:** Subcategoría y Laboratorio no pueden darse de baja
 si tienen Equipos cuyo estado sea distinto de BAJA; RN-41 detalla la regla.
@@ -347,7 +347,7 @@ Equipo utiliza este servicio desde Sprint 5; `id_responsable` **no concede alcan
 RN-40 distingue el alcance de laboratorios activos del acceso histórico global
 de ADMIN a los Equipos existentes.
 
-La [guía de Sprint 4E](sprints/sprint-4e-usuario-laboratorio.md) documenta el flujo,
+La [guía de Sprint 4E](sprints_realizados-backend/sprint-4e-usuario-laboratorio.md) documenta el flujo,
 la concurrencia, los endpoints y su verificación manual sin asumir IDs.
 
 ## 12. Precisiones incorporadas en Sprint 5
@@ -405,7 +405,7 @@ Las FK RESTRICT conservan referencias históricas; no impiden por sí solas
 cambiar el estado lógico de un padre. Los movimientos históricos, por sí solos,
 no bloquean la baja lógica de Laboratorio: conservan la referencia a su fila.
 
-La [guía de Sprint 5](sprints/sprint-5-equipos.md) explica contratos, filtros,
+La [guía de Sprint 5](sprints_realizados-backend/sprint-5-equipos.md) explica contratos, filtros,
 fechas, concurrencia y comprobaciones manuales. RN-01 a RN-36 mantienen
 su numeración. El cierre histórico de Sprint 5 conserva sus pendientes de aquel
 momento; Sprint 6 incorpora el traslado sin cambiar el contrato PUT.
@@ -453,7 +453,7 @@ si se omite, es null o queda blanco, se limpia a null. Máximo 200 caracteres,
 como `equipo.ubicacion_interna`. No se añade esa columna al Movimiento y no se
 conserva automáticamente una ubicación del laboratorio anterior.
 
-La [guía de Sprint 6](sprints/sprint-6-movimientos.md) documenta la operación
+La [guía de Sprint 6](sprints_realizados-backend/sprint-6-movimientos.md) documenta la operación
 atómica, los tres endpoints, la concurrencia y su verificación manual.
 
 ## 14. Clasificación y evidencia del cierre

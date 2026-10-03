@@ -1,24 +1,26 @@
 # 1. Resumen Sprint 8
 
-**Docker del backend operativo en local; automatización de publicación en GHCR
-preparada y pendiente de confirmar en GitHub.** Este sprint continúa el cierre
-funcional del [Sprint 7](sprint-7.md) e incorpora el empaquetado y la ejecución
-del backend de Inventario con PostgreSQL en contenedores separados.
+**Docker local completo y publicación del backend/frontend en GHCR verificados.**
+Este sprint continúa el cierre funcional del [Sprint 7](sprint-7.md). El alcance
+inicial fue backend + PostgreSQL; la actualización del 2026-10-03 registra además
+la integración del frontend de Jason con Nginx y la publicación de ambas imágenes.
 
 Se externalizó el puerto, se incorporó Actuator, se permitió consultar la salud
 sin autenticación, se construyó `inventario-backend:local` y se preparó Compose.
 El usuario ejecutó el entorno y compartió ambos servicios en estado `healthy`
 y la respuesta `status: UP` de `/actuator/health`.
 
-También existe el workflow `.github/workflows/imagen.yml`, adaptado a la
-subcarpeta del backend y con un nombre de imagen exclusivo para este componente.
-La existencia del archivo no demuestra que ya se haya ejecutado correctamente
-en GitHub ni que el paquete esté publicado.
+El workflow `.github/workflows/imagen.yml` utiliza una matriz para publicar
+backend y frontend Jason con nombres de imagen separados. La
+[ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900)
+terminó con ambos trabajos en verde para el commit `9956939`. Se verificaron
+directamente las etiquetas `latest` y `sha-9956939` y sus digests en GHCR.
 
-**Fecha de documentación:** 2026-10-01. Este reporte distingue la revisión de
-archivos actuales, las comprobaciones realizadas durante la actividad y las
-salidas compartidas por el usuario. Al redactarlo no se volvieron a ejecutar
-Docker, Gradle, Git, pruebas ni consultas a PostgreSQL.
+**Fecha inicial de documentación:** 2026-10-01. **Evidencia actualizada:** 2026-10-03.
+El recorrido inicial conserva sus resultados históricos. Las verificaciones
+posteriores de Docker, Actions y GHCR se distinguen de aquella preparación en la
+[evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md).
+Esta actualización documental no ejecuta nuevamente Docker ni las suites.
 
 # 2. Estado inicial
 
@@ -36,7 +38,7 @@ Al comenzar esta actividad faltaban Dockerfile, `.dockerignore`, Compose y el
 workflow de imagen. El puerto era fijo y no estaban incorporados Actuator ni
 la autorización explícita de su endpoint de salud.
 
-# 3. Objetivo y alcance
+# 3. Objetivo y alcance inicial
 
 Empaquetar exclusivamente el backend, ejecutar una instancia reproducible junto
 a una base PostgreSQL independiente y preparar la construcción/publicación
@@ -52,9 +54,11 @@ Incluido en este sprint:
 - Preparación de `imagen.yml` para el repositorio actual.
 - Registro de evidencias, precauciones y pendientes.
 
-No se implementan funciones nuevas de inventario, cambios de esquema, Docker
-del frontend, Kubernetes, CI avanzado, Render, AWS ni una base gestionada en la
-nube. Tampoco se migra la información de la base de Windows al contenedor.
+La actividad inicial no implementó funciones nuevas de inventario, cambios de
+esquema ni Docker del frontend. Este último se incorporó posteriormente y ya
+forma parte del entorno verificado. Kubernetes, CI avanzado, Render, AWS y una
+base gestionada siguen fuera de lo comprobado. No se migró la información de
+la base de Windows al contenedor.
 
 # 4. Relación con la sesión 26
 
@@ -100,6 +104,11 @@ inventario-laboratorios/
 │       ├── gradle/
 │       └── src/
 ├── frontend/
+│   └── version-jason/
+│       └── frontend/
+│           ├── Dockerfile
+│           ├── .dockerignore
+│           └── nginx.conf
 └── docs/
     └── sprints_realizados-backend/
         └── sprint-8.md
@@ -248,12 +257,19 @@ aquella construcción; no se garantiza que se conserve al reconstruir.
 # 11. Compose y PostgreSQL independiente
 
 El [docker-compose.yml](../../backend/inventario/docker-compose.yml) define el
-proyecto `inventario-docker` y dos servicios:
+proyecto `inventario-docker`. Inicialmente tenía dos servicios; actualmente
+integra los tres componentes:
 
 | Servicio | Imagen | Configuración principal |
 |---|---|---|
 | `db` | `postgres:18-alpine` | Base nueva y volumen persistente |
 | `backend` | `inventario-backend:local` | Imagen propia y contexto `build: .` |
+| `frontend` | `inventario-frontend-jason:local` | React/Vite servido por Nginx; contexto `../../frontend/version-jason/frontend` |
+
+El frontend se publica en `http://localhost:3000` y usa `/api` mediante el proxy
+Nginx hacia `backend:8080`. La ruta alternativa de Nginx permite recargar las
+rutas del cliente. El backend conserva `http://localhost:8080`; PostgreSQL no
+publica un puerto al anfitrión. Los tres servicios se observaron saludables.
 
 La base se llama `inventario_laboratorios` y el usuario de conexión Docker es
 `inventario`. Son recursos de la instancia del contenedor; no reutilizan ni
@@ -313,10 +329,11 @@ configuración si falta alguno de esos valores. No se registran sus contenidos
 en este documento. Al redactarlo se confirmó solamente la existencia de `.env`,
 sin leerlo ni exponer sus secretos.
 
-No se activa automáticamente el perfil `dev` ni se entrega `DEMO_USER_PASSWORD`.
-Los usuarios de la base de Windows no aparecen por conectar el backend a la
-base nueva. Crear usuarios de demostración requerirá una acción separada y
-controlada sobre ese entorno.
+El Compose habitual no activa automáticamente el perfil `dev` ni entrega
+`DEMO_USER_PASSWORD`. Los usuarios de Windows no aparecen por conectar el
+backend a otra base. La demostración completa utilizó fixtures y credenciales
+externas exclusivamente en una base temporal; no creó cuentas ni datos de
+inventario en la base habitual.
 
 # 14. Orden de arranque y persistencia
 
@@ -338,7 +355,7 @@ esquema de Inventario sigue a cargo de Flyway. Se mantiene `ddl-auto=validate`.
 eliminar los datos del volumen. Cambiar la contraseña en `.env` tampoco cambia
 automáticamente la contraseña de una base ya inicializada.
 
-# 15. Arranque realizado y evidencias compartidas
+# 15. Arranque inicial y evidencia posterior
 
 El usuario realizó la validación y el arranque guiado desde `backend/inventario`:
 
@@ -371,6 +388,13 @@ Esto confirma el estado comunicado en esa comprobación, no una monitorización
 continua. No se incorporó una transcripción completa de los logs ni un listado
 SQL de `flyway_schema_history` del contenedor.
 
+La comprobación posterior del 2026-10-03 incluyó los tres servicios saludables,
+recorrido en navegador y 33 comprobaciones HTTP adicionales. Se usaron las mismas
+imágenes locales en un entorno aislado, con backend en 18081, frontend en 3001 y
+base `inventario_verificacion_docker_26e35749`. La base temporal y sus recursos
+Docker se eliminaron al terminar; el entorno habitual permaneció intacto. Véase
+la [evidencia completa](../despliegue/verificacion-docker-actions-2026-10-03.md).
+
 # 16. Alcance de la validación
 
 | Comprobación | Estado y evidencia |
@@ -378,12 +402,16 @@ SQL de `flyway_schema_history` del contenedor.
 | Puerto configurable, Actuator y regla de salud | Archivos revisados |
 | Salud del backend antes de Docker | HTTP 200 y `UP` comprobados durante la preparación |
 | Construcción de imagen | Proceso finalizado correctamente y metadatos inspeccionados |
-| Backend y PostgreSQL en Compose | Ambos `healthy` según salida compartida por el usuario |
-| Salud de la instancia Docker | `UP` según salida compartida por el usuario |
-| Login y operaciones de inventario sobre la base Docker | No verificados en esta actividad |
-| Suite automatizada después de los cambios | No ejecutada en esta actividad |
-| Workflow disponible en el árbol local | Archivo `imagen.yml` revisado |
-| Ejecución remota de Actions y paquete GHCR | Pendientes de evidencia |
+| Backend, PostgreSQL y frontend en Compose | Tres servicios saludables; lectura y flujo completo verificados el 2026-10-03 |
+| Salud de la instancia Docker | Backend `UP`; frontend servido por Nginx y proxy `/api` funcional |
+| Login y operaciones de inventario sobre Docker | ADMIN/GESTOR/LECTOR, creación, consulta, edición, traslado, historial, baja, filtros y alcance aprobados |
+| Comprobaciones complementarias | 33/33 HTTP y 24/24 aserciones de verificación; no son pruebas JUnit |
+| Suite Gradle de 233 pruebas | Antecedente de Sprint 7; no reejecutada en esta verificación ni en el build de Actions |
+| Pruebas frontend en Actions | 27/27 aprobadas en el trabajo del frontend Jason |
+| Workflow disponible en el árbol local | `imagen.yml`, matriz backend/frontend y contextos separados |
+| Ejecución remota de Actions y paquetes GHCR | Run 37136137900: ambos trabajos verdes; etiquetas y digests comprobados |
+| Flyway e integridad temporal | V1–V9 exitosas; cinco controles SQL con cero incidencias |
+| Base habitual y limpieza | Nueve conteos iguales antes/después; base, contenedores, red y volumen temporales eliminados |
 
 `UP` no sustituye las pruebas de login, roles, CRUD, traslados ni persistencia
 después de recrear un contenedor. El build usa `-x test`; no corresponde afirmar
@@ -391,26 +419,33 @@ que las 233 pruebas del cierre anterior se ejecutaron otra vez.
 
 # 17. Automatización con imagen.yml
 
-El archivo [imagen.yml](../../.github/workflows/imagen.yml) ya existe en la
-ubicación correcta y define `Imagen Docker del backend`.
+El archivo [imagen.yml](../../.github/workflows/imagen.yml) está en la ubicación
+correcta y define `Imagenes Docker del backend y frontend Jason`. Una matriz
+genera los trabajos `Publicar backend` y `Publicar frontend-jason`.
 
 | Elemento | Configuración revisada |
 |---|---|
-| Activación automática | Push a `main` con cambios en backend o workflow |
-| Filtros de rutas | `backend/inventario/**` y `.github/workflows/imagen.yml` |
+| Activación automática | Push a `main` con cambios en backend, frontend Jason o workflow |
+| Filtros de rutas | `backend/inventario/**`, `frontend/version-jason/frontend/**` y `.github/workflows/imagen.yml` |
 | Activación manual | `workflow_dispatch` |
 | Restricción del trabajo | `github.ref == 'refs/heads/main'` |
 | Ejecutor | `ubuntu-latest` |
 | Permisos | `contents: read` y `packages: write` |
 | Descarga del repositorio | `actions/checkout@v7`, sin persistir credenciales |
 | Autenticación | `docker/login-action@v4` con `GITHUB_TOKEN` |
+| Pruebas de frontend | Node 22 con `actions/setup-node@v7`, `npm ci` y `npm test`; 27 aprobadas en la ejecución confirmada |
+| Preparación de construcción | `docker/setup-buildx-action@v4` |
 | Construcción/publicación | `docker/build-push-action@v7` |
 
-La adaptación esencial al monorepo es:
+La adaptación esencial al monorepo mantiene estos contextos separados:
 
 ```yaml
-context: ./backend/inventario
-file: ./backend/inventario/Dockerfile
+backend:
+  contexto: ./backend/inventario
+  dockerfile: ./backend/inventario/Dockerfile
+frontend-jason:
+  contexto: ./frontend/version-jason/frontend
+  dockerfile: ./frontend/version-jason/frontend/Dockerfile
 ```
 
 El workflow no se necesita por el solo hecho de tener subcarpetas: automatiza
@@ -419,17 +454,21 @@ Dockerfile a la raíz ni separar el frontend en otro repositorio.
 
 # 18. Nombre de imagen, etiquetas y autenticación
 
-El workflow forma el nombre `ghcr.io/${GITHUB_REPOSITORY,,}-backend`, usando
-minúsculas. Para `markopuch/inventario-laboratorios`, el resultado previsto es:
+El workflow forma el nombre `ghcr.io/${GITHUB_REPOSITORY,,}-${COMPONENTE}`, usando
+minúsculas. Para la ejecución verificada del commit `9956939`, se publicaron:
 
 ```text
 ghcr.io/markopuch/inventario-laboratorios-backend:latest
-ghcr.io/markopuch/inventario-laboratorios-backend:sha-<7 caracteres del commit>
+ghcr.io/markopuch/inventario-laboratorios-backend:sha-9956939
+ghcr.io/markopuch/inventario-laboratorios-frontend-jason:latest
+ghcr.io/markopuch/inventario-laboratorios-frontend-jason:sha-9956939
 ```
 
 `latest` apunta a la publicación más reciente realizada por este flujo. La
 etiqueta `sha-...` permite relacionarla con el commit usado para construirla.
-El sufijo `-backend` reserva un nombre distinto del futuro frontend.
+Los sufijos `-backend` y `-frontend-jason` identifican los componentes separados.
+Los digests consultados coinciden con las salidas de Actions y están registrados
+en la [evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md).
 
 La imagen local sigue siendo `inventario-backend:local`; el Compose actual no
 se cambió para descargar desde GHCR. Se añade la etiqueta OCI
@@ -439,23 +478,22 @@ se cambió para descargar desde GHCR. Se añade la etiqueta OCI
 contraseña de la cuenta ni por las variables locales de PostgreSQL/JWT.
 Esta construcción no necesita arrancar la base ni subir `.env`.
 
-# 19. Pendientes de publicación en GitHub
+# 19. Publicación verificada en GitHub
 
-La preparación del workflow está documentada, pero no hay evidencia aportada
-en esta actividad de su ejecución remota. Para cerrar esa parte falta:
+La publicación preparada inicialmente ya se ejecutó en `main` para el commit
+`99569392035fc975171d2df6929a1aa26111b139`. La
+[ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900)
+terminó correctamente:
 
-1. Confirmar la rama principal y que los archivos necesarios estén en GitHub.
-2. Revisar lo preparado para commit, sin incorporar `.env` ni cambios ajenos.
-3. Incorporar el workflow y los cambios del backend a `main` mediante el flujo
-   de trabajo del repositorio; si se utiliza otra rama, revisar el pull request.
-4. Verificar en Actions una ejecución verde de `Imagen Docker del backend`.
-5. Confirmar el paquete `inventario-laboratorios-backend` y ambas etiquetas.
-6. Registrar el commit, enlace de ejecución y nombre/digest de imagen publicado.
-7. Decidir explícitamente si el paquete debe hacerse público para la clase.
+| Trabajo | ID | Resultado |
+|---|---|---|
+| Publicar backend | `111240944686` | Compilación y publicación exitosas; Dockerfile usa `bootJar -x test` |
+| Publicar frontend-jason | `111240944823` | 27 pruebas aprobadas, build y publicación exitosos |
 
-Una publicación nueva en GHCR es privada por defecto. Hacerla pública permite
-descargar el programa compilado; debe revisarse antes que sea apropiado
-distribuirlo y que no contenga secretos. No se cambió ninguna visibilidad.
+Ambos paquetes existen con `latest` y `sha-9956939`; la inspección del registro
+confirmó sus digests. La política de visibilidad pública o privada no se cambió
+ni se atribuye como parte de esta evidencia. Si la entrega requiere descargas
+sin autenticación, esa decisión se revisará por separado.
 
 El botón manual depende de que el workflow esté en la rama predeterminada.
 La guardia actual solo permite publicar desde `main`. Publicar una imagen no
@@ -469,8 +507,12 @@ Rutas relativas a la raíz del repositorio:
 |---|---|
 | `backend/inventario/Dockerfile` | Construcción en dos etapas y ejecución Java 21 |
 | `backend/inventario/.dockerignore` | Excluir cachés, secretos locales y archivos no necesarios |
-| `backend/inventario/docker-compose.yml` | Backend, PostgreSQL, salud, red y volumen |
-| `.github/workflows/imagen.yml` | Automatización preparada para construir/publicar en GHCR |
+| `backend/inventario/docker-compose.yml` | Backend, PostgreSQL y posteriormente frontend; salud, red y volumen |
+| `.github/workflows/imagen.yml` | Automatización ejecutada: matriz backend/frontend con publicación confirmada en GHCR |
+| `frontend/version-jason/frontend/Dockerfile` | Build React/Vite y ejecución del frontend con Nginx |
+| `frontend/version-jason/frontend/.dockerignore` | Exclusiones del contexto frontend |
+| `frontend/version-jason/frontend/nginx.conf` | Proxy `/api`, rutas SPA y salud del frontend |
+| `docs/despliegue/verificacion-docker-actions-2026-10-03.md` | Evidencia consolidada del flujo, limpieza, Actions e imágenes |
 | `docs/sprints_realizados-backend/sprint-8.md` | Este reporte del sprint |
 
 También existe `backend/inventario/.env` como archivo local no destinado al
@@ -489,9 +531,10 @@ Se conservaron la arquitectura de negocio, controladores, DTOs, entidades,
 servicios, repositorios y migraciones del backend. No se introdujo V10.
 `.gitattributes` y el Wrapper existentes se reutilizaron.
 
-**Esta tarea de documentación crea únicamente `sprint-8.md`.** No modifica
-README, código, configuración, workflows, otros sprints ni registros de Git.
-Las eliminaciones de `.gitkeep` descritas en el Sprint 7 no se atribuyen a este.
+La redacción inicial creó únicamente `sprint-8.md`. La actualización posterior
+actualiza los Markdown que presentan el estado vigente y conserva los cierres
+anteriores como historia. No modifica código, configuración, workflows ni
+registros de Git. Las eliminaciones de `.gitkeep` del Sprint 7 no se atribuyen aquí.
 
 # 22. Incidencias y decisiones
 
@@ -503,7 +546,7 @@ Las eliminaciones de `.gitkeep` descritas en el Sprint 7 no se atribuyen a este.
 | Duda entre 8080 y 8081 | Detener backend local y adoptar `127.0.0.1:8080:8080` |
 | ShopEasy usa otro stack de referencia | Adaptar Java 21, PostgreSQL y Flyway; no copiar su configuración completa |
 | Dockerfile dentro de una subcarpeta | Ajustar contexto y ruta en el workflow, sin reorganizar el repositorio |
-| Futuro Docker del frontend | Reservar otra imagen/workflow y mantener los componentes separados |
+| Docker del frontend, inicialmente futuro | Incorporado con Nginx, imagen separada y trabajo propio dentro del mismo workflow |
 
 Después de la construcción realizada en el paso 4, el usuario pidió ejecutar
 personalmente los comandos siguientes. El arranque de Compose se realizó de
@@ -524,26 +567,30 @@ esa manera y sus resultados se compartieron en la conversación.
 - [x] Comprobar ambos servicios `healthy`, según evidencia compartida.
 - [x] Comprobar `status: UP` en la instancia Docker, según evidencia compartida.
 - [x] Preparar `imagen.yml` en la raíz y adaptar el contexto del backend.
-- [x] Separar el nombre de imagen del futuro frontend.
-- [ ] Confirmar una ejecución verde del workflow en GitHub Actions.
-- [ ] Confirmar paquete GHCR, etiquetas y digest publicados.
-- [ ] Resolver y documentar la visibilidad del paquete según la entrega.
-- [ ] Verificar login y operaciones de inventario sobre la nueva base Docker.
-- [ ] Reejecutar y registrar las pruebas automatizadas después de estos cambios.
+- [x] Separar los nombres de imagen de backend y frontend Jason.
+- [x] Integrar frontend, backend y PostgreSQL en Compose y comprobar sus estados saludables.
+- [x] Verificar login, roles, alcance y flujo completo de inventario en Docker aislado.
+- [x] Registrar 33/33 comprobaciones HTTP y 24/24 aserciones, sin sumarlas a JUnit.
+- [x] Confirmar una ejecución verde de ambos trabajos en GitHub Actions.
+- [x] Confirmar ambos paquetes GHCR, etiquetas y digests publicados.
+- [x] Confirmar 27/27 pruebas del frontend en Actions.
+- [x] Preservar la base habitual y eliminar todos los recursos temporales de verificación.
+
+La regresión Gradle de 233 pruebas no se reejecutó en esta validación; permanece
+como antecedente aprobado de Sprint 7. La visibilidad del paquete y una posible
+regresión adicional son decisiones separadas, no resultados atribuidos al build.
 
 # 24. Estado final y próximos pasos
 
-**Empaquetado y ejecución local completados; automatización implementada en
-archivo local, publicación remota pendiente de evidencia.** El Sprint 8 no se
-declara cerrado en su alcance completo de Docker más GHCR.
+**Alcance Docker local + publicación GHCR cerrado y documentado.** El entorno
+completo funciona con los tres servicios, el flujo de inventario fue validado
+en una base temporal y ambas imágenes se publicaron mediante Actions. El
+frontend tiene su propio trabajo e imagen dentro del workflow compartido.
 
-El siguiente paso inmediato es confirmar Actions y el paquete publicado. Luego
-se podrá preparar, si corresponde, un Compose que descargue esa imagen en vez
-de construirla localmente y verificarla con PostgreSQL.
-
-El frontend conservará su propia imagen y workflow. Una futura integración de
-los tres servicios deberá cuidar puertos, URL de la API, secretos y reutilización
-del volumen; no exige separar repositorios ni rehacer el Dockerfile del backend.
+Los pasos de validación Docker y publicación ya tienen evidencia. El siguiente
+trabajo de despliegue será preparar la base gestionada y el backend en la nube,
+si se autoriza, siguiendo la sesión 28. Descargar las imágenes de GHCR en Compose
+es una alternativa operativa: el Compose vigente sigue construyendo localmente.
 
 La publicación en Render u otra plataforma, las revisiones avanzadas y
 Kubernetes quedan fuera de lo comprobado aquí. El cierre funcional del Sprint 7

@@ -2,7 +2,37 @@
 
 Fecha: 3 de octubre de 2026.
 
-**Estado: integración local operativa en las funcionalidades implementadas. Build correcto, 27/27 pruebas del frontend y 42 comprobaciones HTTP aprobadas, además de los recorridos de navegador descritos abajo. FE-08 a FE-10 continúan pendientes; no se declara fidelidad visual 1:1 ni cierre de los once módulos.**
+**Estado: integración local operativa y flujo completo Docker comprobado. La auditoría inicial conserva build, 27/27 pruebas y 42 comprobaciones HTTP; la validación posterior Docker registra 33/33 HTTP adicionales y 24/24 aserciones de flujo y consistencia. Actions publicó ambas imágenes con trabajos en verde. FE-08 a FE-10 continúan pendientes; no se declara fidelidad visual 1:1 ni cierre de los once módulos.**
+
+## Actualización posterior: Docker y GitHub Actions
+
+La [evidencia consolidada del 3 de octubre de 2026](../despliegue/verificacion-docker-actions-2026-10-03.md)
+documenta dos comprobaciones posteriores a la auditoría Vite que se conserva abajo:
+
+- **Flujo Docker:** mismas imágenes del entorno habitual, frontend Nginx temporal
+  en 3001, backend en 18081 y base `inventario_verificacion_docker_26e35749`.
+  Login ADMIN/GESTOR/LECTOR; alta, lectura, edición, traslado 201 → 206, historial
+  con actor/origen/destino/motivo, baja sin acciones, filtros, logout, recarga a
+  Login y datos conservados al reingresar. LECTOR recibió 403 fuera del laboratorio
+  actual del equipo y 200 al consultar el historial permitido por origen.
+- **Resultados Docker:** 33/33 HTTP adicionales y 24/24 aserciones de flujo y
+  consistencia, sin fallos; consola sin errores ni advertencias. Son comprobaciones
+  del recorrido, no nuevas pruebas JUnit ni una regresión completa del backend.
+- **Base y limpieza:** Flyway V1–V9 exitosas, cinco consultas de inconsistencia con
+  resultado 0 y conteos de nueve tablas habituales iguales antes/después. Base,
+  contenedores, volumen y red temporales eliminados. Tres contenedores habituales
+  saludables; frontend actual en 3000 y backend en 8080.
+- **Actions:** [ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900)
+  exitosa sobre `99569392035fc975171d2df6929a1aa26111b139`; trabajos backend
+  `111240944686` y frontend `111240944823` exitosos. Jason ejecutó 27/27 pruebas
+  antes de publicar.
+- **GHCR:** imágenes backend y frontend-jason confirmadas con `latest` y
+  `sha-9956939`; los digests están en el informe consolidado. Publicar no implica
+  despliegue en la nube ni actualización automática del entorno local.
+
+Esta actualización conserva el resultado y los límites de cada ejecución. No suma
+las 42 HTTP anteriores y las 33 posteriores como una suite nueva, ni agrega las
+24 aserciones a las 27 pruebas automatizadas o a las 233 históricas de Gradle.
 
 ## Alcance y criterio de evidencia
 
@@ -114,7 +144,10 @@ estado libre ni Mantenimiento de laboratorio. Movimientos devuelve `tipoMovimien
 y `fechaMovimiento`, sin estados Pendiente/Completado. Las diferencias de los mockups
 en estos puntos se mantienen como pendientes de producto/contrato, sin simularlas.
 
-## Entornos y resultados finales
+## Auditoría inicial: entornos y resultados con Vite
+
+La siguiente tabla es evidencia de la revisión inicial. El entorno habitual actual
+posterior usa Docker completo en 3000/8080, como se documenta en la actualización.
 
 | Comprobación | Resultado y alcance |
 |---|---|
@@ -126,15 +159,15 @@ en estos puntos se mantienen como pendientes de producto/contrato, sin simularla
 | Navegador GESTOR | Dos laboratorios asignados, alta disponible y equipos BAJA sin acciones. CRUD/traslado del gestor también verificados por HTTP. |
 | Sesión y errores | Logout y recarga vuelven a Login; credencial incorrecta muestra mensaje. Backend temporal detenido: dashboard muestra errores/reintento y valores de equipos indisponibles, no ceros ficticios. |
 | Presentación | Escritorio 1280 × 900 y móvil 390 × 844. En la vista móvil comprobada no hubo desbordamiento global; tabla desplaza dentro de su contenedor. Menú abre y cierra al navegar. |
-| Entorno habitual final | Frontend en http://localhost:5173 y backend Docker en http://localhost:8080. Ambos contenedores saludables; login ADMIN y dashboard comprobados desde el navegador. |
+| Entorno habitual al cerrar la auditoría inicial | Frontend Vite en http://localhost:5173 y backend Docker en http://localhost:8080. Los dos contenedores de base/backend estaban saludables; login ADMIN y dashboard comprobados desde el navegador. |
 
 Las consultas HTTP adicionales cubrieron login, catálogos y organización con CRUD/relaciones, conflicto 409 al bajar un padre con hijas, equipo creado/editado/trasladado/dado de baja por GESTOR, filtros combinados, persistencia del historial y seguridad. Se comprobaron 401 sin JWT o con token inválido; 403 por rol y alcance; 400 al enviar un campo inmutable por PUT; 409 al editar BAJA. LECTOR recibió 403 al consultar el equipo fuera de su laboratorio actual y conservó acceso al historial por origen.
 
 Las rutas administrativas tienen guardia de rol en el código. No se afirma que cada alias/ruta directa se haya ejercitado en navegador. Los tests de sesión y asignaciones cubren respuestas tardías y doble envío; no se hizo una prueba exhaustiva de concurrencia mediante la interfaz.
 
-## Base temporal y preservación
+## Auditoría inicial: base temporal y preservación
 
-Todas las escrituras de pruebas usaron **inventario_verificacion_jason_91d7ac79**, con backend Docker separado en 18080 y frontend en 5174. El entorno temporal reutilizó la imagen actual del backend; no modificó su código, Compose ni migraciones.
+Todas las escrituras de la auditoría inicial usaron **inventario_verificacion_jason_91d7ac79**, con backend Docker separado en 18080 y frontend en 5174. El entorno temporal reutilizó la imagen del backend de esa revisión; no modificó su código, Compose ni migraciones. La verificación Docker posterior utilizó otra base temporal, detallada en la actualización; tampoco escribió en el inventario habitual.
 
 Al terminar se registraron 3 usuarios, 3 asignaciones, 4 categorías, 6 subcategorías, 2 sedes, 3 áreas, 4 laboratorios, 2 equipos y 2 movimientos en esa base. Son conteos físicos, incluidos registros con baja lógica.
 
@@ -169,6 +202,7 @@ Node 24.16.0; npm 11.13.0; Docker 29.8.0; React/React DOM 18.3.1; Vite 6.4.3; pl
 
 ## Evidencia y uso
 
+- [Flujo completo Docker y publicación backend/frontend en Actions](../despliegue/verificacion-docker-actions-2026-10-03.md).
 - [Resultados HTTP, SQL, conteos y build](evidencias/verificacion-2026-10-03.json).
 - [Dashboard conectado al Docker habitual](evidencias/dashboard-docker-habitual.png).
 - [Historial de verificación en escritorio](evidencias/movimientos-desktop.png).

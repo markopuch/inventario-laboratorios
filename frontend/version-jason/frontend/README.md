@@ -65,7 +65,7 @@ es una configuración pública de compilación, no una contraseña. La configura
 privada del backend permanece en su carpeta; no se copia al frontend.
 
 Las 27 pruebas se ejecutan con `npm.cmd test` desde esta carpeta del repositorio
-completo y tambien en GitHub Actions antes de publicar Jason. Algunas verifican
+completo y también en GitHub Actions antes de publicar Jason. Algunas verifican
 los contratos leyendo los DTO Java del backend, por lo que no se ejecutan dentro
 del contexto aislado del Dockerfile del frontend.
 
@@ -88,6 +88,14 @@ Cada imagen recibe `latest` y `sha-<7 caracteres del commit>`. GitHub Actions
 usa `GITHUB_TOKEN`, sin incorporar credenciales a los archivos del proyecto.
 El Compose local sigue construyendo las imágenes `:local`; publicar en GHCR
 no sustituye automáticamente los contenedores que ya están ejecutándose.
+
+La [ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900),
+del 3 de octubre de 2026, comprobó ambos trabajos en verde sobre el commit
+`99569392035fc975171d2df6929a1aa26111b139`. El trabajo de Jason aprobó **27/27 pruebas**
+antes de publicar. Se verificaron las dos imágenes en GHCR con etiquetas `latest`
+y `sha-9956939`; sus digests y enlaces de trabajos se conservan en la
+[evidencia Docker y Actions](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md).
+Esto acredita construcción y publicación; el despliegue en la nube sigue pendiente.
 
 ## Configuración de la conexión
 
@@ -166,7 +174,7 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Resultado final del 3 de octubre de 2026: **27/27 pruebas automatizadas aprobadas**
+Resultado de la auditoría inicial del 3 de octubre de 2026: **27/27 pruebas automatizadas aprobadas**
 (10 de autenticación/sesión, 5 de contratos de equipos/catálogos, 5 de movimientos
 y 7 de asignaciones). Son pruebas de lógica y contratos; no certifican todos los
 recorridos de navegador. El build final también pasó: **1670 módulos, 10.85 s**.
@@ -180,7 +188,7 @@ de equipos, filtros, catálogos, laboratorios, errores, logout, recarga y vista 
 Las escrituras usaron exclusivamente `inventario_verificacion_jason_91d7ac79`, backend
 18080 y frontend 5174. Ese entorno temporal, su base, contenedor y credencial temporal
 ya se eliminaron. Durante esa verificación, el frontend en **5173** apuntó al Docker habitual en **8080**;
-ambos servicios Docker están saludables y el dashboard mostró 2 laboratorios,
+los dos contenedores de base/backend estaban saludables y el dashboard mostró 2 laboratorios,
 0 equipos y 0 movimientos. Los conteos del inventario habitual permanecieron iguales.
 
 Conclusión: **integración local operativa en las funcionalidades implementadas**.
@@ -188,6 +196,29 @@ Continúan pendientes FE-08–FE-10, la fidelidad visual 1:1 y la revisión exha
 accesibilidad. La [evidencia final](../../../docs/sprints_realizados-frontend-Jason/evidencias/verificacion-2026-10-03.json)
 y la auditoría detallan los escenarios comprobados; no se declara una reejecución
 completa de la suite backend histórica.
+
+### Verificación posterior del flujo completo en Docker
+
+El 3 de octubre de 2026 se validó el frontend servido por Nginx y el backend con
+las mismas imágenes Docker del entorno habitual, en un stack temporal aislado:
+frontend **3001**, backend **18081** y base **`inventario_verificacion_docker_26e35749`**.
+Se aprobaron **33/33 comprobaciones HTTP adicionales** y **24/24 aserciones de
+flujo y consistencia**; son evidencias del recorrido, no nuevas pruebas JUnit ni
+una suma a las 27 pruebas automatizadas de Jason.
+
+Se comprobó login ADMIN/GESTOR/LECTOR, crear/consultar/editar equipo, traslado
+del laboratorio 201 al 206, historial con actor/origen/destino/motivo, baja lógica
+sin acciones disponibles, filtros, logout, recarga a Login y persistencia de datos
+al reingresar. LECTOR recibió 403 para el equipo fuera de alcance y conservó la
+lectura del historial por origen. La consola registró 0 errores y 0 advertencias.
+
+Flyway mantuvo V1–V9 exitosas y las cinco consultas de inconsistencia devolvieron
+0. Los conteos antes/después de las nueve tablas habituales fueron iguales. Se
+eliminaron la base, contenedores, volumen y red temporales. El entorno habitual
+final tiene sus tres contenedores saludables y utiliza frontend **3000** y backend
+**8080**. El [informe consolidado](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+separa esta evidencia de la auditoría Vite anterior y de la publicación en GHCR.
+FE-08–FE-10 y los límites visuales y de accesibilidad conservan su estado pendiente.
 
 Versiones verificadas: Node 24.16.0, npm 11.13.0, Docker 29.8.0, React 18.3.1,
 Vite 6.4.3, Axios 1.20.0, React Router 7.18.4, plugin React 4.7.0 y Lucide 0.468.0.
@@ -199,7 +230,8 @@ a pruebas. Usa cuentas y credenciales autorizadas; esta documentación no las ex
 El entorno temporal empleado en la verificación ya no existe.
 
 1. Levanta el backend y Jason con los comandos anteriores, comprueba salud `UP` y
-   abre 5173. Identifica los datos iniciales del entorno que vas a utilizar.
+   abre **3000** para el modo Docker completo o **5173** para desarrollo con Vite.
+   Identifica los datos iniciales del entorno que vas a utilizar.
 2. Inicia sesión como ADMIN y comprueba dashboard, laboratorios y ausencia de errores.
    Las cifras deben corresponder a los datos reales, incluso cuando sean cero.
 3. En Asignaciones, consulta el ID de un GESTOR. Selecciona explícitamente los
@@ -224,8 +256,9 @@ El entorno temporal empleado en la verificación ya no existe.
 
 Después de cambiar asignaciones, vuelve a iniciar sesión con el usuario afectado para actualizar las selecciones de la interfaz. El backend verifica los permisos vigentes en cada solicitud; el contador de laboratorios del Dashboard consulta el alcance actualizado al entrar.
 
-La verificación de integración anterior dejó el entorno de desarrollo en 5173/8080.
-Para el nuevo modo Docker, abre 3000 y sigue la sección Frontend Jason en Docker.
+La auditoría Vite anterior utilizó 5173/8080. La verificación posterior dejó el
+entorno habitual Docker en 3000/8080, con sus tres contenedores saludables.
+Para este modo, abre 3000 y sigue la sección Frontend Jason en Docker.
 Para detener Vite usa Ctrl+C en su terminal; `docker compose stop` desde
 backend/inventario detiene los servicios Docker y conserva los datos de PostgreSQL.
 
