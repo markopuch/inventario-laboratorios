@@ -1,25 +1,19 @@
 # FE-11 — Arquitectura, navegación y componentes comunes
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: arquitectura, proxy `/api`, sesión en memoria y rutas por rol integrados; flujo completo con Nginx y publicación en Actions comprobados. Build y 27 pruebas del frontend aprobados. La fidelidad visual y accesibilidad exhaustivas conservan sus pendientes.**
+**Estado vigente: Arquitectura React/Vite/Axios vigente, build y 67 pruebas aprobados en la adaptación; publicación y Docker actual comprobados.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-confirma tres contenedores habituales saludables y frontend Nginx en 3000, con
-proxy `/api` hacia `backend:8080` y fallback de rutas SPA. La sesión conserva
-JWT/usuario en memoria; recarga, logout y reingreso fueron comprobados. El cliente
-Axios usa `/api` y Bearer de la sesión vigente, sin persistir JWT en `localStorage`.
+Rutas públicas/protegidas, `AuthContext`, servicios HTTP y utilidades mantienen sus responsabilidades. `/usuarios`, `/asignaciones` y `/configuracion` tienen guardia ADMIN; permisos visuales no sustituyen autorización del backend. Cliente usa `/api`, Bearer en memoria y protección frente a respuestas de sesión obsoletas; no recupera JWT desde localStorage.
 
-La validación aislada aprobó 33/33 comprobaciones HTTP adicionales y 24/24
-aserciones de flujo y consistencia, sin errores ni advertencias de consola.
-Actions sobre `9956939` aprobó 27/27 pruebas de Jason y publicó imágenes backend y
-frontend-jason con `latest`/`sha-9956939`, verificadas en GHCR. Publicación no
-equivale a despliegue en la nube ni suma pruebas a la suite histórica del backend.
+Actions [37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428) publicó ambos trabajos del commit `e1ce75a`. Docker sirve Nginx en 3000, `/api` hacia backend:8080 y fallback SPA; Vite conserva 5173 para desarrollo. PostgreSQL habitual conserva contenedor y volumen con V1–V13. Consola de la última sesión: cero errores y advertencias; no certifica todos los recorridos. Fidelidad visual al píxel y accesibilidad exhaustivas no están certificadas.
 
-La [auditoría de integración](auditoria-integracion.md) conserva la comprobación
-de escritorio/móvil y los límites de teclado, foco y lectores de pantalla.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

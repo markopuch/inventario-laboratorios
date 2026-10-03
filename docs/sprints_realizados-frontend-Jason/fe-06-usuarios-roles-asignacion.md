@@ -1,22 +1,19 @@
 # FE-06 — Usuarios, roles y asignación de laboratorios
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: asignaciones implementadas y comprobadas, con consulta por ID y selección de laboratorios. `/asignaciones` es la ruta principal y `/usuarios` su alias ADMIN. La administración completa de usuarios y roles queda fuera del alcance funcional actual.**
+**Estado vigente: Directorio y administración de usuarios implementados para ADMIN: creación, edición pública, rol, actividad, contraseña y asignaciones.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [auditoría de integración](auditoria-integracion.md) comprobó por UI asignaciones
-de 2 laboratorios a GESTOR y 1 a LECTOR, selector real y protección al cambiar el
-ID consultado. Las 7 pruebas de asignaciones forman parte de las 27 automatizadas
-de Jason que Actions volvió a aprobar antes de publicar la imagen.
+`/usuarios` muestra `Usuarios.jsx`; `/asignaciones` conserva el recorrido independiente por ID y ya no es el destino del alias `/usuarios`. Consume GET/POST `/api/admin/usuarios`, GET/PUT `/{id}`, PATCH `/{id}/rol`, PATCH `/{id}/estado`, PUT `/{id}/password` y GET/PUT `/{id}/laboratorios`. Username es inmutable, la lista incluye inactivos y el último ADMIN activo está protegido con 409. Guardar laboratorios reemplaza la lista del usuario consultado; cambiar ID invalida el resultado.
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-comprobó los tres roles con asignaciones de fixtures en una base temporal eliminada.
-Confirmó permisos de escritura/lectura, 403 por alcance y lectura histórica por
-origen. No acredita vaciar asignaciones por UI ni implementa directorio, creación
-de cuentas o cambio administrativo de rol: siguen fuera del alcance actual.
-La ruta principal es `/asignaciones`, con `/usuarios` conservada como alias ADMIN.
+La adaptación comprobó alta/edición, rol, actividad y asignaciones por UI. El smoke Docker volvió a comprobar esos contratos por HTTP, incluida contraseña; no se automatizó el envío de contraseña nueva desde el diálogo de navegador. Autocambios permitidos refrescan perfil/alcance; desactivar la propia cuenta cierra sesión. Sin registro público/recuperación. Siete pruebas de usuarios y siete de asignaciones se incluyen en las 67 frontend.
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

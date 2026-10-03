@@ -1,166 +1,128 @@
-# Resumen del backend — cierre técnico de Sprint 7
+# Resumen del backend — estado vigente
 
-Este documento conserva el cierre funcional y las mediciones de Sprint 7.
-**Actualización de contexto — 2026-10-03:** después de ese cierre se integró el
-frontend de Jason, se validó el flujo completo con PostgreSQL/backend/frontend
-en Docker y se publicaron ambas imágenes en GHCR mediante Actions. La
-[evidencia posterior](../despliegue/verificacion-docker-actions-2026-10-03.md)
-registra esos resultados sin atribuir una nueva ejecución de la suite Gradle.
+**Actualizado el 3 de octubre de 2026.** Referencia: commit `e1ce75a`.
+El backend y el frontend Jason de ese commit están publicados en GHCR y
+desplegados en Docker local con PostgreSQL. Los tres servicios quedaron saludables.
+Este documento describe el estado actual; el [Sprint 7](../sprints_realizados-backend/sprint-7.md)
+y su [verificación final](verificacion-final.md) conservan el cierre histórico
+V9/233 pruebas. La [evidencia vigente](../despliegue/verificacion-docker-actions-2026-10-03.md)
+separa las mediciones de cada etapa.
 
-## Qué entrega el proyecto
+## Qué hace
 
-Inventario de Laboratorios es una API REST para organizar laboratorios,
-clasificar Equipos, controlar su estado/ubicación y registrar traslados. El
-backend funciona con Java 21, Spring Boot 4.1.1, PostgreSQL, JPA, Flyway, JWT,
-BCrypt y MapStruct. Mantiene la estructura del proyecto y el estilo de los
-ejemplos del profesor: Controllers, DTOs, Domain, Mappers, Services, Repositories
-y Entities con responsabilidades separadas.
+Inventario de Laboratorios organiza Sedes, Áreas y Laboratorios; clasifica
+Equipos; controla estado, custodia y ubicación; administra usuarios y sus
+asignaciones; registra traslados y mantenimiento; ofrece reportes y consulta
+administrativa de auditoría.
 
-Sprint 7 es el cierre técnico y documental de las funciones de Sprint 1–6.
-Consolida la auditoría, los contratos, las pruebas reproducibles y los artefactos
-de Postman; no agrega otro módulo de negocio. El backend cerrado comprende
-autenticación, cinco catálogos, asignaciones, Equipos y Movimientos. Crear o editar
-usuarios mediante API, mantenimiento como Entity y las demás ampliaciones se
-encuentran en el [backlog](backlog.md).
+Utiliza Java 21, Spring Boot 4.1.1, PostgreSQL, Flyway, JPA/Hibernate,
+Spring Security, JWT, BCrypt, MapStruct, Lombok y Gradle. Conserva la arquitectura
+y los patrones del curso:
 
-## Modelo y arquitectura
+`Cliente → Security/JWT → Controller → DTO → Mapper → Domain → Service → Repository → Entity/JPA → PostgreSQL`.
 
-El modelo contiene **10 entidades, 76 columnas y 13 FK**: Sede, Área,
-Laboratorio, Categoría, Subcategoría, Rol, Usuario, UsuarioLaboratorio, Equipo
-y MovimientoEquipo. Flyway V1–V9 determina su estructura; Hibernate valida el
-esquema y no lo genera. Sprint 4E reutilizó la tabla puente de V2, y Sprint 5/6
-usaron Equipo/Movimiento de V3 sin necesitar V10.
+Controllers coordinan HTTP, Mappers convierten datos y Services concentran
+reglas, autorización y transacciones. La API usa DTOs públicos y errores
+controlados; no expone Entities, hashes, SQL ni stack traces.
 
-La organización es Sede → Área → Laboratorio y la clasificación es Categoría →
-Subcategoría. Equipo tiene un Laboratorio y una Subcategoría obligatorios, más
-un custodio opcional. UsuarioLaboratorio representa la relación N:M mediante
-una PK compuesta. Movimiento registra Equipo, origen opcional para legacy,
-destino, actor, tipo, motivo y fecha. Los nuevos traslados siempre toman el origen
-actual de Equipo.
+## Modelo y persistencia
 
-Una petición pasa por Spring Security, Controller y Service; el servicio aplica
-reglas y transacciones, Repository consulta PostgreSQL y Mapper transforma
-Entity/dominio en DTO público. No se devuelven Entities ni hashes. La
-[arquitectura](arquitectura-backend.md), el [cotejo Entity/Flyway](auditoria-entity-flyway.md)
-y los [ocho flujos](flujos-principales.md) explican este recorrido.
+El modelo actual tiene **12 entidades/tablas y 16 FK**: Sede, Área, Laboratorio,
+Categoría, Subcategoría, Rol, Usuario, UsuarioLaboratorio, Equipo,
+MovimientoEquipo, Mantenimiento y Auditoría. El
+[modelo vigente V13](../Erd_actual/modelo-vigente-v13.md) presenta las relaciones.
+El ERD v2 y sus SVG conservan la instantánea de 10 entidades/V1–V9.
 
-## Funciones y contratos principales
+Flyway es la fuente del esquema. V10 añade el estado operativo de Laboratorio;
+V11 refuerza la unicidad del correo sin distinguir mayúsculas; V12 incorpora
+Mantenimiento; V13 incorpora Auditoría. Las 13 migraciones quedaron exitosas
+en Docker y los checksums V1–V9 no cambiaron. Hibernate usa
+`ddl-auto=validate`, con Flyway habilitado y `open-in-view=false`.
 
-Las **42 operaciones HTTP** se distribuyen así: AUTH 3, Categoría 6,
-Subcategoría 5, Sede 6, Área 6, Laboratorio 5, asignaciones 2, Equipo 6 y
-Movimiento 3. Las listas jerárquicas se cuentan con el padre de su ruta y los
-filtros no incrementan el total. El [catálogo de endpoints](endpoints.md) muestra
-los métodos, rutas, permisos y respuestas.
+Estado operativo de Laboratorio (OPERATIVO/MANTENIMIENTO) es independiente
+de `activo`. Un laboratorio activo en mantenimiento no pierde su identidad
+ni su asignabilidad solamente por ese estado.
 
-Los catálogos permiten alta, consulta, edición y baja lógica. Las hijas requieren
-padres activos y un padre con hijas activas no puede desactivarse. Los nombres
-de Área/Subcategoría son únicos dentro de su padre; el código de Laboratorio
-es único globalmente sin distinguir mayúsculas. Las bajas conservan esas reservas.
+## Funciones y seguridad
 
-Equipo tiene filtros de estado, laboratorio, subcategoría y mantenimiento,
-combinables con AND. Código interno y series informadas son únicos según V3;
-las series blancas se guardan como null. El responsable es opcional. PUT
-reemplaza campos editables y rechaza código interno/laboratorio/fechas ajenos al
-contrato. DELETE cambia a BAJA: no elimina físicamente ni permite reactivar.
-BAJA conserva consultas e historia, pero no admite otra baja, edición o traslado.
+Hay **70 combinaciones método y ruta de aplicación**, verificables en 19
+Controllers: AUTH 3; Categoría 7; Subcategoría 6; Sede 7; Área 7; Laboratorio 6;
+Catálogos ADMIN 5; Usuario ADMIN 7; UsuarioLaboratorio 2; Equipo 6;
+Movimiento 3; Mantenimiento 5; Reportes 5; Auditoría 1.
+Filtros y variantes de roles no aumentan el total; Actuator es infraestructura.
+El [catálogo](endpoints.md) detalla solicitudes, respuestas y permisos.
 
-Las asignaciones se reemplazan como un conjunto completo y atómico. Lista vacía
-es válida; se deduplican IDs, se valida cada laboratorio y se desactivan/reactivan
-relaciones sin perder su fecha original. Puede configurarse un usuario inactivo,
-aunque siga sin poder autenticarse. Una asignación activa bloquea la baja del
-Laboratorio incluso si su usuario está inactivo.
-
-## Seguridad y alcance
-
-| Rol | Capacidad vigente |
+| Rol | Capacidad |
 |---|---|
-| ADMIN | Administración global de catálogos/asignaciones, Equipos e historia |
-| GESTOR | Escritura de Equipos dentro del alcance y traslado entre dos extremos permitidos |
-| LECTOR | Consulta de Equipos e historia autorizados, sin escritura |
+| ADMIN | Administración global de catálogos, cuentas, roles asignados y laboratorios; equipos, mantenimiento, reportes, historia y auditoría. |
+| GESTOR | Consulta global de catálogos y gestión de Equipo/Mantenimiento en laboratorios asignados; traslada con alcance en ambos extremos; reportes e historia autorizados. |
+| LECTOR | Lectura de catálogos y consulta de equipos, mantenimiento, historia y reportes dentro de su alcance; no escribe ni consulta administración de usuarios/auditoría. |
 
-Los tres roles consultan catálogos globales. El alcance efectivo para GESTOR y
-LECTOR exige asignación activa y Laboratorio activo; ADMIN recibe alcance global.
-Usuario y Rol deben estar activos. Los datos vigentes se recargan desde la base,
-por lo que cambiar asignaciones no exige otro login con un JWT aún válido.
-**Custodiar un Equipo no concede acceso.**
+Rol significa **qué** puede hacer el usuario; UsuarioLaboratorio significa
+**dónde**. El filtro JWT recarga usuario/rol vigentes y los servicios leen las
+asignaciones actuales. Desactivar una cuenta bloquea su acceso; cambiar el rol
+o las asignaciones afecta las siguientes solicitudes. Ser custodio no concede
+permisos. ADMIN conserva consulta histórica global; GESTOR/LECTOR ven movimientos
+si origen **o** destino está dentro de su alcance actual.
 
-ADMIN conserva acceso histórico global a Equipos BAJA y laboratorios inactivos.
-Un usuario restringido ve Equipo por su ubicación actual, pero ve un Movimiento
-si origen **o** destino está dentro de su alcance actual. Esto permite consultar
-historia parcial aunque el Equipo haya salido del laboratorio. Los filtros de
-alcance se ejecutan en PostgreSQL, sin cargar todas las filas para filtrar en Java.
+La administración de cuentas ya permite alta, edición pública, actividad,
+rol y restablecimiento de contraseña. No hay registro público ni CRUD Rol.
+Se preserva el último ADMIN activo y se mantienen contraseñas BCrypt fuera
+de respuestas y registros de auditoría.
 
-## Traslado, historia e integridad
+## Equipo, traslado y mantenimiento
 
-POST `/api/equipos/{idEquipo}/traslados` acepta destino, motivo y ubicación
-interna destino opcional. Actor, origen, tipo y fecha proceden del servidor.
-Exige Equipo no BAJA y destino existente, activo y distinto; GESTOR necesita
-ambos extremos. ADMIN puede recuperar un Equipo legacy desde origen inactivo
-hacia destino activo. La respuesta 200 incluye Equipo actualizado y Movimiento.
+Equipo admite CRUD, filtros y baja lógica. Código interno y laboratorio no
+cambian por PUT; el laboratorio se modifica exclusivamente mediante traslado.
+Un Equipo BAJA conserva consulta e historial y rechaza edición, traslado y nueva baja.
 
-Equipo y Movimiento se guardan en una sola transacción. Un error posterior al
-UPDATE revierte ambas escrituras. Se coordinan locks de actor, Equipo y
-laboratorios para proteger traslados, bajas y revocaciones concurrentes.
-El traslado conserva responsable, Subcategoría, código, estado y fechaCreacion;
-ubicación omitida/null/blanca se limpia. La fecha del evento viene del default
-PostgreSQL, que representa el inicio de la transacción, no el commit.
+Traslado valida destino activo y diferente, toma origen del Equipo bloqueado
+y actor del contexto autenticado. UPDATE Equipo e INSERT Movimiento confirman
+en una sola transacción. GESTOR necesita origen y destino autorizados.
+La historia no tiene edición/borrado libre y permanece después de bajas.
 
-No existe edición/borrado de Movimientos ni POST genérico para fabricarlos.
-El historial se ordena por fecha DESC/ID DESC y conserva referencias históricas
-tras bajas lógicas. Sus resúmenes muestran nombres actuales, sin versionarlos.
-Movimiento por sí solo no bloquea la baja de Laboratorio; sí la bloquean
-asignaciones activas o Equipos no BAJA.
+Mantenimiento se crea PROGRAMADO. Solo ese estado admite edición; puede
+iniciarse o cancelarse. EN_PROCESO cambia el Equipo a MANTENIMIENTO, conserva
+su estado anterior y bloquea PUT/DELETE/traslado. Completar o cancelar restaura
+el estado previo. V12 impide dos mantenimientos EN_PROCESO para el mismo Equipo.
 
-## Verificación y reproducibilidad
+Los reportes usan datos reales con filtros por organización, fechas y estados.
+Los servicios registran acciones auditables sin contraseñas ni JWT. La consulta
+de auditoría es exclusivamente ADMIN; no pretende reconstruir todas las versiones
+de los atributos históricos.
 
-El cierre anterior, Sprint 6, tuvo **233 pruebas aprobadas**. Sprint 7 reejecutó
-las 233 sin modificarlas ni agregar otras: **233 aprobadas en 33 suites, cero
-fallos, errores y omitidas**. compileJava, test y bootJar finalizaron correctamente.
-El JAR real arrancó en 8,32 segundos; las 28 solicitudes HTTP de comprobación
-tuvieron el estado esperado. Se verificaron login, jerarquías, asignaciones,
-Equipo, traslado, historia parcial y errores 400/401/403/409. La instancia fue
-detenida y su puerto quedó libre. La [evidencia final](verificacion-final.md)
-separa estos resultados nuevos de las cifras históricas.
+## Evidencia y límites
 
-La auditoría inicial encontró 10 tablas y nueve migraciones exitosas. La base
-habitual tenía tres usuarios, cero asignaciones, dos categorías, cuatro
-subcategorías, una sede, dos áreas, dos laboratorios, cero Equipos y cero
-Movimientos. Los conteos y huellas públicas de esas nueve tablas quedaron
-idénticos después de la verificación. La base temporal
-`inventario_verificacion_s7_cierre_20260921_a73f` conservó V1–V9 exitosas y sus
-checksums; los cinco controles SQL de consistencia dieron cero incidencias.
-Tras limpiar los fixtures y confirmar cero conexiones, se eliminó únicamente
-esa base temporal y se comprobó su ausencia. No se escribieron datos demo en la
-base habitual.
+| Etapa | Evidencia |
+|---|---|
+| Cierre Sprint 7 | 233/233 JUnit en 33 suites, compileJava/test/bootJar y 28 solicitudes HTTP; histórico del 21 de septiembre. |
+| Artefactos backend posteriores | [40 XML locales previos](../despliegue/evidencias/reportes-backend-2026-10-03.json): 319 pruebas, cero fallos/errores/omitidas; no reejecutadas en este paso ni atribuidas al build de Actions. |
+| Actions e1ce75a | Ambos trabajos verdes y ambas imágenes publicadas; frontend 67 pruebas. El Dockerfile backend empaqueta con `bootJar -x test`. |
+| Docker actualizado | 94/94 comprobaciones HTTP por Nginx, 30 aserciones funcionales y siete controles SQL sin incidencias en una base aislada con las mismas imágenes. |
 
-El script [verificar-backend.ps1](../../verificar-backend.ps1) recibe conexión
-y contraseña demo mediante variables externas, exige una base local existente
-`inventario_verificacion_*` y ejecuta compilación, tests y empaquetado. Verifica
-XML sin pruebas omitidas y no crea/elimina bases. Los artefactos Postman incluyen
-colección y environment con secretos, tokens e IDs vacíos: deben completarse
-localmente y ejecutarse en el orden guiado.
+Se comprobó login de los tres roles, alcance, catálogos, usuarios,
+Equipo, mantenimiento, traslado, baja, historia, reportes y auditoría.
+La baja se ejecutó por HTTP: su confirmación nativa bloqueó la automatización
+del navegador y se canceló. Las demás evidencias de interfaz están descritas
+en el [JSON del smoke](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json).
 
-## Cómo comenzar y qué queda fuera
+La base habitual Docker mantuvo el contenedor y volumen. Conteos y contenido
+de nueve tablas anteriores quedaron iguales, con 3 usuarios y 4 asignaciones.
+Se aplicaron las migraciones existentes V10–V13 después de guardar un backup
+privado. No se hicieron escrituras de prueba por API en esa base. La base
+`inventario_verificacion_docker_actual_5149b3ad` y sus recursos temporales
+fueron eliminados; el entorno habitual permaneció saludable.
 
-Con PostgreSQL disponible, [iniciar-backend.ps1](../../iniciar-backend.ps1)
-prepara variables que falten y arranca en 8080. También puede usarse Run sobre
-InventarioApplication si el IDE tiene esas variables. La opción de crear cuentas
-demo es explícita; no cambia cuentas existentes ni agrega Equipos/Movimientos.
-El [README](../../README.md) contiene configuración, ejecución y enlaces vigentes.
+## Uso y próximos pasos
 
-El frontend de Jason y Docker local ya se implementaron después de Sprint 7;
-la publicación de backend/frontend en GHCR está confirmada para el commit
-`9956939`. La verificación Docker obtuvo 33/33 comprobaciones HTTP y 24/24
-aserciones, y el trabajo frontend de Actions aprobó 27 pruebas. Son evidencias
-distintas de las 233 pruebas Gradle del cierre funcional, no una suma de suites.
-La base temporal Docker y sus recursos se eliminaron, con la base habitual
-preservada. Render y una base gestionada aún no tienen evidencia de despliegue.
+Docker local: frontend `http://localhost:3000`; backend
+`http://localhost:8080`; salud `/actuator/health`.
+La ejecución Java local sigue disponible mediante
+[iniciar-backend.ps1](../../iniciar-backend.ps1), con variables externas.
+Las credenciales de PostgreSQL y la contraseña de login de un usuario son
+datos distintos. Se completan privadamente y no se versionan.
 
-Administración completa de usuarios, mantenimiento, auditoría general, refresh
-token y permisos dinámicos permanecen fuera del backend cerrado. No se agregan
-esas funciones para ampliar artificialmente el cierre. Las nuevas prioridades
-pueden centrarse en el despliegue remoto o en una ampliación autorizada del producto.
-Los reportes de sprints anteriores se conservan como evidencia histórica, con sus
-resultados y pendientes de aquel momento; [Sprint 7](../sprints_realizados-backend/sprint-7.md)
-concentra el cierre funcional y [Sprint 8](../sprints_realizados-backend/sprint-8.md)
-documenta el empaquetado y la publicación posteriores.
+Frontend Jason, Docker, usuarios, mantenimiento y auditoría ya están
+implementados. Nube/base gestionada, refresh token, permisos dinámicos,
+paginación y CRUD Rol permanecen en el [backlog vigente](backlog.md).
+La publicación en GHCR no equivale a un despliegue en la nube.

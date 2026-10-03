@@ -1,4 +1,4 @@
-# Verificación final — Sprint 7
+# Verificación final — Sprint 7 (registro histórico)
 
 ## Resultado medido
 
@@ -9,8 +9,7 @@ No se modificó código Java, migraciones, dependencias ni reglas de negocio.
 
 **Referencia posterior, 3 de octubre de 2026:** el
 [reporte Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-documenta el flujo integrado con Jason, 33 solicitudes HTTP adicionales,
-24 aserciones y ambas imágenes GHCR confirmadas. Las cifras siguientes conservan
+documenta la última versión e1ce75a integrada con Jason: 94/94 comprobaciones HTTP, 30 aserciones funcionales, siete controles SQL y ambas imágenes GHCR confirmadas. Flyway habitual quedó en V13. No se deben mezclar esos datos con la verificación anterior 9956939 (33 HTTP/24 aserciones). Las cifras siguientes conservan
 la ejecución histórica de Sprint 7: no representan una nueva suite Gradle
 durante la validación Docker ni durante la actualización documental.
 

@@ -1,111 +1,62 @@
 # Sprints realizados — Frontend Jason
 
-Esta carpeta registra la entrega y la revisión del frontend Jason de Inventario
-de Laboratorios, ubicado en `frontend/version-jason/frontend/`.
+Estado documental actualizado el **3 de octubre de 2026**, después de la adaptación al backend V1–V13, la publicación de e1ce75a y la actualización Docker local.
 
-La [auditoría de integración del 3 de octubre de 2026](auditoria-integracion.md)
-consolida los hallazgos posteriores, las correcciones verificadas, las diferencias
-con los mockups y los límites de las pruebas. Los documentos FE-01 a FE-11 conservan
-el registro de la entrega; sus afirmaciones originales deben leerse junto con
-esa auditoría. No se trasladan resultados de la versión Marko a la versión Jason.
+Esta carpeta registra el frontend de `frontend/version-jason/frontend/`. Cada FE presenta primero su estado vigente y después la entrega original como historia. Los resultados de Marko no certifican Jason. Los sprints organizan trabajo por módulos; no equivalen por sí solos a aprobación completa de cada mockup o escenario.
 
-La [verificación posterior de Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-registra el flujo completo con Nginx, backend y PostgreSQL, y confirma la publicación
-de ambas imágenes. Los estados actualizados de cada FE remiten a esa evidencia;
-los apartados originales permanecen identificados como historia.
+## Estado actual
 
-La [guía de ejecución de Jason](../../frontend/version-jason/frontend/README.md)
-explica Docker, Vite en 5173, el proxy `/api`, la sesión en memoria y los checks.
-La revisión final registra 27/27 pruebas automatizadas, build aprobado y 42 solicitudes
-HTTP verificadas por proxy, además de recorridos de navegador en un entorno aislado.
-La integración local es operativa en las funcionalidades implementadas; FE-08–FE-10,
-la fidelidad visual 1:1 y la accesibilidad exhaustiva continúan pendientes.
-
-## Estado comprobado al 3 de octubre de 2026
-
-| Comprobación | Evidencia actual |
+| Bloque | Estado y evidencia |
 |---|---|
-| Docker completo | Tres contenedores habituales saludables; frontend en 3000 y backend en 8080. |
-| Flujo con las imágenes Docker | Login de tres roles, crear/consultar/editar/trasladar/bajar equipo, historial, filtros y sesión comprobados en entorno aislado. |
-| HTTP adicional Docker | 33/33 comprobaciones aprobadas; no son endpoints distintos ni una nueva suite backend. |
-| Aserciones Docker | 24/24 aserciones de flujo y consistencia aprobadas; no son pruebas JUnit. |
-| PostgreSQL | V1–V9 exitosas, cinco consultas de inconsistencia en cero y conteos habituales preservados. Entorno temporal eliminado. |
-| Actions backend y frontend | Ambos trabajos exitosos en [ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900), commit `9956939`. Jason ejecutó 27/27 pruebas antes de publicar. |
-| GHCR | Ambas imágenes confirmadas con `latest` y `sha-9956939`; digests registrados en la evidencia consolidada. |
-| Despliegue en la nube | Pendiente. GHCR acredita publicación de imágenes, no una URL pública operativa. |
-| FE-08–FE-10 y diseño | Conservan sus pendientes funcionales, visuales y de accesibilidad. |
+| [FE-01 · Login/sesión](fe-01-login-sesion.md) | Integrado; tres roles, JWT en memoria, alcance, 401 y refresco de perfil ante autocambios administrativos. |
+| [FE-02 · Dashboard](fe-02-dashboard.md) | Equipos, laboratorios autorizados, movimientos y resumen real de mantenimiento; errores diferenciados de ceros. |
+| [FE-03 · Equipos](fe-03-equipos.md) | CRUD, filtros, baja lógica y traslado. Docker actual: alta/edición/traslado por UI y baja por HTTP; GESTOR vio BAJA sin acciones. |
+| [FE-04 · Catálogos](fe-04-categorias-subcategorias.md) | Categorías/subcategorías; activos/inactivos administrativos, inactivación y reactivación reales. |
+| [FE-05 · Organización](fe-05-laboratorios-sedes-areas.md) | Sedes/áreas/laboratorios; jerarquía, actividad y estadoOperativo independiente de activo. |
+| [FE-06 · Usuarios/roles/asignaciones](fe-06-usuarios-roles-asignacion.md) | Administración ADMIN: directorio, creación, edición, rol, estado, contraseña y laboratorios. Último ADMIN protegido. |
+| [FE-07 · Movimientos](fe-07-movimientos.md) | Traslado confirmado e historial con actor/origen/destino; lectura por origen tras traslado/baja. |
+| [FE-08 · Mantenimientos](fe-08-mantenimientos.md) | Programación, edición, estados, filtros y alcance implementados. Calendario fuera del alcance actual. |
+| [FE-09 · Reportes](fe-09-reportes.md) | Cinco agregados y filtros reales. Exportación/gráficos completos del mockup fuera del alcance actual. |
+| [FE-10 · Configuración](fe-10-configuracion.md) | Próximamente; acceso ADMIN y placeholder. Preferencias persistentes y seguridad configurable futuras. |
+| [FE-11 · Arquitectura](fe-11-arquitectura-frontend.md) | React/Vite/Axios, routing, sesión, proxy y Nginx integrados. Fidelidad visual y accesibilidad exhaustivas no certificadas. |
 
-Las 27 pruebas y las 42 comprobaciones HTTP de la auditoría Vite se conservan como
-su evidencia original. Las 33 HTTP y las 24 aserciones corresponden a una validación
-posterior distinta; no se suman entre sí ni a las 233 pruebas históricas del backend.
+## Verificación más reciente
 
-La estructura y el nivel de detalle siguen el formato de `fe-01-login-sesion.md`:
-cada documento separa estado comprobado, alcance, referencia visual, contratos,
-recorrido guiado y evidencia. Se conserva la distinción entre implementación
-del frontend y comportamiento que solo puede certificarse mediante pruebas con
-el backend.
-
-## Documentos
-
-| Archivo | Bloque |
+| Comprobación | Resultado documentado |
 |---|---|
-| [Auditoría de integración](auditoria-integracion.md) | Estado consolidado, hallazgos y evidencia de validación |
-| [Verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) | Flujo completo, aislamiento de pruebas y publicación de ambas imágenes |
-| [FE-01](fe-01-login-sesion.md) | Diseño común, login y sesión |
-| [FE-02](fe-02-dashboard.md) | Dashboard |
-| [FE-03](fe-03-equipos.md) | Equipos e inventario |
-| [FE-04](fe-04-categorias-subcategorias.md) | Categorías y subcategorías |
-| [FE-05](fe-05-laboratorios-sedes-areas.md) | Laboratorios, sedes y áreas |
-| [FE-06](fe-06-usuarios-roles-asignacion.md) | Usuarios, roles y asignación |
-| [FE-07](fe-07-movimientos.md) | Movimientos e historial |
-| [FE-08](fe-08-mantenimientos.md) | Mantenimientos |
-| [FE-09](fe-09-reportes.md) | Reportes, indicadores y exportación |
-| [FE-10](fe-10-configuracion.md) | Configuración general y seguridad |
-| [FE-11](fe-11-arquitectura-frontend.md) | Arquitectura, navegación y componentes comunes |
+| Adaptación frontend | 67/67 pruebas y build aprobado con 1677 módulos; evidencia anterior al reemplazo Docker. |
+| GitHub Actions | Ambos trabajos exitosos en [37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428), commit e1ce75a. |
+| Imágenes | Backend y frontend-jason publicados con sha-e1ce75a y desplegados en Docker local. |
+| Habitual | Tres contenedores saludables; frontend 3000, backend 8080. Flyway V1–V13; checksums V1–V9 conservados. |
+| Smoke actual | 94/94 HTTP, 30 aserciones funcionales y siete controles SQL sin inconsistencias, aislado con las mismas imágenes. |
+| Preservación | Nueve tablas anteriores sin cambios de filas/conteos, incluidas cuatro asignaciones. Contenedor/volumen PostgreSQL conservados y respaldo privado previo. |
+| Limpieza | Base inventario_verificacion_docker_actual_5149b3ad y sus contenedores/volumen/red eliminados; puertos temporales libres. |
+| Alcance | Login y escrituras en entorno aislado. Habitual: salud, protección HTTP, Flyway y preservación. npm/Gradle no se repitieron en el despliegue. |
+| Límite UI | Confirmación nativa de baja bloqueó automatización; se canceló y baja se comprobó por API. LECTOR vio historia después del traslado/baja. |
+| Nube | GHCR y Docker local no acreditan una URL pública desplegada. |
 
-## Estado declarado en la entrega original
+HTTP/aserciones/SQL no son endpoints distintos ni se suman a frontend o JUnit. Esta actualización Markdown no ejecuta de nuevo las pruebas.
 
-Este resumen conserva la clasificación inicial. La auditoría detectó defectos en
-sesión, permisos, asignaciones, estados y movimientos; la existencia de llamadas
-API no demuestra por sí sola que esos recorridos estén terminados.
+## Documentos y evidencia
 
-### Implementado
+- [Guía de ejecución y pruebas manuales](../../frontend/version-jason/frontend/README.md).
+- [Auditoría de integración](auditoria-integracion.md): estado vigente, hallazgos iniciales y límites.
+- [Informe Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md): publicación y actualización local.
+- [Adaptación V13 y 67 pruebas](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json).
+- [Smoke Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json).
+- [Reportes Docker](../../frontend/version-jason/frontend/evidencias/docker-actual-reportes-2026-10-03.png) e [historial LECTOR](../../frontend/version-jason/frontend/evidencias/docker-actual-historial-2026-10-03.png).
+- [Referencias visuales](../frontend/mockup/): objetivos de diseño sin declarar reproducción 1:1.
 
-- Login y sesión.
-- Protección de la aplicación.
-- Dashboard.
-- Equipos.
-- Categorías y subcategorías.
-- Laboratorios, sedes y áreas.
-- Historial de movimientos.
-- Asignación de laboratorios a usuarios.
-- Navegación lateral y componentes comunes.
-- Cliente HTTP con Axios.
+## Antecedentes del 3 de octubre de 2026
 
-### Parcial o visual
+Antes de la ampliación V10–V13 se registraron:
 
-- Usuarios: actualmente se implementan asignaciones, no CRUD completo.
-- Mantenimientos: superficie visual preparada.
-- Reportes: superficie visual preparada.
-- Configuración: superficie visual preparada.
+1. Auditoría Vite inicial: 27/27 pruebas frontend, build de 1670 módulos y 42 HTTP; base inventario_verificacion_jason_91d7ac79, eliminada.
+2. Primer Docker V9: 33/33 HTTP y 24/24 aserciones de flujo/consistencia; base inventario_verificacion_docker_26e35749, eliminada. Cinco controles SQL en cero y habitual preservada.
+3. Publicación anterior: Actions [37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900), commit 9956939; 27/27 frontend antes de publicar ambas imágenes.
 
-## Referencias visuales
-
-Las diez referencias están en [docs/frontend/mockup](../frontend/mockup/).
-La entrega comparte parte de su lenguaje visual, pero mantiene diferencias
-estructurales: Equipos usa tarjetas, Categorías usa pestañas, Usuarios solo tiene
-asignaciones y Mantenimientos/Reportes/Configuración son placeholders. La auditoría
-detalla las diferencias por pantalla; no se certifica fidelidad visual completa.
-
-Los valores CSS son adaptación visual; no se consideran valores oficiales
-extraídos de los mockups.
+En esa entrega Usuarios solo ofrecía asignaciones y Mantenimientos/Reportes eran placeholders. Estos límites fueron superados por la adaptación; Configuración permanece futura. Las 27/42/33 se conservan como ejecuciones diferentes, sin sumarlas como suite nueva ni a las 233 pruebas históricas del backend.
 
 ## Criterio documental
 
-`IMPLEMENTADO` significa que existe código correspondiente en el frontend.
-`REVISADO ESTÁTICAMENTE` significa que se inspeccionó el código o estructura.
-`COMPROBADO POR EJECUCIÓN` se reserva para resultados de ejecución aportados o
-realizados y documentados de forma explícita.
-`PENDIENTE` significa que no hay evidencia suficiente para cerrar ese punto.
-
-Esta carpeta documenta frontend y no implica cambios en backend ni PostgreSQL.
+IMPLEMENTADO requiere código; COMPROBADO POR EJECUCIÓN requiere escenario, entorno y resultado. FUTURO indica funcionalidad sin recorrido actual. Diferencias de diseño, exportación, calendario y accesibilidad no se presentan como terminadas. Esta actualización solo cambia documentos, no implementa backend/frontend/migraciones.

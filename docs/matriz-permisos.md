@@ -1,197 +1,87 @@
-# Matriz de permisos - Sistema de Inventario de Laboratorios
+# Matriz de permisos — estado vigente
 
-**Proyecto:** API REST de inventario de equipos de laboratorio  
-**Versión:** 1.0  
-**Estado:** Permisos implementados; cierre funcional de Sprint 7, comprobados también en el flujo Docker del 2026-10-03
+**Revisión documental:** 3 de octubre de 2026, commit `e1ce75a`.
+Fuente: [SecurityConfig](../backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java)
+y Services actuales. La [evidencia Docker/Actions](despliegue/verificacion-docker-actions-2026-10-03.md)
+incluye las extensiones posteriores a Sprint 7. V9/233 y las 42 operaciones
+originales corresponden a aquel cierre histórico, no al alcance actual V13/70.
 
-El empaquetado y la publicación posteriores no modificaron esta matriz. La
-[evidencia Docker/Actions](despliegue/verificacion-docker-actions-2026-10-03.md)
-registra login de los tres roles, alcance y operaciones de inventario verificadas
-en una base temporal. Son comprobaciones adicionales; no una nueva ejecución de
-las 233 pruebas Gradle ni permisos nuevos.
+## 1. Rol y alcance
 
-## 1. Principio de autorización
+El rol define **qué operación**; UsuarioLaboratorio define **dónde**.
+ADMIN administra globalmente. GESTOR/LECTOR requieren asignación activa
+a Laboratorio activo para operar sobre Equipo/Mantenimiento.
+Los cinco catálogos activos son de lectura global para los tres roles.
+`equipo.id_responsable` representa custodia y **no concede permisos**.
 
-La autorización se evalúa en dos niveles:
+Historial de Movimiento usa origen **o** destino dentro del alcance actual.
+Mantenimiento usa el Laboratorio actual del Equipo. Reportes aplican alcance
+en servidor; un filtro explícito fuera de alcance se rechaza con 403.
+ADMIN conserva consulta histórica de equipos y movimientos globalmente.
 
-1. **Rol:** determina la clase de operación permitida.
-2. **Alcance de laboratorio:** determina sobre qué laboratorios puede ejecutarse la operación.
+## 2. Operaciones implementadas
 
-Desde Sprint 4E, `ADMIN` tiene alcance efectivo global a laboratorios activos y
-`GESTOR`/`LECTOR` obtienen sus laboratorios activamente asignados. El servicio
-se aplica al CRUD y filtros de Equipo desde Sprint 5, y a traslado e historial
-desde Sprint 6. ADMIN conserva además consulta histórica
-global de Equipos, incluso si su laboratorio fue dado de baja posteriormente. Los catálogos actuales de Categoría,
-Subcategoría, Sede, Área y Laboratorio son **globales para lectura de los tres
-roles** y permiten escritura únicamente a ADMIN.
+| Operación / rutas | ADMIN | GESTOR | LECTOR | Alcance |
+|---|---|---|---|---|
+| POST `/api/auth/login` | Sí | Sí | Sí | Público; identidad/contraseña válidas y cuenta/rol activos |
+| GET `/api/auth/me` | Sí | Sí | Sí | Perfil propio |
+| GET `/api/auth/me/laboratorios` | Global activo | Asignaciones activas | Asignaciones activas | Principal autenticado; no recibe idUsuario |
+| GET categorías/subcategorías/sedes/áreas/laboratorios y jerarquías | Sí | Sí | Sí | Catálogo global activo |
+| POST/PUT/DELETE de los cinco catálogos | Sí | No | No | Global; reglas de padres/dependencias |
+| PATCH `/{catalogo}/{id}/estado` | Sí | No | No | Activación/desactivación con mismas reglas de integridad |
+| GET `/api/admin/{catalogo}` | Sí | No | No | Global; filtro opcional activo, incluye inactivos si se solicita |
+| GET `/api/admin/usuarios` y `/{id}` | Sí | No | No | Todos los usuarios; DTO público |
+| POST `/api/admin/usuarios` | Sí | No | No | Alta administrativa; no registro público |
+| PUT `/api/admin/usuarios/{id}` | Sí | No | No | Nombre/apellido/email/cargo; no cambia username, rol ni password |
+| PATCH `/api/admin/usuarios/{id}/estado` o `/rol` | Sí | No | No | No puede desactivar/degradar último ADMIN activo |
+| PUT `/api/admin/usuarios/{id}/password` | Sí | No | No | Restablecimiento administrativo; 204 sin secreto en respuesta |
+| GET/PUT `/api/admin/usuarios/{idUsuario}/laboratorios` | Sí | No | No | Asignaciones explícitas; reemplazo atómico; destinatario puede estar inactivo |
+| GET `/api/equipos` y `/{id}` | Global | En alcance | En alcance | Ubicación actual; BAJA consultable |
+| GET `/api/admin/equipos` | Sí | No | No | Listado global |
+| POST/PUT/DELETE `/api/equipos` | Global | En alcance | No | No BAJA; PUT/DELETE bloqueados con mantenimiento EN_PROCESO |
+| POST `/api/equipos/{idEquipo}/traslados` | Global | Origen y destino | No | Destino activo/distinto; sin mantenimiento EN_PROCESO |
+| GET `/api/movimientos` y `/api/equipos/{idEquipo}/movimientos` | Global | Historia visible | Historia visible | Origen O destino en alcance; no depende solo de ubicación actual |
+| GET `/api/mantenimientos` y `/{id}` | Global | En alcance | En alcance | Laboratorio actual del Equipo |
+| POST/PUT `/api/mantenimientos`, PATCH `/{id}/estado` | Global | En alcance | No | Equipo vigente, ciclo/transiciones válidas |
+| GET `/api/reportes/resumen`, `/equipos/por-estado`, `/equipos/por-laboratorio`, `/movimientos`, `/mantenimientos` | Global | En alcance | En alcance | Filtros, fechas y permisos en servidor |
+| GET `/api/admin/auditoria` | Sí | No | No | Consulta administrativa y filtros; sin endpoint de escritura libre |
 
-> `equipo.id_responsable` representa custodia o responsabilidad. No concede permisos.
+En las rutas abreviadas de catálogo, los cinco nombres reales son
+`categorias`, `subcategorias`, `sedes`, `areas` y `laboratorios`.
+Las 70 rutas exactas, sus contratos y códigos están en [endpoints](backend-final/endpoints.md).
+GET de salud Actuator es público y técnico, separado del total de aplicación.
+El resto sin regla autorizada se deniega mediante `anyRequest().denyAll()`.
 
-## 2. Resumen por operación
+## 3. Respuestas de seguridad
 
-| Operación | ADMIN | GESTOR | LECTOR |
-|---|---:|---:|---:|
-| Iniciar sesión | Sí | Sí | Sí |
-| Ver equipos | Todos | Sus laboratorios | Sus laboratorios |
-| Ver detalle de equipo | Todos | Sus laboratorios | Sus laboratorios |
-| Registrar equipo | Sí | En sus laboratorios | No |
-| Editar equipo | Sí | En sus laboratorios | No |
-| Dar de baja un equipo | Sí | En sus laboratorios | No |
-| Trasladar equipo | Sí | Origen y destino autorizados | No |
-| Filtrar equipos | Todos | Dentro de su alcance | Dentro de su alcance |
-| Ver movimientos | Todos | Movimientos de su alcance | Movimientos de su alcance |
-| Gestionar categorías | Sí | No | No |
-| Consultar categorías | Sí | Sí | Sí |
-| Gestionar subcategorías | Sí | No | No |
-| Consultar subcategorías, incluida la lista por categoría | Sí | Sí | Sí |
-| Gestionar sedes, áreas y laboratorios | Sí | No | No |
-| Consultar sedes, áreas y laboratorios | Sí | Sí | Sí |
-| Asignar laboratorios a usuarios | Sí | No | No |
-| Consultar asignaciones explícitas de un usuario | Sí | No | No |
-| Consultar alcance propio | Global activo | Asignaciones activas a laboratorios activos | Asignaciones activas a laboratorios activos |
-
-## 3. Matriz de endpoints implementados
-
-Login, perfil propio, Categoría, Subcategoría, las 17 operaciones de organización,
-los tres endpoints de asignaciones/alcance, los seis de Equipo y los tres de
-traslado/historial están implementados. La administración general de usuarios
-está fuera del alcance del backend entregado. Administrar asignaciones no implica
-crear usuarios ni cambiar roles.
-La sección 6 delimita el alcance. La tabla siguiente contiene exclusivamente
-operaciones implementadas; las propuestas de usuarios están en la sección 7.
-
-| Método y ruta | Operación | ADMIN | GESTOR | LECTOR | Regla de alcance |
-|---|---|---:|---:|---:|---|
-| `POST /api/auth/login` | Autenticarse | Sí | Sí | Sí | El usuario debe estar activo |
-| `GET /api/auth/me` | Consultar perfil propio | Sí | Sí | Sí | JWT válido |
-| `GET /api/auth/me/laboratorios` **IMPLEMENTADO** | Consultar alcance efectivo propio | Sí | Sí | Sí | ADMIN: todos activos; GESTOR/LECTOR: asignación y laboratorio activos; principal del contexto |
-| `GET /api/equipos` **IMPLEMENTADO** | Listar equipos | Sí | Sí | Sí | ADMIN incluye históricos BAJA; los demás solo laboratorios activos asignados; filtros en SQL |
-| `GET /api/equipos/{id}` **IMPLEMENTADO** | Consultar equipo | Sí | Sí | Sí | El equipo debe pertenecer al alcance del usuario |
-| `POST /api/equipos` **IMPLEMENTADO** | Registrar equipo | Sí | Sí | No | GESTOR debe tener asignado el laboratorio recibido |
-| `PUT /api/equipos/{id}` **IMPLEMENTADO** | Editar equipo | Sí | Sí | No | GESTOR debe tener acceso al laboratorio actual; no se edita si está en BAJA |
-| `DELETE /api/equipos/{id}` **IMPLEMENTADO** | Dar de baja | Sí | Sí | No | Es baja lógica; GESTOR solo en sus laboratorios |
-| `POST /api/equipos/{idEquipo}/traslados` **IMPLEMENTADO** | Trasladar equipo | Sí | Sí | No | GESTOR requiere origen Y destino en alcance actual; destino activo para todos |
-| `GET /api/equipos/{idEquipo}/movimientos` **IMPLEMENTADO** | Ver historial del equipo | Sí | Sí | Sí | ADMIN global; GESTOR/LECTOR solo movimientos cuyo origen O destino esté en su alcance actual |
-| `GET /api/movimientos` **IMPLEMENTADO** | Listar movimientos | Sí | Sí | Sí | Alcance en SQL; filtro idLaboratorio coincide con origen O destino |
-| `GET /api/categorias` | Consultar categorías | Sí | Sí | Sí | Sin restricción por laboratorio |
-| `GET /api/categorias/{id}` | Consultar categoría | Sí | Sí | Sí | Sin restricción por laboratorio |
-| `POST /api/categorias` | Crear categoría | Sí | No | No | Administración global |
-| `PUT /api/categorias/{id}` | Editar categoría | Sí | No | No | Administración global |
-| `DELETE /api/categorias/{id}` | Desactivar categoría | Sí | No | No | En Sprint 4A: rechaza si tiene subcategorías activas |
-| `GET /api/subcategorias` | Listar subcategorías activas | Sí | Sí | Sí | Sin restricción por laboratorio |
-| `GET /api/subcategorias/{id}` | Consultar subcategoría activa | Sí | Sí | Sí | Sin restricción por laboratorio |
-| `GET /api/categorias/{id}/subcategorias` | Listar hijas activas de categoría activa | Sí | Sí | Sí | Sin restricción por laboratorio |
-| `POST /api/subcategorias` | Crear subcategoría | Sí | No | No | Padre existente y activo; administración global |
-| `PUT /api/subcategorias/{id}` | Actualizar o reasignar subcategoría | Sí | No | No | Hija activa y padre destino existente y activo |
-| `DELETE /api/subcategorias/{id}` | Dar de baja subcategoría | Sí | No | No | Rechaza con 409 si tiene Equipos no BAJA; nombre reservado |
-| `GET /api/sedes` | Listar sedes activas | Sí | Sí | Sí | Catálogo global |
-| `GET /api/sedes/{id}` | Consultar sede activa | Sí | Sí | Sí | Catálogo global |
-| `POST /api/sedes` | Crear sede | Sí | No | No | Administración global |
-| `PUT /api/sedes/{id}` | Actualizar sede | Sí | No | No | Sede activa |
-| `DELETE /api/sedes/{id}` | Dar de baja sede | Sí | No | No | Rechaza si tiene áreas activas |
-| `GET /api/areas` | Listar áreas activas | Sí | Sí | Sí | Catálogo global |
-| `GET /api/areas/{id}` | Consultar área activa | Sí | Sí | Sí | Catálogo global |
-| `GET /api/sedes/{idSede}/areas` | Listar áreas activas de sede activa | Sí | Sí | Sí | Catálogo global; padre inactivo/ausente → 404 |
-| `POST /api/areas` | Crear área | Sí | No | No | Sede existente y activa |
-| `PUT /api/areas/{id}` | Actualizar o mover área | Sí | No | No | Área activa; sede destino activa; nombre único en destino |
-| `DELETE /api/areas/{id}` | Dar de baja área | Sí | No | No | Rechaza si tiene laboratorios activos |
-| `GET /api/laboratorios` | Listar laboratorios activos | Sí | Sí | Sí | Catálogo global |
-| `GET /api/laboratorios/{id}` | Consultar laboratorio activo | Sí | Sí | Sí | Catálogo global |
-| `GET /api/areas/{idArea}/laboratorios` | Listar laboratorios activos de área activa | Sí | Sí | Sí | Catálogo global; padre inactivo/ausente → 404 |
-| `POST /api/laboratorios` | Crear laboratorio | Sí | No | No | Área existente y activa; código global único |
-| `PUT /api/laboratorios/{id}` | Actualizar o mover laboratorio | Sí | No | No | Laboratorio activo y área destino activa |
-| `DELETE /api/laboratorios/{id}` | Dar de baja laboratorio | Sí | No | No | Rechaza con 409 si hay asignaciones activas o Equipos no BAJA; conserva código reservado |
-| `GET /api/admin/usuarios/{idUsuario}/laboratorios` **IMPLEMENTADO** | Consultar asignaciones explícitas activas | Sí | No | No | Configuración del destinatario, incluso inactivo; no es su alcance efectivo |
-| `PUT /api/admin/usuarios/{idUsuario}/laboratorios` **IMPLEMENTADO** | Reemplazar asignaciones explícitas activas | Sí | No | No | Atómico; lista vacía válida; destinatario existente; laboratorios existentes y activos |
-| `GET /api/admin/equipos` **IMPLEMENTADO** | Consultar todos los equipos | Sí | No | No | Endpoint explícitamente global |
-
-## 4. Casos esperados de autorización
-
-| Caso | Resultado esperado |
+| Caso | Resultado |
 |---|---|
-| Solicitud protegida sin token | `401 Unauthorized` |
-| Token inválido, alterado o vencido | `401 Unauthorized` |
-| Usuario o rol inactivo con token anterior | `401 Unauthorized` al recargar la identidad vigente |
-| Usuario autenticado con rol insuficiente | `403 Forbidden` |
-| GESTOR o LECTOR consulta o reemplaza asignaciones administrativas | `403 Forbidden` |
-| ADMIN consulta sus asignaciones explícitas | `200`, solo filas activas; pueden ser cero sin limitar su alcance global |
-| GESTOR/LECTOR sin asignaciones consulta su alcance | `200`, `alcanceGlobal=false`, `laboratorios=[]` |
-| Cualquier rol consulta `GET /api/laboratorios` | `200`, catálogo global activo; no es el endpoint de alcance propio |
-| GESTOR intenta acceder a equipos de un laboratorio no asignado | `403 Forbidden` en Equipo; filtro explícito de laboratorio no autorizado también |
-| LECTOR intenta crear, editar, trasladar o dar de baja | `403 Forbidden` |
-| ADMIN consulta o administra cualquier laboratorio | Operación permitida si la solicitud es válida |
-| GESTOR traslada entre dos laboratorios asignados | 200 si Equipo no BAJA, destino activo/diferente y request válido |
-| GESTOR solo tiene acceso al origen o solo al destino | `403 Forbidden`, sin cambios ni movimiento |
-| ADMIN consulta historia con un laboratorio inactivo | 200; la baja lógica no oculta esos movimientos |
-| Equipo actual fuera del alcance, con movimientos visibles relacionados | GET historial 200 con solo los visibles; no habilita GET detalle del Equipo |
-| Sin movimientos visibles y Equipo actual dentro del alcance | GET historial `200 []` |
-| Sin movimientos visibles y Equipo actual fuera del alcance | GET historial 403 |
+| Ruta protegida sin JWT, token inválido/vencido, usuario/rol inactivo | 401 |
+| Rol insuficiente, incluido LECTOR intentando escribir | 403 |
+| GESTOR/LECTOR solicita administración de usuarios/auditoría | 403 |
+| Filtro o detalle existente fuera del alcance permitido | 403 |
+| Alcance vacío y consulta de listado sin laboratorio explícito | 200, lista vacía |
+| GESTOR solo tiene origen o solo destino de traslado | 403 sin UPDATE ni Movimiento |
+| Equipo fuera del alcance actual con movimientos visibles | Historial 200 parcial; detalle Equipo sigue 403 |
+| Usuario destinatario inactivo configurado por ADMIN | Asignaciones permitidas; login continúa bloqueado |
+| Último ADMIN activo desactivado o degradado | 409 |
+| Equipo con mantenimiento EN_PROCESO editado/dado de baja/trasladado | 409 |
 
-## 5. Implementación existente
+Actor y origen de traslado se resuelven en servidor; enviarlos en el request
+produce 400. El rol enviado al **cambio administrativo de rol** es el nuevo
+rol del destinatario, autorizado previamente por ADMIN; nunca concede al
+cliente el rol del actor.
 
-- Spring Security valida autenticación y rol.
-- `AlcanceLaboratorioService` calcula el alcance y comprueba acceso a un laboratorio: ADMIN global activo; GESTOR/LECTOR según asignación activa.
-- El endpoint de alcance propio obtiene el principal del contexto; no recibe un ID de usuario. Los endpoints ADMIN sí reciben el ID del destinatario después de autorizar al administrador.
-- EquipoRepository aplica filtros y laboratorios permitidos en PostgreSQL; no filtra toda la tabla en memoria. El catálogo global de Laboratorio conserva su política.
-- MovimientoEquipoRepository aplica origen O destino en alcance actual; ADMIN no filtra historia por estado activo de los laboratorios.
-- La suite cubre acceso permitido y rechazado por rol; el cierre medido se registra en [verificación final](backend-final/verificacion-final.md).
+## 4. Vigencia y backlog
 
-## 6. Alcance implementado hasta Sprint 6
+Usuarios administrativos, reactivación de catálogos, Mantenimiento,
+Reportes y Auditoría están **IMPLEMENTADOS**. No son pendientes del cierre
+actual. El [Sprint 7](sprints_realizados-backend/sprint-7.md) conserva que
+entonces estaban fuera de su alcance; las extensiones posteriores no
+reescriben esa historia.
 
-Están implementados login JWT, perfil propio (`GET /api/auth/me`), Categoría y
-Subcategoría, Sede, Área y Laboratorio. Los tres roles consultan los catálogos;
-solo ADMIN los modifica. Las rutas jerárquicas por Categoría, Sede y Área usan
-la misma política de lectura global. No existe una ruta `/api/organizacion/**`;
-las rutas reales están enumeradas arriba.
-Todas estas rutas, salvo el login, requieren un JWT válido: ausencia o token
-inválido devuelve 401; rol sin permiso devuelve 403.
-
-La administración completa de usuarios queda fuera del backend entregado. Sprint 6 incorpora
-traslado transaccional e historial inmutable desde la API. Equipo tiene CRUD, filtros, baja lógica
-BAJA y listado administrativo global. Sprint 4E implementa GET/PUT de
-asignaciones, GET del alcance propio y la regla de no desactivar Laboratorio
-con asignaciones activas. La asignación de un usuario inactivo también bloquea
-la baja; ese usuario continúa sin autenticarse. Las relaciones inactivas no
-bloquean y su fecha original se conserva al reactivarlas.
-
-El reemplazo consulta el estado vigente dentro de una transacción. El alcance
-se actualiza en la siguiente petición sin renovar un JWT que continúe válido.
-ADMIN puede tener asignaciones explícitas, pero no limitan su alcance global.
-No se modifican login, BCrypt, firma ni expiración JWT. Sprint 5 agrega el
-bloqueo de baja de Subcategoría/Laboratorio si hay Equipos no BAJA, mantiene el
-bloqueo por asignaciones y exige ADMIN/GESTOR para escribir Equipos. LECTOR
-solo consulta. Un Equipo BAJA sigue visible con autorización; PUT y segundo
-DELETE devuelven 409.
-
-El traslado de Sprint 6 solo acepta destino, motivo y ubicación interna destino.
-Origen, actor, tipo y fecha proceden del servidor; campos ajenos dan 400. BAJA,
-destino inactivo o mismo destino producen 409. MANTENIMIENTO e INOPERATIVO sí
-permiten trasladar. No existen POST directo, PUT ni DELETE de movimientos.
-Los movimientos históricos no bloquean la baja lógica de Laboratorio por sí
-solos. Los nombres del historial provienen de las entidades actuales; no son
-una auditoría versionada de sus nombres.
-
-Consulta las guías de [Sprint 4A](sprints_realizados-backend/sprint-4a-subcategorias.md),
-[organización](sprints_realizados-backend/sprint-4b-organizacion.md#paso-16--jwt-y-roles-401-y-403) y
-[Sprint 4E](sprints_realizados-backend/sprint-4e-usuario-laboratorio.md#28-postman-secuencia-manual)
-para comprobar los roles con Postman. La [guía de Sprint 5](sprints_realizados-backend/sprint-5-equipos.md)
-añade la matriz de casos de Equipo, filtros e inmutabilidad. La
-[guía de Sprint 6](sprints_realizados-backend/sprint-6-movimientos.md) incorpora traslado, rollback,
-alcance del historial y bajas lógicas de laboratorios con historia.
-
-## 7. Backlog fuera del backend cerrado
-
-Crear/editar usuarios, activar/desactivar cuentas mediante API y cambiar roles
-son propuestas de administración futura. **No son permisos de rutas existentes**
-y no aparecen en las tablas de operación implementada. El diseño prevé ADMIN
-para esa administración, pero no existe un CRUD completo de Usuario/Rol.
-La gestión actual de asignaciones solo configura usuarios que ya existen.
-
-Mantenimiento como Entity, auditoría general y otras ampliaciones de negocio
-figuran en el [backlog](backend-final/backlog.md). Frontend Jason y Docker local
-ya se implementaron después del cierre funcional; ambas imágenes están publicadas
-en GHCR. Ese avance de despliegue mantiene los permisos actuales y no habilita
-CRUD administrativo de usuarios. Render/base gestionada siguen sin evidencia de
-despliegue. El catálogo funcional contiene
-[42 operaciones HTTP](backend-final/endpoints.md); los endpoints técnicos de salud
-no son operaciones nuevas del negocio.
+No existen registro público, CRUD del catálogo Rol, refresh token, permisos
+dinámicos ni borrado físico de Equipo. Estas propuestas y el despliegue remoto
+están en el [backlog](backend-final/backlog.md), separados de bugs.
+La comprobación Docker vigente no reejecutó JUnit: 94 HTTP/30 aserciones
+son otra evidencia distinta de las suites backend y frontend.

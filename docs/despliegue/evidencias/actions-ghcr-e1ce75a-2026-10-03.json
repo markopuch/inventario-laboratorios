@@ -1,0 +1,171 @@
+{
+  "fechaLectura": "2026-10-03",
+  "tipo": "Consulta pública de la ejecución ya publicada; no se disparó otro workflow",
+  "run": 37158784428,
+  "commit": "e1ce75a1abf5058ad83ffafd85357dd0aa4c644b",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428",
+  "workflow": "Imagenes Docker del backend y frontend Jason",
+  "createdAtUTC": "2026-10-03T22:32:16Z",
+  "updatedAtUTC": "2026-10-03T22:34:50Z",
+  "jobs": [
+    {
+      "id": 111307629232,
+      "nombre": "Publicar backend",
+      "status": "completed",
+      "conclusion": "success",
+      "inicioUTC": "2026-10-03T22:32:18Z",
+      "finUTC": "2026-10-03T22:34:49Z",
+      "url": "https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428/job/111307629232",
+      "pasos": [
+        {
+          "nombre": "Set up job",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Descargar el codigo",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Preparar el nombre y la etiqueta",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Preparar Node para las pruebas de Jason",
+          "conclusion": "skipped",
+          "status": "completed"
+        },
+        {
+          "nombre": "Comprobar contratos y logica del frontend Jason",
+          "conclusion": "skipped",
+          "status": "completed"
+        },
+        {
+          "nombre": "Preparar Docker Buildx",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Iniciar sesion en GHCR",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Construir y publicar backend",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Construir y publicar backend",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Iniciar sesion en GHCR",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Preparar Docker Buildx",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Descargar el codigo",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Complete job",
+          "conclusion": "success",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": 111307629348,
+      "nombre": "Publicar frontend-jason",
+      "status": "completed",
+      "conclusion": "success",
+      "inicioUTC": "2026-10-03T22:32:19Z",
+      "finUTC": "2026-10-03T22:33:08Z",
+      "url": "https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428/job/111307629348",
+      "pasos": [
+        {
+          "nombre": "Set up job",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Descargar el codigo",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Preparar el nombre y la etiqueta",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Preparar Node para las pruebas de Jason",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Comprobar contratos y logica del frontend Jason",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Preparar Docker Buildx",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Iniciar sesion en GHCR",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Construir y publicar frontend-jason",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Construir y publicar frontend-jason",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Iniciar sesion en GHCR",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Preparar Docker Buildx",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Preparar Node para las pruebas de Jason",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Post Descargar el codigo",
+          "conclusion": "success",
+          "status": "completed"
+        },
+        {
+          "nombre": "Complete job",
+          "conclusion": "success",
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}

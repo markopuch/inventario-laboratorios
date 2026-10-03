@@ -1,6 +1,6 @@
 # Flujos principales del backend
 
-Ocho recorridos de los contratos existentes al cierre de Sprint 7. Las reglas
+Los ocho recorridos base de Sprint 7 se mantienen; las secciones 9–12 incluyen las extensiones vigentes V13/e1ce75a, revisadas documentalmente el 3 de octubre de 2026. Las reglas
 detalladas están en [RN-01–45](../reglas-negocio.md), las rutas en
 [endpoints](endpoints.md) y las respuestas de error en [códigos HTTP](codigos-http.md).
 Los diagramas muestran responsabilidades; no agregan tablas ni operaciones.
@@ -87,7 +87,7 @@ editables. Código interno, Laboratorio, ID, fechas y cualquier propiedad ajena
 son rechazados con 400. Es un reemplazo de campos editables, no un PATCH.
 
 1. Se comprueba ADMIN/GESTOR y se valida la entrada.
-2. EquipoService bloquea actor y Equipo, verifica alcance y rechaza BAJA.
+2. EquipoService bloquea actor y Equipo, verifica alcance y rechaza BAJA o mantenimiento EN_PROCESO.
 3. Valida/bloquea Subcategoría destino activa y el Laboratorio actual.
 4. Comprueba responsable y duplicados excluyendo el ID propio.
 5. EquipoMapper copia campos editables; el servicio actualiza fecha en UTC y guarda.
@@ -140,7 +140,7 @@ transacción PostgreSQL, no necesariamente el orden de commit.
 BAJA, mismo destino y destino inactivo producen 409; destino ausente, 404.
 ADMIN puede partir de un origen legacy inactivo hacia destino activo. GESTOR
 necesita origen **y** destino dentro del alcance vigente; LECTOR obtiene 403.
-MANTENIMIENTO e INOPERATIVO sí permiten trasladar.
+MANTENIMIENTO e INOPERATIVO permiten trasladar solo si no existe mantenimiento EN_PROCESO; ese proceso bloquea traslado con 409.
 
 Equipo conserva código, Subcategoría, responsable, estado y fechaCreacion.
 Cambia laboratorio, ubicación y fechaActualizacion. Ubicación omitida/null/blanca
@@ -192,3 +192,53 @@ Las escrituras de Equipos/traslados bloquean su actor con FOR SHARE, por lo que
 se coordinan con el reemplazo administrativo. La siguiente petición consulta
 el alcance nuevo sin necesitar otro login. Cualquier asignación activa bloquea
 la baja de su Laboratorio, aun cuando Usuario esté inactivo.
+
+
+## 9. Administrar Usuarios
+
+ADMIN inicia sesión y usa GET /api/admin/usuarios para seleccionar el
+destinatario o POST para crearlo. Username y email se normalizan y se comprueba
+su unicidad; password se guarda BCrypt. PUT modifica nombre/apellido/email/cargo.
+PATCH de rol/estado y PUT de password son rutas distintas y protegen al
+último ADMIN activo. Se configuran laboratorios mediante el flujo de sección 8.
+Cambios de rol/actividad/asignación se leen en las siguientes solicitudes;
+las respuestas nunca contienen el hash.
+
+## 10. Actividad de catálogos y estado operativo
+
+ADMIN consulta /api/admin/categorias, subcategorias, sedes, areas o laboratorios;
+activo=false permite ver bajas. PATCH /api/{catalogo}/{id}/estado reactiva o
+desactiva con validaciones de padre/dependencias. GET normal sigue mostrando
+activos. PUT Laboratorio modifica estadoOperativo independientemente de activo:
+OPERATIVO/MANTENIMIENTO; omitirlo conserva el anterior.
+
+## 11. Programar y finalizar Mantenimiento
+
+1. ADMIN/GESTOR selecciona un Equipo vigente dentro de su alcance.
+2. POST /api/mantenimientos recibe Equipo, tipo, descripción y fecha programada;
+   responsable/observaciones son opcionales. Responde 201 en PROGRAMADO.
+3. Solo PROGRAMADO permite PUT de datos o PATCH a EN_PROCESO/CANCELADO.
+4. Al iniciar, se bloquea Equipo y se guarda su estado previo; pasa a MANTENIMIENTO.
+5. Durante EN_PROCESO no se permite PUT/DELETE/traslado de Equipo (409).
+6. PATCH a COMPLETADO o CANCELADO termina el proceso y restaura el estado previo.
+7. GET permite lectura a los tres roles por ubicación actual del Equipo.
+   No existe DELETE de Mantenimiento ni reapertura de finales.
+
+`PROGRAMADO → EN_PROCESO → COMPLETADO`, con cancelación desde PROGRAMADO
+o EN_PROCESO. El índice parcial de V12 permite solo un proceso activo por Equipo.
+
+## 12. Reportes y Auditoría
+
+Los tres roles consultan los cinco GET /api/reportes con filtros reales.
+El servidor intersecta laboratorio/organización con el alcance; el historial
+de movimientos usa origen/destino y mantenimiento la ubicación actual.
+Rango invertido devuelve 400 y laboratorio explícito fuera de alcance, 403.
+
+Las escrituras de los servicios registran una descripción segura en Auditoría
+dentro de la transacción. Solo ADMIN consulta GET /api/admin/auditoria y sus
+filtros. No hay POST libre de auditoría, edición de Movimientos ni passwords
+en las descripciones.
+
+[Evidencia del flujo Docker vigente](../despliegue/verificacion-docker-actions-2026-10-03.md):
+94 comprobaciones HTTP y 30 aserciones separadas de JUnit. La baja se comprobó
+por API debido al bloqueo de automatización de la confirmación nativa del navegador.

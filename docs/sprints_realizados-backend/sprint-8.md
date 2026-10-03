@@ -1,26 +1,32 @@
 # 1. Resumen Sprint 8
 
-**Docker local completo y publicación del backend/frontend en GHCR verificados.**
-Este sprint continúa el cierre funcional del [Sprint 7](sprint-7.md). El alcance
-inicial fue backend + PostgreSQL; la actualización del 2026-10-03 registra además
-la integración del frontend de Jason con Nginx y la publicación de ambas imágenes.
+**Docker local completo, publicación GHCR y actualización a e1ce75a verificados.**
+Fecha de evidencia/documentación vigente: **3 de octubre de 2026**.
+El entorno tiene PostgreSQL, backend y frontend Jason/Nginx saludables con
+las imágenes publicadas del commit
+`e1ce75a1abf5058ad83ffafd85357dd0aa4c644b`.
 
-Se externalizó el puerto, se incorporó Actuator, se permitió consultar la salud
-sin autenticación, se construyó `inventario-backend:local` y se preparó Compose.
-El usuario ejecutó el entorno y compartió ambos servicios en estado `healthy`
-y la respuesta `status: UP` de `/actuator/health`.
+La [ejecución Actions 37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428)
+terminó con ambos trabajos verdes. Las referencias `sha-e1ce75a` se descargaron,
+se asociaron a los tags locales existentes y se actualizaron únicamente
+backend/frontend con `docker compose up -d --no-build --no-deps backend frontend`.
+Flyway aplicó las migraciones existentes V10–V13 en Docker habitual, conservando
+V1–V9, el contenedor/volumen PostgreSQL y los registros anteriores.
 
-El workflow `.github/workflows/imagen.yml` utiliza una matriz para publicar
-backend y frontend Jason con nombres de imagen separados. La
-[ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900)
-terminó con ambos trabajos en verde para el commit `9956939`. Se verificaron
-directamente las etiquetas `latest` y `sha-9956939` y sus digests en GHCR.
+Se verificaron **94/94 comprobaciones HTTP, 30 aserciones funcionales y siete
+controles SQL sin incidencias** en una base temporal con las mismas imágenes.
+Usuarios, mantenimiento, reportes y auditoría ya están implementados;
+el modelo actual tiene 12 entidades, 16 FK y 70 rutas de aplicación.
+La [evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md)
+detalla los límites: las suites backend/npm no se reejecutaron en el despliegue
+ni en esta actualización de Markdown.
 
-**Fecha inicial de documentación:** 2026-10-01. **Evidencia actualizada:** 2026-10-03.
-El recorrido inicial conserva sus resultados históricos. Las verificaciones
-posteriores de Docker, Actions y GHCR se distinguen de aquella preparación en la
-[evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md).
-Esta actualización documental no ejecuta nuevamente Docker ni las suites.
+**Lectura histórica:** las secciones 2–24 conservan el recorrido inicial
+de Docker y la primera validación/publicación del commit `9956939`
+(33 HTTP, 24 aserciones, frontend 27 pruebas, Flyway V9).
+Esas cifras no se sobrescriben ni se presentan como el último estado.
+La sección 25 registra e1ce75a y sus resultados. El cierre de
+[Sprint 7](sprint-7.md) mantiene su alcance histórico V9/233.
 
 # 2. Estado inicial
 
@@ -478,7 +484,7 @@ se cambió para descargar desde GHCR. Se añade la etiqueta OCI
 contraseña de la cuenta ni por las variables locales de PostgreSQL/JWT.
 Esta construcción no necesita arrancar la base ni subir `.env`.
 
-# 19. Publicación verificada en GitHub
+# 19. Primera publicación verificada en GitHub — 9956939
 
 La publicación preparada inicialmente ya se ejecutó en `main` para el commit
 `99569392035fc975171d2df6929a1aa26111b139`. La
@@ -552,7 +558,7 @@ Después de la construcción realizada en el paso 4, el usuario pidió ejecutar
 personalmente los comandos siguientes. El arranque de Compose se realizó de
 esa manera y sus resultados se compartieron en la conversación.
 
-# 23. Checklist Sprint 8
+# 23. Checklist de la primera validación Sprint 8
 
 - [x] Identificar la carpeta real del backend y conservar la estructura del repositorio.
 - [x] Comprobar Docker Desktop disponible durante la actividad.
@@ -580,7 +586,7 @@ La regresión Gradle de 233 pruebas no se reejecutó en esta validación; perman
 como antecedente aprobado de Sprint 7. La visibilidad del paquete y una posible
 regresión adicional son decisiones separadas, no resultados atribuidos al build.
 
-# 24. Estado final y próximos pasos
+# 24. Estado y próximos pasos al corte inicial 9956939
 
 **Alcance Docker local + publicación GHCR cerrado y documentado.** El entorno
 completo funciona con los tres servicios, el flujo de inventario fue validado
@@ -596,3 +602,107 @@ La publicación en Render u otra plataforma, las revisiones avanzadas y
 Kubernetes quedan fuera de lo comprobado aquí. El cierre funcional del Sprint 7
 se conserva como antecedente histórico, no como una prohibición de iniciar este
 nuevo trabajo de empaquetado y despliegue.
+
+
+# 25. Consolidación vigente — e1ce75a
+
+Esta etapa registra las ampliaciones del backend y la adaptación del frontend
+que ya estaban implementadas. El paso 2 actualizó Docker y comprobó su flujo;
+el paso 3 actualiza Markdown. Ninguno de esos dos pasos añadió código de negocio
+ni nuevas migraciones.
+
+## 25.1 Publicación y despliegue
+
+| Evidencia | Resultado |
+|---|---|
+| Commit | `e1ce75a1abf5058ad83ffafd85357dd0aa4c644b` |
+| Actions | Run `37158784428`, ambos trabajos success |
+| Backend | Job `111307629232`; construcción/publicación GHCR; empaquetado con bootJar -x test |
+| Frontend Jason | Job `111307629348`; 67 pruebas frontend, build y publicación |
+| Imagen backend | `ghcr.io/markopuch/inventario-laboratorios-backend:sha-e1ce75a` |
+| Imagen frontend | `ghcr.io/markopuch/inventario-laboratorios-frontend-jason:sha-e1ce75a` |
+| Docker habitual | Tres contenedores running/healthy; backend/frontend actualizados sin reconstruir ni recrear PostgreSQL |
+| Acceso | Frontend localhost:3000; backend localhost:8080; /actuator/health devuelve UP |
+
+Los digests y las comprobaciones remotas están en la
+[evidencia vigente](../despliegue/verificacion-docker-actions-2026-10-03.md)
+y su [JSON Actions/GHCR](../despliegue/evidencias/actions-ghcr-e1ce75a-2026-10-03.json).
+Compose conserva sus tags locales; se actualizaron para apuntar a las imágenes
+publicadas, no se cambió el YAML para descargar GHCR automáticamente.
+
+## 25.2 Backend y Flyway actuales
+
+V1–V13 están exitosas. V10 agrega estadoOperativo de Laboratorio; V11 el email
+único IgnoreCase; V12 Mantenimiento; V13 Auditoría. Son migraciones existentes
+de las ampliaciones anteriores: no se crearon para documentar el despliegue.
+Los checksums V1–V9 se conservaron.
+
+El modelo tiene 12 entidades/tablas y 16 FK; el
+[modelo V13](../Erd_actual/modelo-vigente-v13.md) complementa los ERD v2
+históricos. Los [70 endpoints](../backend-final/endpoints.md) incluyen
+administración de usuarios, actividad de catálogos, mantenimiento, reportes y
+auditoría. El [backlog](../backend-final/backlog.md) ya no presenta esas
+funciones como futuras.
+
+La evidencia backend previa contiene
+[40 XML locales y 319 pruebas](../despliegue/evidencias/reportes-backend-2026-10-03.json),
+cero fallos/errores/omitidas, timestamps del 3 de octubre a las 13:04–13:05 Lima.
+Es una lectura de artefactos existentes, no una ejecución nueva de este paso
+ni de Actions. Los 233 tests del Sprint 7 conservan su contexto histórico.
+
+## 25.3 Flujo integrado y seguridad
+
+94 comprobaciones HTTP por Nginx aprobadas; incluyen errores 400/401/403/409
+esperados. Se verificaron 30 aserciones funcionales: login de tres roles,
+alcance, altas/cambios de catálogos y usuarios, último ADMIN protegido,
+Equipo creado/editado, mantenimiento PROGRAMADO → EN_PROCESO → COMPLETADO,
+cancelación, bloqueos de Equipo en proceso, traslado, baja, historia, reportes
+y auditoría solo ADMIN.
+
+Crear/editar Equipo, mantenimiento y traslado se ejecutaron por interfaz.
+La confirmación nativa de baja bloqueó la automatización del navegador:
+se canceló y se ejecutó/verificó la baja por API. Reportes GESTOR e historial
+LECTOR después de traslado/baja están en capturas. No se afirma que el botón
+de confirmación de baja haya sido automatizado exitosamente.
+
+Las siete consultas SQL dieron cero inconsistencias: Equipo vigente bajo
+Subcategoría/Laboratorio inactivos, asignación activa hacia Laboratorio inactivo,
+movimientos/mantenimientos huérfanos, traslado con origen=destino y Equipo
+incoherente con mantenimiento EN_PROCESO.
+
+## 25.4 Preservación y limpieza
+
+Se guardó backup privado pg_dump antes de actualizar.
+La base habitual mantuvo contenedor, volumen, conteos y contenido de nueve
+tablas anteriores: usuario 3, usuario_laboratorio 4, categoria 2,
+subcategoria 4, sede 1, area 2, laboratorio 2, equipo 0 y movimiento_equipo 0.
+Las nuevas tablas mantenimiento/auditoria quedaron vacías; ambos laboratorios
+existentes recibieron estadoOperativo OPERATIVO por V10.
+No se escribieron fixtures ni se resetearon cuentas habituales por API.
+
+El smoke escribió solamente en
+`inventario_verificacion_docker_actual_5149b3ad`.
+Terminó con 4 usuarios, 1 Equipo, 1 Movimiento, 2 Mantenimientos y 36 registros
+de auditoría. Tras confirmar cero conexiones se eliminó esa base y
+sus tres contenedores, volumen y red propios. Los puertos temporales quedaron
+libres y el entorno habitual siguió saludable.
+
+[JSON de la verificación](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json)
+y capturas no contienen passwords, JWT ni variables privadas.
+
+## 25.5 Checklist vigente
+
+- [x] Ambas imágenes e1ce75a publicadas y ambos jobs Actions exitosos.
+- [x] Imágenes publicadas desplegadas localmente en backend/frontend.
+- [x] PostgreSQL habitual y su volumen preservados.
+- [x] Flyway V1–V13 correcto; checksums V1–V9 conservados.
+- [x] Flujo y permisos comprobados con 94 HTTP / 30 aserciones.
+- [x] Siete controles SQL sin inconsistencias.
+- [x] Base habitual sin escrituras de smoke y con registros anteriores intactos.
+- [x] Recursos temporales propios eliminados.
+- [x] Documentación vigente separada de los cortes históricos S7/9956939.
+- [ ] Despliegue en nube/base gestionada: pendiente de un trabajo autorizado.
+
+**Estado:** Docker local y publicación GHCR consolidados. El próximo trabajo
+de despliegue es nube/base gestionada si se autoriza. Esta actualización no
+implementa otras funciones ni hace commit/push.

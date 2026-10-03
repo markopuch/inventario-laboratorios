@@ -1,5 +1,7 @@
 # Usuarios y autenticación JWT
 
+**Estado vigente:** commit `e1ce75a`, 3 de octubre de 2026. [Evidencia Docker/Actions](despliegue/verificacion-docker-actions-2026-10-03.md). El flujo del curso permanece y la administración de cuentas se amplió después de Sprint 7.
+
 La API incorpora usuarios JPA, login con BCrypt y tokens JWT. Se conserva la
 organización de carpetas y el flujo de los ejemplos de `Carlos_backend/workshop`,
 con las comprobaciones de usuario activo de los otros ejemplos del profesor.
@@ -26,8 +28,7 @@ La tabla muestra la política de Categoría, compartida por los cinco catálogos
 lectura global para los tres roles y escritura solo ADMIN. También están
 implementados asignaciones de laboratorio (Sprint 4E), Equipo (Sprint 5) y
 traslado/historial (Sprint 6). GESTOR escribe Equipos dentro de su alcance;
-LECTOR consulta. ADMIN administra asignaciones, pero la administración completa
-de usuarios sigue fuera del backend cerrado. Consulta la
+LECTOR consulta. ADMIN administra también usuarios: alta, edición pública, rol, actividad, contraseña y asignaciones mediante rutas específicas; protege al último ADMIN activo. No hay registro público ni CRUD Rol. Consulta la
 [matriz vigente](matriz-permisos.md) y el [cierre técnico](backend-final/resumen-backend.md).
 
 ## Cómo se relaciona con el código del profesor
@@ -58,7 +59,7 @@ Solicitud con Authorization: Bearer ...
 | `dto/response/UsuarioResponse.java` | Perfil público, sin contraseña ni hash |
 | `domain/Usuario.java` | Representación del usuario fuera de JPA, sin datos secretos |
 | `mapper/UsuarioMapper.java` | Entity → dominio → respuesta usando MapStruct |
-| `entity/UsuarioEntity.java` y `entity/RolEntity.java` | Columnas de V2/V6 y relación `ManyToOne` usuario–rol |
+| `entity/UsuarioEntity.java` y `entity/RolEntity.java` | Columnas de V2/V6, índice email IgnoreCase V11 y relación `ManyToOne` usuario–rol |
 | `repository/UsuarioRepository.java` y `repository/RolRepository.java` | Consultas JPA; el usuario carga su rol mediante `EntityGraph` |
 | `service/UsuarioService.java` | Busca usuario y rol activos; adapta JPA a Spring Security |
 | `security/UserInfoDetails.java` | Identidad y authorities `ROLE_ADMIN`, `ROLE_GESTOR` o `ROLE_LECTOR` |
@@ -81,7 +82,7 @@ petición; desactivar un usuario o rol invalida su acceso inmediatamente, y camb
 su rol modifica sus permisos incluso si presenta un token anterior. No hay
 refresh token ni endpoint de registro público.
 
-El secreto de firma se obtiene de `JWT_SECRET`, en Base64 y con al menos 32 bytes
+El secreto de firma se obtiene de `JWT_SECRET`, en Base64 estándar y con al menos 32 bytes
 aleatorios. La duración predeterminada es de 1800 segundos y se puede configurar
 mediante `JWT_EXPIRATION_SECONDS`. Una clave nueva invalida los tokens anteriores.
 
@@ -90,7 +91,7 @@ mediante `JWT_EXPIRATION_SECONDS`. Una clave nueva invalida los tokens anteriore
 V6 agrega `usuario.username` y un índice único sobre `UPPER(username)`. Si hubiera
 usuarios anteriores, se les asigna `usuario_<id_usuario>` como identificador de
 acceso; se conservan sus datos. Las tres cuentas de demostración usan sus nombres
-de acceso explícitos. V1–V5 no se editaron.
+de acceso explícitos. V1–V5 no se editaron. V11 agregó el índice UNIQUE de email por UPPER sin cambiar identidades/credenciales existentes; el backend Docker actual validó V1–V13.
 
 Flyway administra el esquema y Hibernate sigue usando `ddl-auto=validate`.
 Los hashes los genera BCrypt al crear cuentas mediante JPA; no hay contraseñas
@@ -357,3 +358,21 @@ PowerShell de esta guía y obtén un token nuevo en Postman.
 Referencias:
 [JJWT y sus dependencias](https://github.com/jwtk/jjwt#installation),
 [DaoAuthenticationProvider de Spring Security](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/dao-authentication-provider.html).
+
+
+## Administración vigente y Docker
+
+Las rutas reales de usuarios se documentan en
+[endpoints](backend-final/endpoints.md#11-usuario-admin--7-operaciones).
+Perfil AUTH conserva UsuarioResponse; la consulta administrativa usa
+AdminUsuarioResponse con cargo y sin hash. Cambios de rol/actividad se reflejan
+en las siguientes peticiones con un JWT todavía válido. Un restablecimiento
+administrativo de contraseña guarda otro BCrypt y no devuelve la contraseña;
+no implementa una política adicional de revocación de JWT.
+
+Docker habitual no activa dev ni vuelve a sembrar/resetear cuentas.
+DEMO_USER_PASSWORD solo crea las cuentas que falten en una base con perfil dev.
+La contraseña de PostgreSQL no es la de login de marko/aldo/romel.
+En el despliegue e1ce75a se conservaron 3 cuentas y 4 asignaciones; login y
+mutaciones de prueba se ejecutaron únicamente en la base temporal.
+La evidencia no publica contraseñas, JWT ni variables privadas.

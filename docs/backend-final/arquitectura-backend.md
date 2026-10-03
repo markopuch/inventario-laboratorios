@@ -1,4 +1,6 @@
-# Arquitectura del backend — cierre de Sprint 7
+# Arquitectura del backend — estado vigente V13
+
+Revisión documental del 3 de octubre de 2026, commit `e1ce75a`. Se conserva la arquitectura del curso; las extensiones ya implementadas se distinguen del [cierre histórico de Sprint 7](verificacion-final.md). [Evidencia Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md).
 
 ## 1. Estructura que conserva el proyecto
 
@@ -9,7 +11,7 @@ administra el esquema; no se genera desde las Entities.
 
 ```mermaid
 flowchart TD
-    cliente[Cliente: Postman o consumidor HTTP] --> seguridad[Spring Security y filtro JWT]
+    cliente[Cliente: frontend Jason o Postman] --> seguridad[Spring Security y filtro JWT]
     seguridad --> controller[Controller: ruta, principal y respuesta HTTP]
     controller --> request[Request DTO y Bean Validation]
     request --> mapper[MapStruct: convertir contratos y modelos]
@@ -18,7 +20,7 @@ flowchart TD
     service --> repository[Repository: consultas y bloqueos]
     repository --> entity[Entity: mapeo JPA]
     entity --> postgres[(PostgreSQL)]
-    flyway[Flyway V1 a V9] --> postgres
+    flyway[Flyway V1 a V13] --> postgres
     service --> salida[Domain de resultado]
     salida --> response[Mapper y Response DTO]
     response --> cliente
@@ -130,7 +132,7 @@ tipo y fecha los decide el servidor; intentar enviarlos produce 400.
 Dentro de una sola transacción, `MovimientoEquipoService`:
 
 1. Bloquea la fila del actor con FOR SHARE y verifica su vigencia y rol.
-2. Bloquea Equipo con FOR UPDATE, comprueba existencia y rechaza BAJA.
+2. Bloquea Equipo con FOR UPDATE, comprueba existencia y rechaza BAJA o un mantenimiento EN_PROCESO.
 3. Obtiene el origen del Equipo ya bloqueado y rechaza un destino igual.
 4. Bloquea origen y destino por ID ascendente. El destino debe existir y estar activo.
 5. Valida acceso efectivo de GESTOR a ambos laboratorios. ADMIN puede mover
@@ -216,10 +218,7 @@ permanece y sus FK siguen siendo válidas. La historia tampoco se borra al dar
 de baja un Equipo. `RESTRICT` protege referencias frente a borrados físicos;
 no sustituye las reglas de baja lógica implementadas por los Services.
 
-El esquema tiene un indicador `requiere_mantenimiento` y un estado
-MANTENIMIENTO. No existe una Entity de mantenimiento ni una auditoría genérica
-implementada. Usuario/Rol sirven a autenticación y pertenencia; la administración
-completa de usuarios continúa en el [backlog](backlog.md).
+El esquema mantiene `requiere_mantenimiento` y el estado MANTENIMIENTO de Equipo. Desde V12 hay MantenimientoEntity; desde V13, AuditoriaEntity. AdminUsuarioService ya administra cuentas, roles asignados y contraseñas; no hay CRUD del catálogo Rol. El [backlog](backlog.md) describe solo ampliaciones aún no implementadas.
 
 ## 8. Flyway, configuración y errores
 
@@ -229,11 +228,7 @@ Open Session in View. Los Mappers que necesitan relaciones se ejecutan dentro
 de los Services transaccionales; los Repositories cargan las relaciones públicas
 necesarias con EntityGraph. El contrato HTTP nunca serializa una Entity.
 
-Flyway permanece en V9. MovimientoEquipo ya estaba en V3; añadir su vertical
-Java no requirió otra migración. PostgreSQL genera los valores iniciales de
-fechas mediante DEFAULT; las modificaciones de Equipo actualizan su fecha desde
-el Service. El [cotejo Entity/Flyway](auditoria-entity-flyway.md) detalla las
-76 columnas y las restricciones reales.
+Flyway está en V13. MovimientoEquipo ya estaba en V3; su vertical no requirió migración en Sprint 6. V10–V13 corresponden a las extensiones posteriores: estado operativo, email IgnoreCase, mantenimiento y auditoría. PostgreSQL genera fechas iniciales con DEFAULT; los Services actualizan fechas de cambios. El [cotejo histórico](auditoria-entity-flyway.md) conserva las 76 columnas V9; el [modelo vigente](../Erd_actual/modelo-vigente-v13.md) detalla la ampliación de esquema.
 
 | Código | Uso en la API |
 |---|---|
@@ -256,3 +251,59 @@ Consultar el [checklist de 26 requisitos](checklist-entrega.md), la
 [flujos principales](flujos-principales.md). Una anotación, un diagrama o un
 archivo existente demuestra estructura; el resultado de una prueba o petición
 registrada demuestra comportamiento. El cierre mantiene esa distinción.
+
+
+## 10. Extensiones posteriores al cierre Sprint 7
+
+### Usuarios y catálogos administrativos
+
+AdminUsuarioController → Request/UsuarioMapper → AdminUsuarioService →
+UsuarioRepository/RolRepository → Entities JPA. ADMIN modifica el destinatario;
+la identidad del actor procede de SecurityContext. El servicio serializa cambios
+administrativos, protege al último ADMIN activo y guarda contraseñas BCrypt.
+El PUT general solo edita nombre/apellido/email/cargo. Rol, actividad y password
+usan rutas específicas. Las asignaciones mantienen su reemplazo atómico.
+
+CatalogoAdminController consulta activos/inactivos; los cinco Controllers
+de catálogo admiten PATCH de actividad. Reactivar valida padre activo y
+desactivar conserva reglas por hijos, Equipos y asignaciones. estadoOperativo
+de Laboratorio es independiente de activo; omitido en PUT conserva el anterior.
+
+### Mantenimiento
+
+MantenimientoController → DTO/MantenimientoMapper → MantenimientoService →
+MantenimientoRepository/EquipoRepository → MantenimientoEntity/EquipoEntity.
+El Service toma actor del principal y exige rol/alcance actual. La transacción
+bloquea Equipo y Mantenimiento, valida el ciclo y coordina su estado:
+
+`PROGRAMADO → EN_PROCESO → COMPLETADO`, con cancelación desde los dos primeros.
+
+Iniciar guarda estado previo del Equipo y lo pone en MANTENIMIENTO.
+Completar/cancelar en proceso lo restaura. Solo PROGRAMADO admite edición.
+Un EN_PROCESO bloquea PUT/DELETE/traslado de Equipo; la unicidad parcial de V12
+impide dos mantenimientos simultáneos en proceso para el mismo Equipo.
+
+### Reportes y auditoría
+
+ReporteController → FiltroReporteRequest/ReporteMapper → ReporteService →
+ReporteRepository. Este Repository usa NamedParameterJdbcTemplate para
+agregaciones SQL; no necesita cargar todas las Entities ni una tabla Reporte.
+Es una variante existente de persistencia, no un cambio a la arquitectura.
+
+AuditoriaService persiste las acciones de servicios en la transacción de
+negocio; un rollback tampoco deja ese registro confirmado. El actor se resuelve
+en servidor. AuditoriaController permite solo GET ADMIN con filtros.
+AuditoriaMapper produce un DTO seguro: descripción de cambios, nunca password,
+hash, token, secretos o SQL. No es un versionado completo de atributos.
+
+## 11. Ejecución integrada
+
+En Docker: navegador → Nginx frontend Jason → /api → Spring Security/backend →
+PostgreSQL. Nginx sirve archivos React y rutas SPA; PostgreSQL mantiene el volumen
+habitual. Las imágenes publicadas e1ce75a se verificaron primero con una base
+temporal y después se actualizaron los contenedores habituales.
+
+Se registraron 94 HTTP, 30 aserciones y siete consultas SQL de consistencia.
+No se reejecutó JUnit/npm durante este despliegue ni en esta revisión documental.
+Las 233 pruebas de Sprint 7, los 319 XML locales posteriores y las 67 pruebas
+frontend se describen separadamente en la evidencia vigente.

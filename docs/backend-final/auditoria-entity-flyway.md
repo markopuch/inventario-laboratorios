@@ -1,5 +1,7 @@
 # Auditoría de Entity, Flyway y limpieza — Sprint 7
 
+**Alcance histórico: Sprint 7, 21 de septiembre de 2026 (V1–V9).** Los conteos, referencias a Entities y conclusiones del cuerpo siguiente describen aquel corte; no son el inventario actual. El estado vigente e1ce75a es V1–V13, 12 entidades y 70 rutas. Consultar [modelo V13](../Erd_actual/modelo-vigente-v13.md), [endpoints actuales](endpoints.md) y [evidencia Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md). Esta actualización documental no repite la auditoría dinámica ni modifica migraciones.
+
 ## 1. Resultado y fuentes
 
 El cotejo estático de las diez Entities con V1–V9 es conforme: **10 tablas,

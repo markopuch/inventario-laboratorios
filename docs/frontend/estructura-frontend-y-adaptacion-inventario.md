@@ -15,7 +15,12 @@ de backend/frontend en GitHub Actions están
 La versión Marko permanece separada. Las diferencias entre la propuesta inicial,
 Jason y los mockups se registran en la
 [auditoría de integración](../sprints_realizados-frontend-Jason/auditoria-integracion.md);
-no se afirma fidelidad visual 1:1 ni implementación de Mantenimientos/Reportes/Configuración.
+no se afirma fidelidad visual 1:1 ni accesibilidad exhaustiva. Jason ya incorpora
+Usuarios administrativos, Mantenimientos y Reportes del backend V13; su adaptación
+aprobó 67 pruebas frontend y el smoke Docker `e1ce75a` pasó 94 comprobaciones HTTP.
+Configuración persistida continúa fuera del alcance funcional. Las pantallas
+presentadas como futuras en el diseño inicial de esta guía son antecedentes;
+el índice de sprints Jason registra qué módulos están implementados hoy.
 
 ## 1. Contexto y alcance
 

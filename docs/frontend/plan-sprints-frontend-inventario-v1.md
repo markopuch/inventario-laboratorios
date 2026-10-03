@@ -12,9 +12,12 @@ plan inicial basado en Tech Store. La implementación activa es
 React Router y Axios y dispone de dashboard. Su
 [índice de sprints](../sprints_realizados-frontend-Jason/README.md) y la
 [evidencia Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-registran el avance real: flujo Docker validado y ambas imágenes publicadas.
+registran el avance real: Jason adaptado a V13, 67 pruebas frontend aprobadas,
+flujo Docker `e1ce75a` validado y ambas imágenes publicadas.
 Los identificadores FE de este plan no equivalen a los FE de Jason; por ejemplo,
-FE-08 aquí propone consolidación y FE-08 de Jason describe Mantenimientos pendiente.
+FE-08 aquí propone consolidación y FE-08 de Jason describe Mantenimientos,
+actualmente integrado. Usuarios administrativos y Reportes también están
+implementados en Jason; Configuración persistida continúa fuera del alcance.
 Las decisiones propuestas abajo no deben interpretarse como el estado actual
 ni como una obligación de reemplazar la arquitectura de Jason.
 

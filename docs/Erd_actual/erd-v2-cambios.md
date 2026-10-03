@@ -1,10 +1,12 @@
 # ERD v2: cambios frente al diseño inicial
 
-Actualización documental del 21 de septiembre de 2026. El modelo vigente se
+**Instantánea histórica V1–V9 (10 entidades, 13 FK).** Este documento y sus SVG conservan el modelo de aquel corte. El estado vigente del 3 de octubre de 2026 es V1–V13, con 12 entidades y 16 FK: [modelo actual](modelo-vigente-v13.md). Las ampliaciones ya están implementadas y comprobadas en [Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md); no se regeneraron estos SVG como diagramas completos V13.
+
+Actualización documental del 21 de septiembre de 2026. El modelo de esta instantánea se
 obtiene de Flyway V1–V9. Los PDF anteriores son propuestas de Sprint 0, anteriores
 a las migraciones; se conservan como historia y no se sobrescriben.
 
-Documentos vigentes: [ERD lógico v2](erd-logico-v2.md) y
+Documentos de la instantánea v2: [ERD lógico v2](erd-logico-v2.md) y
 [ERD físico PostgreSQL v2](erd-fisico-v2.md). Ambos conservan el fuente editable
 en bloques Mermaid. El documento físico incluye una vista general y vistas
 ampliadas para facilitar la lectura de las tablas.

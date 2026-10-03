@@ -1,21 +1,17 @@
 # FE-02 — Dashboard y pantalla inicial
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: dashboard conectado y comprobado en los recorridos de integración y Docker. Contadores e historial usan datos reales; errores e indisponibilidad se distinguen de ceros. La fidelidad visual y accesibilidad exhaustivas continúan pendientes.**
+**Estado vigente: Dashboard conectado a datos actuales de equipos, alcance, movimientos y reportes de mantenimiento.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [auditoría de integración](auditoria-integracion.md) comprobó resúmenes,
-historial y fallo/reintento. El contador de laboratorios consulta
-`GET /api/auth/me/laboratorios` al entrar, también para ADMIN; no confunde la
-lectura global del catálogo con el alcance del usuario.
+`Home.jsx` consulta equipos, movimientos, `/auth/me/laboratorios` y `/reportes/resumen`. Distingue carga, error y ausencia de registros; el fallo de una consulta no fabrica un cero. Total, programados y mantenimientos en proceso provienen del resumen real del servidor. El contador de laboratorios consulta el alcance al entrar. No existe mockup independiente de Dashboard ni certificación exhaustiva de accesibilidad.
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-comprobó login y navegación con las imágenes del entorno habitual, que ahora
-sirve Jason en 3000 y backend en 8080. Actions confirmó el build y publicación
-de Jason con 27/27 pruebas del frontend. Esto no certifica cada combinación de
-datos del dashboard ni agrega un mockup de Dashboard que no fue aportado.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

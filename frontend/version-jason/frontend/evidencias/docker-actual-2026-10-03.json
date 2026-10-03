@@ -1,0 +1,324 @@
+{
+  "titulo": "Paso 2: actualizar Docker local y verificar el flujo completo",
+  "fecha": "2026-10-03",
+  "resultado": "COMPLETADO",
+  "commit": "e1ce75a1abf5058ad83ffafd85357dd0aa4c644b",
+  "actions": {
+    "run": 37158784428,
+    "url": "https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428",
+    "comprobadoEnPasoAnterior": true
+  },
+  "imagenes": {
+    "backend": {
+      "referencia": "ghcr.io/markopuch/inventario-laboratorios-backend:sha-e1ce75a",
+      "digest": "sha256:095be10c5cda0ca715f4f06d36e431cdb9e5dd7ee8bf805e6bfab5aa890a668b"
+    },
+    "frontend": {
+      "referencia": "ghcr.io/markopuch/inventario-laboratorios-frontend-jason:sha-e1ce75a",
+      "digest": "sha256:54baf163b1f499f03c0946ba60f9539e1a4eb6d7a9600c2674f80d86716b2f44"
+    }
+  },
+  "despliegue": {
+    "comando": "docker compose up -d --no-build --no-deps backend frontend",
+    "directorio": "backend/inventario",
+    "tagsLocalesActualizados": [
+      "inventario-backend:local",
+      "inventario-frontend-jason:local"
+    ],
+    "contenedores": [
+      {
+        "nombre": "inventario-docker-db-1",
+        "imagen": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+        "estado": "running",
+        "salud": "healthy"
+      },
+      {
+        "nombre": "inventario-docker-backend-1",
+        "imagen": "sha256:095be10c5cda0ca715f4f06d36e431cdb9e5dd7ee8bf805e6bfab5aa890a668b",
+        "estado": "running",
+        "salud": "healthy"
+      },
+      {
+        "nombre": "inventario-docker-frontend-1",
+        "imagen": "sha256:54baf163b1f499f03c0946ba60f9539e1a4eb6d7a9600c2674f80d86716b2f44",
+        "estado": "running",
+        "salud": "healthy"
+      }
+    ],
+    "lecturasHabituales": [
+      {
+        "url": "http://localhost:8080/actuator/health",
+        "estado": 200,
+        "resultado": "UP"
+      },
+      {
+        "url": "http://localhost:3000/health",
+        "estado": 200,
+        "resultado": "OK"
+      },
+      {
+        "url": "http://localhost:3000/api/auth/me",
+        "estado": 401,
+        "resultado": "Protegido sin JWT"
+      },
+      {
+        "url": "http://localhost:3000/api/admin/usuarios",
+        "estado": 401,
+        "resultado": "Protegido sin JWT"
+      },
+      {
+        "url": "http://localhost:3000/api/mantenimientos",
+        "estado": 401,
+        "resultado": "Protegido sin JWT"
+      },
+      {
+        "url": "http://localhost:3000/reportes",
+        "estado": 200,
+        "resultado": "Ruta SPA disponible"
+      }
+    ]
+  },
+  "baseHabitual": {
+    "nombre": "inventario_laboratorios",
+    "contenedorConservado": true,
+    "volumenConservado": true,
+    "filasConservadas": true,
+    "checksumsV1V9Conservados": true,
+    "conteos": {
+      "usuario": {
+        "antes": 3,
+        "despues": 3,
+        "contenidoIgual": true
+      },
+      "usuario_laboratorio": {
+        "antes": 4,
+        "despues": 4,
+        "contenidoIgual": true
+      },
+      "categoria": {
+        "antes": 2,
+        "despues": 2,
+        "contenidoIgual": true
+      },
+      "subcategoria": {
+        "antes": 4,
+        "despues": 4,
+        "contenidoIgual": true
+      },
+      "sede": {
+        "antes": 1,
+        "despues": 1,
+        "contenidoIgual": true
+      },
+      "area": {
+        "antes": 2,
+        "despues": 2,
+        "contenidoIgual": true
+      },
+      "laboratorio": {
+        "antes": 2,
+        "despues": 2,
+        "contenidoIgual": true
+      },
+      "equipo": {
+        "antes": 0,
+        "despues": 0,
+        "contenidoIgual": true
+      },
+      "movimiento_equipo": {
+        "antes": 0,
+        "despues": 0,
+        "contenidoIgual": true
+      }
+    },
+    "flyway": [
+      {
+        "script": "V1__crear_organizacion_y_catalogos.sql",
+        "success": true,
+        "version": "1",
+        "checksum": -1224790997
+      },
+      {
+        "script": "V2__crear_usuarios_y_seguridad.sql",
+        "success": true,
+        "version": "2",
+        "checksum": 930089448
+      },
+      {
+        "script": "V3__crear_equipos_y_movimientos.sql",
+        "success": true,
+        "version": "3",
+        "checksum": -889347868
+      },
+      {
+        "script": "V4__insertar_datos_iniciales.sql",
+        "success": true,
+        "version": "4",
+        "checksum": -30934170
+      },
+      {
+        "script": "V5__categoria_nombre_unico_sin_mayusculas.sql",
+        "success": true,
+        "version": "5",
+        "checksum": 1571040130
+      },
+      {
+        "script": "V6__agregar_username_usuario.sql",
+        "success": true,
+        "version": "6",
+        "checksum": 1971342152
+      },
+      {
+        "script": "V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql",
+        "success": true,
+        "version": "7",
+        "checksum": 932004306
+      },
+      {
+        "script": "V8__area_nombre_unico_por_sede_sin_mayusculas.sql",
+        "success": true,
+        "version": "8",
+        "checksum": 2043234542
+      },
+      {
+        "script": "V9__laboratorio_codigo_unico_sin_mayusculas.sql",
+        "success": true,
+        "version": "9",
+        "checksum": -204147188
+      },
+      {
+        "script": "V10__estado_operativo_laboratorio.sql",
+        "success": true,
+        "version": "10",
+        "checksum": 642141636
+      },
+      {
+        "script": "V11__administracion_usuarios.sql",
+        "success": true,
+        "version": "11",
+        "checksum": -697692969
+      },
+      {
+        "script": "V12__crear_mantenimientos.sql",
+        "success": true,
+        "version": "12",
+        "checksum": 1666773476
+      },
+      {
+        "script": "V13__crear_auditoria.sql",
+        "success": true,
+        "version": "13",
+        "checksum": -182052760
+      }
+    ],
+    "tablasNuevas": {
+      "auditoria": 0,
+      "mantenimiento": 0,
+      "laboratoriosOperativos": 2,
+      "laboratoriosEstadoInvalido": 0
+    }
+  },
+  "backup": {
+    "formato": "pg_dump -Fc",
+    "bytes": 42156,
+    "almacenamiento": "Copia privada fuera del repositorio",
+    "creadoAntesActualizar": true
+  },
+  "verificacion": {
+    "entorno": "PostgreSQL, backend y frontend aislados con las mismas imágenes publicadas",
+    "baseTemporal": "inventario_verificacion_docker_actual_5149b3ad",
+    "mutacionesEnBaseHabitualPorAPI": false,
+    "smokeHttp": {
+      "comprobaciones": 94,
+      "aprobadas": 94,
+      "fallidas": 0,
+      "nota": "Son comprobaciones HTTP mediante Nginx; incluyen rechazos 400/401/403/409 esperados. No representan endpoints distintos ni una nueva ejecución JUnit."
+    },
+    "asercionesFuncionales": 30,
+    "flujos": [
+      "Login ADMIN / GESTOR / LECTOR y autenticación inválida",
+      "Alcance y denegaciones por rol/laboratorio",
+      "Catálogos: creación, inactivación, reactivación y consulta administrativa",
+      "Laboratorio: estado operativo independiente de activo",
+      "Usuarios: creación, edición, rol, estado, contraseña y asignaciones; protección del último ADMIN",
+      "Equipo: creación y edición en interfaz; código interno inmutable",
+      "Mantenimiento: PROGRAMADO → EN_PROCESO → COMPLETADO; bloqueo de edición/baja/traslado mientras está en proceso",
+      "Mantenimiento: cancelación y rechazo de transición inválida",
+      "Traslado mediante interfaz, actor resuelto por servidor y origen/destino distintos",
+      "Baja lógica por API, rechazo de posteriores mutaciones e historial conservado",
+      "Reportes filtrados por organización, fechas, estado y tipo; alcance GESTOR/LECTOR",
+      "Auditoría administrativa y denegación a GESTOR",
+      "Nginx: /api y recarga de ruta SPA"
+    ],
+    "interfaz": {
+      "crearEquipo": true,
+      "editarEquipo": true,
+      "mantenimientoCompleto": true,
+      "traslado": true,
+      "bajaPorApi": true,
+      "equipoBajaSinBotonesMutacion": true,
+      "reportesGestor": {
+        "equipos": 1,
+        "movimientos": 1,
+        "mantenimientos": 2
+      },
+      "historialLectorTrasTrasladoYBaja": true,
+      "ultimaSesionConsola": {
+        "errores": 0,
+        "advertencias": 0
+      }
+    },
+    "consistenciaSql": {
+      "fixtures": {
+        "equipos": 1,
+        "usuarios": 4,
+        "auditoria": 36,
+        "movimientos": 1,
+        "mantenimientos": 2
+      },
+      "movimientosHuerfanos": 0,
+      "mantenimientosHuerfanos": 0,
+      "trasladoOrigenIgualDestino": 0,
+      "equipoVigenteLaboratorioInactivo": 0,
+      "equipoVigenteSubcategoriaInactiva": 0,
+      "asignacionActivaLaboratorioInactivo": 0,
+      "mantenimientoEnProcesoEquipoIncoherente": 0
+    },
+    "flywayTemporal": {
+      "total": 13,
+      "todasSuccess": true,
+      "checksumsCoincidenHabitual": true
+    },
+    "limpieza": {
+      "conexionesAntesEliminar": 0,
+      "baseTemporalAusente": true,
+      "contenedoresEliminados": true,
+      "volumenEliminado": true,
+      "redEliminada": true,
+      "habitualSaludableTrasLimpieza": true,
+      "puertosTemporalesLibres": [
+        {
+          "puerto": 50686,
+          "libre": true
+        },
+        {
+          "puerto": 50687,
+          "libre": true
+        }
+      ]
+    }
+  },
+  "alcanceYLimites": [
+    "No se modificaron código, migraciones ni configuración Compose en este paso.",
+    "Las escrituras del smoke se realizaron únicamente en la base temporal; el despliegue habitual aplicó las migraciones existentes V10–V13.",
+    "El login y el flujo con escritura se probaron en el entorno aislado. En el habitual se verificaron salud, protección HTTP, Flyway y preservación de registros.",
+    "La confirmación nativa de baja bloqueó la automatización del navegador; se canceló y la baja se ejecutó/verificó mediante HTTP.",
+    "Se corrigieron dos errores del montaje/harness temporal: clave JWT en Base64 estándar y comprobación del campo actor del movimiento. No requirieron cambios en la aplicación.",
+    "No se volvieron a ejecutar las suites JUnit/npm en este paso; se usaron las imágenes ya publicadas por Actions.",
+    "La actualización general de documentos Markdown corresponde al siguiente paso."
+  ],
+  "capturas": [
+    "docker-actual-reportes-2026-10-03.png",
+    "docker-actual-historial-2026-10-03.png"
+  ]
+}

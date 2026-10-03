@@ -1,5 +1,7 @@
 # Códigos HTTP del backend entregado
 
+**Revisión vigente:** 3 de octubre de 2026, commit e1ce75a y Flyway V13. [Evidencia Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md).
+
 Los códigos indican el resultado de la solicitud. Los contratos completos y
 permisos están en [endpoints](endpoints.md). Las respuestas de negocio y seguridad
 usan DTO; una excepción no devuelve Entity, SQL, contraseña, hash ni stack trace.
@@ -7,8 +9,8 @@ usan DTO; una excepción no devuelve Entity, SQL, contraseña, hash ni stack tra
 | Código | Significado | Ejemplo real |
 |---|---|---|
 | 200 | Consulta o acción completada | Login, GET Equipo, PUT Equipo, reemplazo de asignaciones, POST traslado |
-| 201 | Recurso creado | POST Categoria/Subcategoria/Sede/Area/Laboratorio/Equipo; devuelve Location |
-| 204 | Baja lógica completada | DELETE de catálogo o Equipo; cuerpo vacío |
+| 201 | Recurso creado | POST Categoria/Subcategoria/Sede/Area/Laboratorio/Equipo/Usuario/Mantenimiento; devuelve Location |
+| 204 | Acción completada sin cuerpo | DELETE lógico de catálogo/Equipo y PUT administrativo de contraseña |
 | 400 | Solicitud inválida | JSON mal formado, motivo vacío, ID no entero, campos prohibidos en PUT Equipo o traslado |
 | 401 | Falta autenticación válida | Sin Bearer, JWT inválido/expirado, credenciales de login incorrectas, usuario o rol inactivo |
 | 403 | Operación o alcance no autorizado | LECTOR hace POST Equipo; GESTOR intenta traslado sin alcance en ambos extremos |
@@ -74,3 +76,22 @@ de respuesta. Las pruebas existentes verifican validación, autenticación,
 autorización, conflictos, errores internos seguros y rollback. El cierre medido
 está en [verificación final](verificacion-final.md). No se agrega un endpoint
 que provoque errores 500 para demostrar el taller.
+
+
+## Contratos de las extensiones vigentes
+
+- PATCH de actividad de catálogo/Usuario, PATCH de rol y PATCH de estado de
+  Mantenimiento responden 200 con su DTO actualizado.
+- PUT de contraseña administrativa responde 204, sin devolver el valor nuevo.
+- Desactivar/degradar al último ADMIN activo produce 409.
+- Editar, dar de baja o trasladar Equipo con mantenimiento EN_PROCESO produce 409.
+- Un ciclo de mantenimiento inválido o reabrir un estado final produce 409.
+- Un rango invertido de reportes/filtros produce 400; GESTOR/LECTOR solicitando
+  auditoría o usuarios administrativos produce 403.
+- GET administrativo puede incluir catálogo inactivo o Usuario inactivo.
+  Su inactividad no significa por sí sola 404 en ese contrato; GET normal
+  de catálogo conserva el filtrado por activo.
+
+Los Requests vigentes y el alcance están en [endpoints](endpoints.md).
+No se deben interpretar los ejemplos históricos de Sprint 7 como pruebas
+nuevas del despliegue actual.

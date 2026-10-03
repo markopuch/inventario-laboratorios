@@ -1,5 +1,14 @@
 # Ampliación del backend — 3 de octubre de 2026
 
+**Estado de integración posterior:** esta ampliación ya está conectada al frontend
+Jason y desplegada en Docker local con las imágenes `sha-e1ce75a`.
+Flyway V1–V13 tiene `success=true`; los checksums V1–V9 y los registros habituales
+se conservaron. El [reporte vigente de Docker y Actions](../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+documenta ambas publicaciones, 94 comprobaciones HTTP, 30 aserciones funcionales,
+siete controles SQL y la eliminación del entorno temporal. Esas cifras no son
+una nueva ejecución de la suite JUnit. La actualización de documentación no
+modificó código, SQL ni configuración del backend.
+
 Implementación de las características solicitadas para acompañar al frontend.
 Los cambios están dentro de `backend/inventario`; no se edita el frontend.
 Se conservan Spring Security/JWT, DTO → Mapper → Domain → Service → Repository

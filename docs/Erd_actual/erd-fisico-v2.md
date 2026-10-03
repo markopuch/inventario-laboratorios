@@ -1,7 +1,9 @@
 # ERD físico PostgreSQL v2
 
+**Instantánea histórica V1–V9 (10 entidades, 13 FK).** Este documento y sus SVG conservan el modelo de aquel corte. El estado vigente del 3 de octubre de 2026 es V1–V13, con 12 entidades y 16 FK: [modelo actual](modelo-vigente-v13.md). Las ampliaciones ya están implementadas y comprobadas en [Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md); no se regeneraron estos SVG como diagramas completos V13.
+
 Esquema de dominio **derivado estáticamente de Flyway V1–V9**, contrastado con las
-diez Entities JPA actuales tras Sprint 6. La revisión del ERD es estática: describe el
+diez Entities JPA del corte histórico tras Sprint 6. La revisión del ERD es estática: describe el
 DDL resultante de esas migraciones, sin afirmar una inspección del catálogo de una
 instancia local. No modifica código, migraciones ni datos.
 

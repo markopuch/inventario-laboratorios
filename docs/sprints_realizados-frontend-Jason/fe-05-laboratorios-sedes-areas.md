@@ -1,20 +1,17 @@
 # FE-05 — Laboratorios, sedes y áreas
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: organización, CRUD HTTP y creación/edición de laboratorio por UI comprobados en la auditoría. La jerarquía Sede → Área → Laboratorio está disponible. La UI respeta `activo` real; no ofrece Mantenimiento como estado de laboratorio. Docker y publicación confirmados.**
+**Estado vigente: Jerarquía Sede → Área → Laboratorio integrada, con activos/inactivos administrativos y estado operativo real de Laboratorio.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [auditoría de integración](auditoria-integracion.md) comprobó relación con
-sede/área, árbol expandible y CRUD de organización. Las respuestas contienen
-`activo`; los DTO de alta/edición no permiten un estado libre. La opción visual
-En mantenimiento entregada originalmente no tenía contrato y se retiró.
+ADMIN consulta `/admin/sedes`, `/admin/areas` y `/admin/laboratorios` y utiliza PATCH de actividad. Desde V10, Laboratorio tiene `estadoOperativo` OPERATIVO/MANTENIMIENTO mediante su contrato de edición; es independiente de `activo`. Se verificó MANTENIMIENTO → OPERATIVO manteniendo `activo=true`. No debe confundirse el estado de ubicación con el ciclo de Mantenimiento de Equipo. Padres/dependencias vigentes pueden impedir inactivaciones con 409. Continúan las diferencias visuales de ficha, búsqueda del árbol y filtros combinados.
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-comprobó el traslado entre laboratorios de fixtures 201 y 206, alcance y filtros
-con frontend Nginx. Flyway conservó V1–V9 y los conteos habituales no cambiaron.
-Esto no agrega búsqueda del árbol, ficha detallada ni filtros combinados del mockup.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

@@ -1,10 +1,49 @@
 # Auditoría de integración — Frontend Jason
 
-Fecha: 3 de octubre de 2026.
+Actualización: **3 de octubre de 2026**, después de desplegar el commit e1ce75a.
 
-**Estado: integración local operativa y flujo completo Docker comprobado. La auditoría inicial conserva build, 27/27 pruebas y 42 comprobaciones HTTP; la validación posterior Docker registra 33/33 HTTP adicionales y 24/24 aserciones de flujo y consistencia. Actions publicó ambas imágenes con trabajos en verde. FE-08 a FE-10 continúan pendientes; no se declara fidelidad visual 1:1 ni cierre de los once módulos.**
+**Estado vigente: integración con el backend V1–V13 operativa y Docker local actualizado. Usuarios administrativos, Mantenimientos y Reportes ya están integrados; Configuración conserva su placeholder. No se declara fidelidad visual 1:1 ni accesibilidad exhaustiva.**
 
-## Actualización posterior: Docker y GitHub Actions
+## Estado vigente y fuente de evidencia
+
+La [adaptación al backend ampliado](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) registra 67/67 pruebas frontend y build aprobado con 1677 módulos. Conservó las 27 anteriores y añadió 40; no es una nueva ejecución durante el despliegue ni esta edición documental.
+
+El [informe Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran ambas imágenes sha-e1ce75a, Actions [37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428) con ambos trabajos exitosos y tres contenedores habituales saludables. Nginx en 3000; backend en 8080.
+
+El habitual quedó con V1–V13 exitosas, checksums V1–V9 conservados y nueve tablas anteriores intactas. Había y siguen existiendo cuatro asignaciones. Contenedor/volumen PostgreSQL se conservaron y se creó respaldo privado previo. Login y escrituras se probaron en otra base con las mismas imágenes; habitual: salud, protección HTTP, Flyway y preservación.
+
+## Matriz vigente FE-01 a FE-11
+
+| Sprint | Estado actual comprobado | Límites |
+|---|---|---|
+| [FE-01](fe-01-login-sesion.md) | Tres roles, JWT en memoria, alcance y 401; refresco de perfil ante autocambios. | Sin Recordarme/recuperación; recarga vuelve a Login. |
+| [FE-02](fe-02-dashboard.md) | Equipos, alcance, movimientos y mantenimiento con respuestas reales. | Sin mockup independiente ni certificación de todos los datos. |
+| [FE-03](fe-03-equipos.md) | Alta/edición/traslado por UI; baja por HTTP; BAJA sin acciones para GESTOR. | Confirmación nativa impidió automatizar clic final de baja; tarjetas/modal difieren del mockup. |
+| [FE-04](fe-04-categorias-subcategorias.md) | Catálogos administrativos, actividad/reativación; conflictos de dependencias. | Sin maestro/detalle idéntico al mockup. |
+| [FE-05](fe-05-laboratorios-sedes-areas.md) | Jerarquía, actividad y estadoOperativo real desde V10. | Estado de ubicación distinto de Mantenimiento de Equipo; diferencias visuales. |
+| [FE-06](fe-06-usuarios-roles-asignacion.md) | Directorio, creación, edición, rol, actividad, contraseña y asignaciones ADMIN. | Password por HTTP, sin automatizar envío del diálogo de navegador. |
+| [FE-07](fe-07-movimientos.md) | Actor/origen del servidor e historia LECTOR por origen tras BAJA. | Sin estados de proceso ni filtros de fechas/tipo/exportación en esa pantalla. |
+| [FE-08](fe-08-mantenimientos.md) | Programar/editar/iniciar/completar/cancelar, filtros/alcance y bloqueo de Equipo. | Sin calendario. |
+| [FE-09](fe-09-reportes.md) | Cinco agregados, filtros y errores/reintento; totales contrastados. | Sin exportación ni gráficos completos del mockup. |
+| [FE-10](fe-10-configuracion.md) | Ruta/menú ADMIN Próximamente. | Preferencias y seguridad configurable futuras. |
+| [FE-11](fe-11-arquitectura-frontend.md) | React/Vite/Axios, sesión, rutas por rol, Nginx/proxy/fallback SPA. | Fidelidad visual y accesibilidad exhaustivas no certificadas. |
+
+## Smoke de las imágenes actuales
+
+- **94/94 HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**. Incluye 400/401/403/409 esperados; no son endpoints diferentes ni pruebas JUnit nuevas.
+- UI: crear/editar Equipo, ciclo completo de mantenimiento y traslado. GESTOR vio BAJA sin mutaciones y Reportes con 1 Equipo/1 Movimiento/2 Mantenimientos; LECTOR vio historia después del traslado/baja.
+- HTTP: catálogos/usuarios ampliados, último ADMIN, contraseña, transiciones, baja, reportes filtrados, auditoría administrativa y denegaciones. El frontend no añade pantalla de Auditoría.
+- Base inventario_verificacion_docker_actual_5149b3ad; Flyway 13/13. Fixtures finales: 4 usuarios, 1 Equipo BAJA, 1 Movimiento, 2 Mantenimientos y 36 registros de auditoría. Base/contenedores/volumen/red eliminados; cero conexiones antes de borrar y puertos temporales libres.
+- Última sesión: cero errores/advertencias. [Reportes Docker](../../frontend/version-jason/frontend/evidencias/docker-actual-reportes-2026-10-03.png) e [historial LECTOR](../../frontend/version-jason/frontend/evidencias/docker-actual-historial-2026-10-03.png).
+- Límite: confirmación nativa de baja bloqueó automatización; se canceló y se verificó por HTTP. Montaje temporal corrigió Base64 del JWT y harness el nombre actor, sin cambios de aplicación.
+
+GHCR y Docker local no acreditan nube. No se repitieron npm/Gradle durante este smoke ni la actualización documental. Las 27/42/33 de las secciones siguientes son antecedentes anteriores a V10–V13, no estado vigente.
+
+## Registro de la auditoría inicial (histórico)
+
+Lo siguiente conserva hallazgos y límites de la entrega original y primera verificación V9. Contratos pendientes/placeholders y métricas antiguas corresponden a esa fase; sus conclusiones actuales se sustituyen por la matriz vigente anterior.
+
+## Antecedente: primera verificación Docker V9 y Actions 9956939
 
 La [evidencia consolidada del 3 de octubre de 2026](../despliegue/verificacion-docker-actions-2026-10-03.md)
 documenta dos comprobaciones posteriores a la auditoría Vite que se conserva abajo:
@@ -61,7 +100,7 @@ La severidad **P1** corresponde al riesgo de operar sobre un usuario distinto;
 de presentación o documentación sin ese impacto inmediato. El backend conserva la
 responsabilidad de autorizar cada operación.
 
-## Matriz FE-01 a FE-11
+## Matriz inicial FE-01 a FE-11 (histórica, antes de V10–V13)
 
 | Sprint | Estado de integración después de la revisión | Diferencias o límites |
 |---|---|---|
@@ -132,7 +171,7 @@ describe la entrega original: la corrección ya incorpora casillas de asignacion
 ID de responsable en equipos y columna de tipo en movimientos, y retira controles
 sin función. Estos ajustes no completan las diferencias estructurales de los mockups.
 
-## Contratos y trabajo pendiente del backend
+## Contratos pendientes en la auditoría inicial (histórico)
 
 La revisión utiliza las operaciones existentes. No añade contratos de gestión
 completa de usuarios, mantenimiento programado, exportación de reportes ni preferencias
@@ -211,8 +250,8 @@ Node 24.16.0; npm 11.13.0; Docker 29.8.0; React/React DOM 18.3.1; Vite 6.4.3; pl
 
 Las capturas de movimientos contienen fixtures eliminados al cerrar las pruebas. El dashboard habitual muestra su inventario real vacío. Ningún archivo de evidencia incluye tokens, contraseñas o hashes.
 
-## Límites y siguientes decisiones
+## Límites de la auditoría inicial y evolución posterior
 
-La integración local de las funcionalidades existentes quedó operativa. FE-08, FE-09 y FE-10 siguen siendo placeholders; no se dan por terminados. Completar la fidelidad visual requerirá acordar qué elementos del mockup caben en el backend actual. No se incorporaron funciones de mantenimiento, reportes, usuarios completos ni configuración para simular ese cierre.
+En la auditoría inicial FE-08, FE-09 y FE-10 eran placeholders y Usuarios solo tenía asignaciones. Después la adaptación V10–V13 incorporó usuarios administrativos, mantenimiento y reportes reales, según el estado vigente del inicio. Configuración permanece futura. La ampliación no certifica fidelidad visual ni accesibilidad exhaustivas.
 
 Queda como mejora de interfaz revisar exhaustivamente navegación por teclado, foco/Escape y restauración de foco de modales, lectores de pantalla y otros tamaños de dispositivo. Los nombres accesibles básicos y el menú móvil se mejoraron, pero esta revisión no certifica accesibilidad integral.

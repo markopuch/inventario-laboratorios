@@ -1,5 +1,7 @@
 # ERD lógico v2 — Inventario de Laboratorios
 
+**Instantánea histórica V1–V9 (10 entidades, 13 FK).** Este documento y sus SVG conservan el modelo de aquel corte. El estado vigente del 3 de octubre de 2026 es V1–V13, con 12 entidades y 16 FK: [modelo actual](modelo-vigente-v13.md). Las ampliaciones ya están implementadas y comprobadas en [Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md); no se regeneraron estos SVG como diagramas completos V13.
+
 Modelo lógico del dominio definido por **Flyway V1–V9**, revisado el
 21 de septiembre de 2026. Representa diez entidades y trece relaciones reales;
 `flyway_schema_history` es infraestructura de migraciones y queda fuera del

@@ -1,26 +1,17 @@
 # FE-01 — Diseño común, login y sesión
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-Nota del 3 de octubre de 2026: este documento conserva el registro de la entrega.
-La [auditoría de integración](auditoria-integracion.md) documenta los defectos
-detectados posteriormente y las correcciones comprobadas.
+**Estado vigente: Login y sesión integrados; tres roles comprobados con las imágenes Docker actuales. JWT y usuario permanecen en memoria.**
 
-**Estado actualizado: login de ADMIN/GESTOR/LECTOR, logout, recarga a Login y reingreso comprobados en Docker. Sesión únicamente en memoria, sin Recordarme ni recuperación. Permanecen los límites de accesibilidad y cobertura exhaustiva descritos en la auditoría.**
+## Implementación y verificación actuales
 
-## Evidencia vigente al 3 de octubre de 2026
+El login usa `{ userName, password }`, carga el alcance autorizado y agrega Bearer a las solicitudes. Recarga y logout requieren nuevo login; un 401 de la sesión vigente la limpia. La adaptación añadió refresco de perfil/alcance ante autocambios administrativos permitidos. Recordarme y recuperación no están implementados. Las 14 pruebas actuales de `api.test.js` forman parte de las 67 del conjunto, no se añaden otra vez a su total.
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-comprobó el recorrido con frontend Nginx y backend aislados. Se aprobaron 33/33
-HTTP adicionales y 24/24 aserciones de flujo y consistencia del conjunto; no son
-24 pruebas de este sprint. Actions confirmó 27/27 pruebas automatizadas de Jason
-antes de publicar, incluidas las 10 de lógica de sesión.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
 
-El cliente usa `/api`, conserva JWT/usuario en memoria y limpia la sesión vigente
-ante 401. Recargar exige iniciar sesión nuevamente; no restaura JWT desde
-`localStorage`. Los controles decorativos de acceso de prueba, Recordarme y
-recuperación se retiraron. El login sigue usando `{ userName, password }` de una
-cuenta del backend; ninguna contraseña se documenta o precarga.
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

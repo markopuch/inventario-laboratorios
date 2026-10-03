@@ -1,5 +1,13 @@
 # 1. Resumen Sprint 7
 
+**Alcance histórico:** este reporte conserva el cierre de Sprint 7 con V1–V9,
+10 entidades y 233 pruebas. La ampliación posterior del backend y su integración
+con Jason están desplegadas con V1–V13, 12 entidades y 70 operaciones HTTP.
+Consulta el [estado vigente de Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
+y la [ampliación del backend](../../backend/inventario/ACTUALIZACION-BACKEND.md).
+Los resultados de las secciones siguientes no se renumeran ni se presentan
+como una nueva ejecución sobre V13.
+
 **BACKEND CERRADO PARA ENTREGA.** Se auditó y consolidó la entrega existente,
 sin añadir funcionalidades de inventario. Se corrigió documentación, se retiraron
 once marcadores de carpetas ya pobladas y se prepararon documentación final,
@@ -213,7 +221,7 @@ correspondencia de rutas, variables/cuerpos, sintaxis de 129 scripts y simulaci�
 de captura/escape de tres login comprobados. Contraseñas, tokens e IDs vacíos.
 
 Se entregan ejemplos de login, CRUD, alcance, filtros, traslado e historial.
-El [orden guiado](../backend-final/endpoints.md#uso-guiado-de-postman) evita ejecutar
+El [orden guiado](../backend-final/endpoints.md#uso-guiado-de-postman--colección-histórica-sprint-7) evita ejecutar
 bajas antes de sus dependientes. No se afirma haber usado la aplicación gráfica
 Postman ni ejecutado su Runner completo: el smoke real fue HTTP sobre el JAR.
 

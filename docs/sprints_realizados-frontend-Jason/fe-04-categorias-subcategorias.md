@@ -1,20 +1,17 @@
 # FE-04 — Categorías y subcategorías
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: CRUD de categorías/subcategorías y conflicto de baja de padre con hijas comprobados en la auditoría de integración. La UI refleja `activo` real y respeta los DTO. Docker y publicación de Jason confirmados; se conservan las diferencias con el mockup.**
+**Estado vigente: Catálogos administrativos con consulta de activos/inactivos, cambio de estado real y reactivación integrados.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [auditoría de integración](auditoria-integracion.md) registra creación/edición
-de categoría y subcategoría relacionada por UI, y CRUD/conflictos por HTTP.
-El selector libre de estado entregado originalmente era inoperante y se retiró;
-las respuestas usan `activo`, y la baja usa DELETE según el contrato real.
+ADMIN utiliza `/admin/categorias` y `/admin/subcategorias`, con filtro `activo`, y PATCH `/{id}/estado` para cambiar actividad. Los otros roles leen el catálogo activo por rutas normales. La adaptación probó formularios de desactivación/reactivación mediante UI; el smoke Docker actual volvió a comprobar creación, inactivación, consulta y reactivación por HTTP. Una categoría con hijas activas no se desactiva: devuelve 409. `activo` es persistido por API; no es un badge fijo. La vista sigue en pestañas, sin afirmar maestro/detalle idéntico al mockup.
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-usó catálogos de fixtures para el flujo de equipos, confirmó el entorno completo
-y la publicación de Jason tras 27/27 pruebas. No declara una repetición por UI
-de cada baja de catálogo ni completa la vista maestro/detalle del mockup.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

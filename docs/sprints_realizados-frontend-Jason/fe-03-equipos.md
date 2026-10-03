@@ -1,22 +1,17 @@
 # FE-03 — Equipos e inventario
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: alta, consulta, edición, filtros, traslado y baja lógica comprobados mediante UI y HTTP en Docker. Se mantiene la autorización del backend y el alcance por laboratorio; quedan diferencias visuales y revisión exhaustiva de accesibilidad.**
+**Estado vigente: CRUD, filtros, traslado y baja lógica integrados. En el smoke Docker actual alta, edición y traslado se hicieron mediante interfaz; la baja se verificó mediante HTTP.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-ejecutó crear/leer/editar un equipo conservando código y laboratorio, traslado
-201 → 206, consulta de historial y baja sin acciones disponibles. Comprobó filtros,
-roles y alcance: LECTOR recibió 403 para el equipo fuera de su laboratorio actual.
-Se usó una base temporal eliminada; no se alteraron equipos del inventario habitual.
+Se comprobó código interno inmutable, traslado L201 → L206, historia conservada y Equipo BAJA sin botones de mutación en la interfaz GESTOR. LECTOR recibió 403 al consultar el equipo fuera de alcance. Durante mantenimiento EN_PROCESO, edición/baja/traslado devolvieron 409. La confirmación nativa de baja bloqueó la automatización del navegador; se canceló y la operación se realizó por API. Esto no acredita el clic final de baja por UI en esta ejecución. Jason conserva tarjetas/modal; tabla/página, adjuntos, paginación y exportación del mockup no se declaran implementados.
 
-La ejecución aprobó 33/33 HTTP adicionales y 24/24 aserciones del recorrido completo,
-sin presentarlas como una nueva suite de Equipos. Actions aprobó las 27 pruebas
-automatizadas de Jason antes de publicar. La comparación visual conserva una
-diferencia real: Jason usa tarjetas/modal mientras el mockup propone tabla/página;
-faltan ficha completa, adjuntos, paginación y exportación.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

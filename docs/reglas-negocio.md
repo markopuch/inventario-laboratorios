@@ -1,8 +1,8 @@
 # Reglas de negocio - Sistema de Inventario de Laboratorios
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
-**Versión:** 1.0  
-**Estado:** Reglas del backend cerrado; auditoría documental de Sprint 7
+**Versión documental:** estado vigente V13, 3 de octubre de 2026
+**Estado:** RN-01–45 conservadas y contrastadas con el código del commit `e1ce75a`. Incluye precisiones de las extensiones posteriores al cierre histórico de Sprint 7.
 
 **Fuente de verdad:** migraciones Flyway y código del backend
 
@@ -24,17 +24,13 @@ Sprint 6 implementa MovimientoEquipo, traslado transaccional e historial
 inmutable desde la API.
 Los catálogos Categoría, Subcategoría, Sede, Área
 y Laboratorio siguen siendo globales: los tres roles consultan y solo ADMIN
-escribe. JWT y usuarios con rol están implementados; no hay administración
-completa de usuarios.
+escribe. También están implementados usuarios administrativos, consulta de inactivos y reactivación de catálogos, mantenimiento, reportes y auditoría. La [evidencia vigente](despliegue/verificacion-docker-actions-2026-10-03.md) registra Flyway V1–V13 y el flujo Docker; el [Sprint 7](sprints_realizados-backend/sprint-7.md) conserva su cierre V9/233.
 
 ## 2. Reglas de identidad, usuarios y seguridad
 
 ### RN-01. Correo único
 
-El correo de Usuario es obligatorio y único por `uq_usuario_email` de V2,
-con la comparación sensible a mayúsculas existente. La unicidad está implementada
-en PostgreSQL; no implica que exista un endpoint de registro o administración
-completa de usuarios.
+El correo de Usuario es obligatorio y válido en CreateUsuarioRequest/UpdateUsuarioRequest. V2 conserva su UNIQUE original y V11 añade `uq_usuario_email_ignore_case` sobre UPPER(email), incluyendo usuarios inactivos. AdminUsuarioService normaliza correo con trim/minúsculas y comprueba duplicados. Hay alta administrativa exclusiva de ADMIN; no registro público.
 
 ### RN-02. Contraseña protegida
 
@@ -49,8 +45,7 @@ Solo los usuarios activos pueden autenticarse y utilizar los endpoints protegido
 Todo Usuario referencia exactamente un Rol mediante FK obligatoria. Para
 autenticarse y operar, Usuario y Rol deben estar activos. Los roles del contrato
 actual son `ADMIN`, `GESTOR` y `LECTOR`; V4 los inicializa, pero no existe un CHECK
-SQL que cierre el catálogo a esos tres nombres. Crear/cambiar roles por API queda
-fuera del backend cerrado.
+SQL que cierre el catálogo a esos tres nombres. ADMIN ya puede asignar/cambiar uno de esos roles mediante PATCH de Usuario; crear/editar el catálogo Rol por API continúa fuera del alcance. No puede desactivar ni degradar al último ADMIN activo.
 
 ### RN-05. Asignación de laboratorios
 
@@ -171,8 +166,7 @@ editar datos técnicos y trasladar siguen siendo operaciones distintas.
 Un equipo no puede trasladarse al mismo laboratorio en el que ya se encuentra.
 La comparación se hace contra el Equipo bloqueado: si coincide, devuelve 409
 sin crear un movimiento ni modificar el equipo. El destino debe existir (404)
-y estar activo (409), también para ADMIN. Solo el estado BAJA impide trasladar;
-OPERATIVO, MANTENIMIENTO e INOPERATIVO están permitidos.
+y estar activo (409), también para ADMIN. BAJA impide trasladar. Además, un mantenimiento EN_PROCESO devuelve 409 aunque el Equipo esté en estado MANTENIMIENTO. Sin ese proceso activo, OPERATIVO, MANTENIMIENTO e INOPERATIVO permiten traslado.
 
 ### RN-22. Autorización sobre origen y destino
 
@@ -214,10 +208,8 @@ traslado; no existe un POST genérico de Movimiento.
 La API valida los campos obligatorios, tamaños, tipos, relaciones y valores del
 dominio definidos por cada Request. Los módulos con `@Positive` rechazan IDs no
 positivos con 400; Categoría conserva su contrato histórico de 404 para un ID
-entero inexistente, incluso no positivo. La validación de formato de correo
-**NO APLICA** a los contratos HTTP actuales: no hay Request de alta/edición de
-Usuario ni entrada de email. Ese requisito corresponderá a la futura
-administración de usuarios.
+entero inexistente, incluso no positivo. La validación de formato de correo está
+**IMPLEMENTADA** en los contratos actuales de alta/edición administrativa de Usuario mediante @Email, además de obligatoriedad y longitud. La contraseña respeta 4–72 caracteres y máximo 72 bytes UTF-8 en alta/restablecimiento.
 
 ### RN-27. Códigos HTTP consistentes
 
@@ -462,18 +454,14 @@ La clasificación describe el alcance existente, no promete módulos adicionales
 
 - **IMPLEMENTADA:** regla respaldada por el código o DDL actual.
 - **DOCUMENTAL/DISEÑO:** propuesta todavía sin contrato implementado.
-- **NO APLICA:** condición que no forma parte de los contratos del backend cerrado.
+- **NO APLICA:** condición que no forma parte del contrato correspondiente.
 - **PENDIENTE FUERA DEL BACKEND CERRADO:** ampliación del [backlog](backend-final/backlog.md).
 
-Las 45 reglas tienen implementación en su alcance vigente. RN-01 no significa
-registro HTTP; RN-04 no impone un enum SQL; RN-20 no implementa órdenes de
-mantenimiento; RN-26 excluye el formato email, que hoy NO APLICA. La propuesta
-de permisos para crear usuarios/cambiar roles es DOCUMENTAL/DISEÑO y su
-implementación está PENDIENTE FUERA DEL BACKEND CERRADO. No se renumera ninguna RN.
+Las 45 reglas conservan su numeración. RN-01 y RN-26 ahora incluyen la entrada administrativa de email y la unicidad sin distinguir mayúsculas de V11. RN-04 permite cambios administrativos de rol y protege al último ADMIN activo; no implementa CRUD del catálogo Rol. RN-20 conserva el filtro de Equipo y el módulo Mantenimiento agrega el ciclo detallado abajo. Crear usuarios y cambiar roles ya están IMPLEMENTADOS. Los estados históricos fuera de alcance de Sprint 7 permanecen en su reporte, no describen la API actual.
 
 | RN | Regla | Clasificación | Evidencia concreta |
 |---|---|---|---|
-| RN-01 | Correo único | IMPLEMENTADA | V2: `uq_usuario_email`; sin CRUD de usuarios |
+| RN-01 | Correo único | IMPLEMENTADA | V2/V11 y AdminUsuarioService: email único, incluido IgnoreCase |
 | RN-02 | Contraseña protegida | IMPLEMENTADA | AppConfig/BCrypt, DemoUsuariosConfig y DTOs públicos |
 | RN-03 | Usuario activo | IMPLEMENTADA | UsuarioService, UserInfoDetails y JwtAuthFilter |
 | RN-04 | Rol obligatorio/vigente | IMPLEMENTADA | V2 FK NOT NULL; UsuarioService y UserInfoDetails |
@@ -492,13 +480,13 @@ implementación está PENDIENTE FUERA DEL BACKEND CERRADO. No se renumera ningun
 | RN-17 | Estados permitidos | IMPLEMENTADA | V3 CHECK y EstadoEquipo |
 | RN-18 | Baja lógica Equipo | IMPLEMENTADA | EquipoService.eliminarEquipo |
 | RN-19 | Equipo BAJA | IMPLEMENTADA | EquipoService y MovimientoEquipoService |
-| RN-20 | Filtro mantenimiento | IMPLEMENTADA | EquipoRepository: `requiereMantenimiento`; no módulo de mantenimiento |
+| RN-20 | Filtro mantenimiento | IMPLEMENTADA | EquipoRepository: `requiereMantenimiento`; módulo MantenimientoService/V12 |
 | RN-21 | Destino diferente | IMPLEMENTADA | MovimientoEquipoService bajo lock de Equipo |
 | RN-22 | Alcance en ambos extremos | IMPLEMENTADA | MovimientoEquipoService + AlcanceLaboratorioService |
 | RN-23 | Movimiento obligatorio | IMPLEMENTADA | MovimientoEquipoService y protección PUT de Equipo |
 | RN-24 | Transacción/locks | IMPLEMENTADA | MovimientoEquipoService `@Transactional` |
 | RN-25 | Motivo obligatorio | IMPLEMENTADA | TrasladarEquipoRequest y normalización del Service |
-| RN-26 | Validación de requests actuales | IMPLEMENTADA | Jakarta Validation, Controllers y handler; email NO APLICA |
+| RN-26 | Validación de requests actuales | IMPLEMENTADA | Jakarta Validation, Create/UpdateUsuarioRequest @Email, Controllers y handler |
 | RN-27 | HTTP consistente con cada operación | IMPLEMENTADA | Controllers, GlobalExceptionHandler y SecurityErrorHandler |
 | RN-28 | Errores públicos seguros | IMPLEMENTADA | GlobalExceptionHandler, ApiError y SecurityErrorHandler |
 | RN-29 | Filtros con alcance | IMPLEMENTADA | EquipoRepository: WHERE de IDs permitidos |
@@ -526,3 +514,46 @@ Fuentes: [migraciones](../backend/inventario/src/main/resources/db/migration/),
 [seguridad](../backend/inventario/src/main/java/com/utec/inventario/security/) y
 [códigos HTTP auditados](backend-final/codigos-http.md). La evidencia dinámica
 se registra separadamente en [verificación final](backend-final/verificacion-final.md).
+
+
+## 15. Precisiones vigentes después de Sprint 7
+
+Estas precisiones amplían el alcance comprobado; no renumeran RN-01–45 ni
+atribuyen las nuevas funciones al cierre histórico V9.
+
+- **Usuarios (RN-01–04, RN-26):** ADMIN tiene alta, edición pública, actividad,
+  rol y contraseña en rutas específicas. Username no cambia por PUT; password
+  nunca sale en DTO/auditoría. Usuario/rol activos se recargan en cada petición.
+  Las modificaciones administrativas se serializan y protegen al último ADMIN activo.
+- **Actividad de catálogos (RN-31–35, RN-41):** PATCH activa/desactiva sin
+  perder identidad. Reactivar hijas exige padre activo; desactivar mantiene
+  los bloqueos por hijas, Equipos no BAJA y asignaciones activas. GET ADMIN
+  permite consultar inactivos; GET normal sigue mostrando activos.
+- **Laboratorio (RN-11, RN-36):** estadoOperativo es OPERATIVO o MANTENIMIENTO
+  desde V10, independiente de activo. No concede ni revoca alcance por sí solo.
+  Omitirlo en PUT conserva su valor; POST omitido usa OPERATIVO.
+- **Mantenimiento (RN-17–21, RN-24):** se crea PROGRAMADO y solo PROGRAMADO
+  admite edición. PROGRAMADO puede pasar a EN_PROCESO/CANCELADO;
+  EN_PROCESO a COMPLETADO/CANCELADO. Estados finales no se reabren.
+  Iniciar exige Equipo no BAJA y Laboratorio activo, guarda estado previo
+  y pone Equipo en MANTENIMIENTO; finalizar/cancelar en proceso lo restaura.
+  V12 permite como máximo un EN_PROCESO por Equipo. Mientras lo haya,
+  PUT/DELETE/traslado de Equipo producen 409.
+- **Alcance (RN-07–10, RN-29–30, RN-40, RN-44):** Mantenimiento usa la ubicación
+  actual del Equipo. Movimiento conserva visibilidad por origen O destino.
+  Los cinco reportes filtran en SQL respetando alcance y los filtros del request;
+  un rango de fechas invertido devuelve 400.
+- **Auditoría (RN-28, RN-42–43):** los servicios registran acciones con actor
+  del contexto y fecha de PostgreSQL, dentro de las transacciones de escritura.
+  La lectura global es solo ADMIN. Auditoria.entidad/idEntidad identifica un
+  objeto lógico, sin FK genérica; su actor tiene FK opcional y usernameActor
+  conserva una referencia textual. No registra passwords, hashes, JWT ni
+  credenciales. No habilita edición de Movimiento.
+
+Fuentes adicionales:
+[AdminUsuarioService](../backend/inventario/src/main/java/com/utec/inventario/service/AdminUsuarioService.java),
+[MantenimientoService](../backend/inventario/src/main/java/com/utec/inventario/service/MantenimientoService.java),
+[ReporteService](../backend/inventario/src/main/java/com/utec/inventario/service/ReporteService.java),
+[AuditoriaService](../backend/inventario/src/main/java/com/utec/inventario/service/AuditoriaService.java),
+[modelo V13](Erd_actual/modelo-vigente-v13.md) y [endpoints vigentes](backend-final/endpoints.md).
+Esta revisión documental no vuelve a ejecutar tests ni modifica datos.

@@ -1,5 +1,7 @@
 # Checklist de entrega del backend — 26 requisitos
 
+**Vigencia:** la tabla de 26 requisitos y la condición de cierre conservan evidencia histórica del Sprint 7 (V9/233). La sección final registra el despliegue vigente e1ce75a/V13. [Resumen actual](resumen-backend.md), [modelo V13](../Erd_actual/modelo-vigente-v13.md) y [evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md). No se ejecutan nuevas suites durante esta actualización.
+
 ## Cómo leer los estados
 
 `VERIFICADO` indica que el requisito tiene evidencia revisada: código y
@@ -71,17 +73,22 @@ Las nueve tablas auditadas de la base habitual conservaron conteos y huellas.
 La reproducción de la demostración requiere preparar una nueva base temporal;
 la empleada en este cierre ya no permanece disponible.
 
-## Verificación posterior del empaquetado
+## Verificación posterior vigente — e1ce75a
 
 | Evidencia | Estado | Referencia |
 |---|---|---|
-| Docker local completo | VERIFICADO | PostgreSQL 18, backend y frontend Jason/Nginx saludables; flujo validado con las mismas imágenes en una base temporal aislada |
-| Flujo de inventario y seguridad en Docker | VERIFICADO | Login ADMIN/GESTOR/LECTOR, alcance, creación, consulta, edición, traslado, historial, baja y filtros; 33/33 comprobaciones HTTP y 24/24 aserciones |
-| Conservación de datos y limpieza | VERIFICADO | Nueve conteos habituales idénticos; base `inventario_verificacion_docker_26e35749`, contenedores, red y volumen temporales eliminados |
-| Actions del backend | VERIFICADO | Run 37136137900, commit `9956939`, job 111240944686 exitoso; construye con `bootJar -x test`, no ejecuta la regresión Gradle |
-| Actions del frontend | VERIFICADO | Mismo run, job 111240944823 exitoso; 27/27 pruebas, construcción y publicación |
-| Imágenes GHCR | VERIFICADO | Backend y frontend Jason con `latest`/`sha-9956939`; digests confirmados en la [evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md) |
-| Render/base gestionada | SIN EVIDENCIA DE DESPLIEGUE | Siguiente etapa; no forma parte del cierre funcional ni de la publicación de imágenes verificada |
+| Docker local completo | VERIFICADO | PostgreSQL 18, backend y frontend Jason/Nginx saludables con las imágenes publicadas sha-e1ce75a. |
+| Flujo HTTP y seguridad | VERIFICADO | 94/94 comprobaciones HTTP, 30 aserciones; login de tres roles, usuarios, catálogos, Equipo, mantenimiento, traslado, baja, historia, reportes y auditoría. |
+| Interfaz Jason | VERIFICADO CON LÍMITE | Crear/editar Equipo, ciclo mantenimiento y traslado por interfaz; baja por HTTP porque confirmación nativa bloqueó automatización. Reportes GESTOR e historia LECTOR en capturas. |
+| Modelo actual | DOCUMENTADO | 12 Entities/tablas y 16 FK en [modelo V13](../Erd_actual/modelo-vigente-v13.md); 70 rutas de aplicación en [endpoints](endpoints.md). |
+| Flyway e integridad | VERIFICADO | V1–V13 success=true; checksums V1–V9 preservados; siete consultas SQL con cero incidencias en base temporal. |
+| Base habitual y limpieza | VERIFICADO | 3 cuentas, 4 asignaciones y nueve conteos/contenidos intactos; volumen/contenedor PostgreSQL conservados; base temporal y recursos propios eliminados. |
+| Actions backend | VERIFICADO | Run 37158784428, job 111307629232; construcción/publicación, Dockerfile empaqueta con bootJar -x test. |
+| Actions frontend | VERIFICADO | Mismo run, job 111307629348; 67 pruebas frontend, construcción/publicación. |
+| GHCR | VERIFICADO | Ambas referencias sha-e1ce75a y digests en la [evidencia consolidada](../despliegue/verificacion-docker-actions-2026-10-03.md). |
+| Regresión backend posterior | EVIDENCIA LOCAL PREVIA | [40 XML / 319 pruebas](../despliegue/evidencias/reportes-backend-2026-10-03.json), cero fallos/errores/omitidas; no reejecutadas aquí ni atribuidas a Actions. |
+| Render/base gestionada | SIN EVIDENCIA DE DESPLIEGUE | Nube pendiente; publicar imágenes no despliega por sí solo la aplicación. |
 
-El [Sprint 8](../sprints_realizados-backend/sprint-8.md) recoge este estado.
-Las cifras HTTP, aserciones y tests frontend no se añaden al total JUnit de 233.
+Las cifras HTTP, aserciones, JUnit histórico/posterior y tests frontend son
+mediciones separadas. El [Sprint 8](../sprints_realizados-backend/sprint-8.md)
+y el [backlog vigente](backlog.md) distinguen funciones implementadas de futuras.

@@ -1,22 +1,17 @@
 # FE-07 — Movimientos e historial
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado actualizado: traslado e historial comprobados en Docker, con fecha, tipo, origen, destino, actor y motivo reales. Lectura histórica por origen y conservación tras baja comprobadas. No existen estados Pendiente/Completado en el contrato actual.**
+**Estado vigente: Traslado e historial reales comprobados; LECTOR conserva historia por origen después del traslado y de la baja.**
 
-## Evidencia vigente al 3 de octubre de 2026
+## Implementación y verificación actuales
 
-La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md)
-comprobó traslado 201 → 206 e historial antes/después de la baja. LECTOR obtuvo
-403 para el equipo fuera del alcance actual y 200 para el historial autorizado
-por origen. Cinco consultas de inconsistencia devolvieron 0, incluidos movimientos
-huérfanos y traslados con origen igual a destino.
+El traslado Docker actual se hizo desde interfaz. Origen y actor los determina el servidor: `idUsuarioActor` enviado por cliente recibió 400 y origen=destino 409. Historial devuelve fecha, tipo TRASLADO, actor, origen, destino y motivo; permanece tras BAJA. LECTOR consultó la historia por el origen autorizado aun sin poder leer el equipo en su ubicación actual. La pantalla mantiene búsqueda y filtro de laboratorio. No tiene estados Pendiente/Completado; rango de fechas/tipo y exportación de esta pantalla siguen sin implementarse, aunque Reportes ya ofrece filtros propios.
 
-La [auditoría de integración](auditoria-integracion.md) documenta las correcciones
-del filtro de laboratorio y los KPIs. `tipoMovimiento` y `fechaMovimiento` son los
-campos reales; Pendiente/Completado se retiraron. Actions aprobó las 27 pruebas de
-Jason, incluidas 5 de fechas/orden/búsqueda de movimientos. Permanecen pendientes
-rango de fechas, filtro por tipo, exportación y panel lateral del mockup.
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
 
 ## Registro de entrega original (histórico)
 

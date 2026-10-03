@@ -3,12 +3,18 @@
 Aplicación React/Vite conectada al backend Spring Boot del repositorio. Esta versión
 está en `frontend/version-jason/frontend/`; la versión Marko se conserva por separado.
 
-**Adaptación al backend ampliado — 3 de octubre de 2026:** esta versión consume
-los contratos actuales de catálogos administrativos, usuarios, mantenimientos y
-reportes. Requiere un backend que incorpore las migraciones V10–V13 y los nuevos
-Controllers. Una imagen Docker anterior conserva su API anterior: hay que
-reconstruirla para usar estos módulos. Esta adaptación modifica únicamente Jason;
-no reconstruye ni reemplaza tu backend habitual.
+**Estado al 3 de octubre de 2026:** esta versión consume los contratos actuales de
+catálogos administrativos, usuarios, mantenimientos y reportes. El Docker local ya
+utiliza las imágenes publicadas del commit `e1ce75a`, con backend Flyway V1–V13,
+frontend en **3000**, backend en **8080** y tres contenedores saludables. Se
+conservaron PostgreSQL, las cuentas y las cuatro asignaciones habituales. La
+adaptación anterior modificó solo Jason; el despliegue posterior reemplazó
+backend/frontend sin cambios de código, Compose ni migraciones.
+
+La [evidencia actual](evidencias/docker-actual-2026-10-03.json) y el
+[informe Docker/Actions](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+separan pruebas, publicación y preservación. Para el estado por módulo consulta
+[los sprints Jason](../../../docs/sprints_realizados-frontend-Jason/README.md).
 
 ## Ejecución local en Windows
 
@@ -96,13 +102,19 @@ usa `GITHUB_TOKEN`, sin incorporar credenciales a los archivos del proyecto.
 El Compose local sigue construyendo las imágenes `:local`; publicar en GHCR
 no sustituye automáticamente los contenedores que ya están ejecutándose.
 
-La [ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900),
-del 3 de octubre de 2026, comprobó ambos trabajos en verde sobre el commit
-`99569392035fc975171d2df6929a1aa26111b139`. El trabajo de Jason aprobó **27/27 pruebas**
-antes de publicar. Se verificaron las dos imágenes en GHCR con etiquetas `latest`
-y `sha-9956939`; sus digests y enlaces de trabajos se conservan en la
+La [ejecución actual 37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428),
+del 3 de octubre de 2026, completó ambos trabajos sobre el commit
+`e1ce75a1abf5058ad83ffafd85357dd0aa4c644b`. Las imágenes
+`backend:sha-e1ce75a` y `frontend-jason:sha-e1ce75a` se publicaron en GHCR y
+se desplegaron en Docker local; referencias completas/digests constan en la
 [evidencia Docker y Actions](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md).
-Esto acredita construcción y publicación; el despliegue en la nube sigue pendiente.
+Las **67/67 pruebas frontend** y el build están documentados en la adaptación
+previa. El smoke del reemplazo Docker no volvió a ejecutar npm/Gradle.
+El despliegue en la nube sigue sin acreditarse por estas comprobaciones.
+
+Como antecedente anterior a V10–V13, la [ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900)
+publicó el commit `9956939` con 27/27 pruebas de Jason. Esa imagen no es la
+versión actualmente desplegada; se conserva su evidencia como historia.
 
 ## Configuración de la conexión
 
@@ -144,8 +156,8 @@ implementados. Un 401 de una solicitud de la sesión vigente cierra esa sesión.
 | `LECTOR` | Consulta de catálogos, equipos, movimientos, mantenimientos y reportes; sin acciones de escritura. |
 
 Los tres roles pueden leer los catálogos y la organización global. El alcance por
-laboratorio restringe equipos y movimientos, no la lectura de todos los laboratorios
-del catálogo. El alcance de menú/filtros se obtiene al iniciar sesión; el contador
+laboratorio restringe equipos, movimientos, mantenimientos y reportes; la lectura
+del catálogo activo de laboratorios es global. El alcance de menú/filtros se obtiene al iniciar sesión; el contador
 del dashboard vuelve a consultar `/auth/me/laboratorios` en cada entrada.
 Los autocambios de rol o de asignaciones refrescan perfil y alcance; un autocambio
 de actividad que desactive la cuenta cierra la sesión. El backend revalida siempre
@@ -154,11 +166,15 @@ los permisos de cada solicitud, aunque una sesión ajena conserve datos visuales
 El backend autoriza cada operación. La lectura de catálogos y organización es global para los tres roles; el alcance por laboratorio restringe equipos, movimientos, mantenimientos y reportes. Los movimientos pueden seguir siendo visibles por su origen aunque el equipo haya salido de ese laboratorio. Las rutas `/asignaciones` y `/usuarios`
 y `/configuracion` además están protegidas por rol en el frontend.
 
-En la comprobación del entorno habitual del 3 de octubre de 2026 existían `marko`
-(`ADMIN`), `aldo` (`GESTOR`) y `romel` (`LECTOR`), con cero asignaciones y cero equipos.
-Es una fotografía de ese entorno: una pantalla vacía puede ser el resultado correcto.
-Las asignaciones y equipos creados para verificar escrituras se probaron en un
-entorno aislado, separado de ese inventario habitual.
+En el despliegue actual del 3 de octubre de 2026 se conservaron las tres cuentas
+habituales, **cuatro asignaciones** y cero equipos. Antes/después se compararon
+conteos y contenido de nueve tablas, incluidos usuarios y asignaciones. Una
+pantalla vacía de Equipos puede ser correcta para ese inventario. El login y las
+escrituras del flujo se comprobaron con cuentas de fixtures en un entorno aislado;
+no se cambiaron contraseñas ni datos habituales por la API.
+
+La auditoría inicial de ese mismo día había registrado cero asignaciones. Ese
+conteo es histórico y no describe el despliegue actual.
 
 ## Alcance y pendientes
 
@@ -220,12 +236,14 @@ incluye resultados, escenarios y límites; las capturas muestran
 [el conflicto del último ADMIN](evidencias/usuarios-conflicto-admin-2026-10-03.png),
 [mantenimientos completados](evidencias/mantenimientos-2026-10-03.png) y
 [reportes filtrados](evidencias/reportes-2026-10-03.png).
-No se reejecutó la suite JUnit del backend ni se publicó un nuevo build en Actions.
+En aquella adaptación no se reejecutó la suite JUnit del backend ni se publicó
+un build en Actions. La publicación y el despliegue ocurrieron después, como se
+detalla en la verificación Docker actual de abajo.
 
-**Comentario para el backend/despliegue:** no se encontró un cambio de código
-backend necesario para esta adaptación. Para usarla con Docker, la imagen del
-backend debe contener sus cambios V10–V13; arrancar una imagen anterior no los
-incorpora automáticamente. La edición de registros inactivos requiere reactivarlos
+**Resultado para el backend/despliegue:** no se encontró un cambio de código
+backend necesario para adaptar Jason. La imagen Docker habitual ya incorpora
+V10–V13 desde el reemplazo por `sha-e1ce75a`; una imagen antigua no obtiene esos
+endpoints automáticamente. La edición de registros inactivos requiere reactivarlos
 primero según el contrato actual, y la interfaz muestra errores de cualquier paso
 sin presentar operaciones parciales como una transacción completada.
 
@@ -256,7 +274,7 @@ accesibilidad. La [evidencia final](../../../docs/sprints_realizados-frontend-Ja
 y la auditoría detallan los escenarios comprobados; no se declara una reejecución
 completa de la suite backend histórica.
 
-### Verificación posterior del flujo completo en Docker
+### Antecedente: primera verificación del flujo Docker con V9
 
 El 3 de octubre de 2026 se validó el frontend servido por Nginx y el backend con
 las mismas imágenes Docker del entorno habitual, en un stack temporal aislado:
@@ -280,6 +298,50 @@ separa esta evidencia de la auditoría Vite anterior y de la publicación en GHC
 En aquella comprobación FE-08–FE-10 y los límites visuales y de accesibilidad
 conservaban su estado pendiente. Mantenimientos y Reportes ahora consumen sus APIs;
 Configuración y las revisiones visuales adicionales conservan sus límites indicados.
+
+### Verificación Docker actual con V1–V13
+
+Después de la adaptación y Actions se descargaron las imágenes **sha-e1ce75a**,
+se actualizaron sus tags locales y se ejecutó, desde backend/inventario:
+
+```powershell
+docker compose up -d --no-build --no-deps backend frontend
+```
+
+Este fue el comando del reemplazo documentado, con los tags locales preparados;
+no descarga por sí solo una nueva imagen de GHCR. El
+[informe de despliegue](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+incluye las referencias y el contexto del procedimiento. No se eliminó ni
+recreó PostgreSQL.
+
+Las mismas imágenes se probaron en un stack aislado, frontend **50686**, backend
+**50687**, base **inventario_verificacion_docker_actual_5149b3ad**:
+
+| Evidencia | Resultado |
+|---|---|
+| HTTP por Nginx | 94/94 comprobaciones aprobadas, incluidos rechazos de permisos/validación esperados. |
+| Funcional | 30 aserciones aprobadas; login, roles/alcance, catálogos, usuarios, equipos, mantenimiento, traslado, baja, historia y reportes. |
+| SQL | Siete controles en cero: dependencias inactivas, huérfanos, origen=destino y coherencia de mantenimiento. |
+| UI | Alta/edición de Equipo, mantenimiento completo y traslado; GESTOR vio BAJA sin acciones y Reportes 1 Equipo/1 Movimiento/2 Mantenimientos. LECTOR vio historia tras traslado/baja. |
+| Límite UI | Confirmación nativa de baja bloqueó automatización; se canceló y baja se comprobó por HTTP. No acredita clic final de baja en navegador actual. |
+| Limpieza | Cero conexiones antes de eliminar; base, contenedores, volumen/red temporales eliminados y puertos libres. |
+
+Son comprobaciones del smoke; no se suman a las 67 frontend ni a Gradle. No se
+repitieron esas suites en este reemplazo. El login y las escrituras se realizaron
+solo en el stack aislado; el habitual se comprobó mediante salud, protección HTTP,
+Flyway y preservación.
+
+Habitual: **tres contenedores saludables**, V1–V13 exitosas, checksums V1–V9 iguales,
+nueve tablas anteriores sin cambios, cuatro asignaciones conservadas y
+contenedor/volumen de PostgreSQL originales. V10–V13 crearon el esquema vigente;
+no agregaron filas de prueba. Se guardó respaldo privado antes de actualizar.
+No se modificaron código, migraciones ni Compose.
+
+[Evidencia JSON](evidencias/docker-actual-2026-10-03.json),
+[Reportes GESTOR](evidencias/docker-actual-reportes-2026-10-03.png) e
+[historial LECTOR](evidencias/docker-actual-historial-2026-10-03.png) corresponden a
+fixtures temporales ya eliminados. Consola de la última sesión: cero errores y
+advertencias; no certifica todos los recorridos.
 
 Versiones verificadas: Node 24.16.0, npm 11.13.0, Docker 29.8.0, React 18.3.1,
 Vite 6.4.3, Axios 1.20.0, React Router 7.18.4, plugin React 4.7.0 y Lucide 0.468.0.
@@ -361,8 +423,8 @@ esperados, no una indicación de que React haya cambiado el dato localmente.
 12. Configuración sigue como Próximamente. No se presentan éxitos ni preferencias
     guardadas sin un endpoint que las persista.
 
-La auditoría Vite anterior utilizó 5173/8080. La verificación posterior dejó el
-entorno habitual Docker en 3000/8080, con sus tres contenedores saludables.
+La auditoría Vite inicial utilizó 5173/8080. El despliegue actual `e1ce75a` dejó
+Docker en 3000/8080 con sus tres contenedores saludables y Flyway V1–V13.
 Para este modo, abre 3000 y sigue la sección Frontend Jason en Docker.
 Para detener Vite usa Ctrl+C en su terminal; `docker compose stop` desde
 backend/inventario detiene los servicios Docker y conserva los datos de PostgreSQL.

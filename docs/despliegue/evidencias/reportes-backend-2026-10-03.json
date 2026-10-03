@@ -1,0 +1,335 @@
+{
+    "fechaLectura":  "2026-10-03",
+    "tipo":  "Lectura de reportes XML locales existentes; no es una nueva ejecución",
+    "fuente":  "backend/inventario/build/test-results/test/TEST-*.xml",
+    "atribucion":  "Los archivos no certifican por sí solos una ejecución nueva ni el commit exacto probado. No proceden del smoke Docker ni del job de publicación.",
+    "totales":  {
+                    "archivos":  40,
+                    "pruebas":  319,
+                    "fallos":  0,
+                    "errores":  0,
+                    "omitidas":  0
+                },
+    "suites":  [
+                   {
+                       "archivo":  "TEST-com.utec.inventario.AdminUsuarioIntegrationTests.xml",
+                       "pruebas":  20,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:03.224Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.AuthIntegrationTests.xml",
+                       "pruebas":  15,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:07.620Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.CatalogoEstadoIntegrationTests.xml",
+                       "pruebas":  21,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:10.151Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.CategoriaConcurrenciaTests.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:12.911Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.entity.UsuarioLaboratorioIdTest.xml",
+                       "pruebas":  1,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:35.881Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.EquipoConcurrenciaTests.xml",
+                       "pruebas":  9,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:13.087Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.EquipoIntegrationTests.xml",
+                       "pruebas":  14,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:14.946Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.exception.GlobalExceptionHandlerTest.xml",
+                       "pruebas":  8,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:35.892Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.InventarioApplicationTests.xml",
+                       "pruebas":  1,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:18.608Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.MantenimientoIntegrationTests.xml",
+                       "pruebas":  9,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:04:31.474Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.AreaMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:35.977Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.CategoriaMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:35.988Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.EquipoMapperTest.xml",
+                       "pruebas":  3,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.001Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.LaboratorioMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.569Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.MantenimientoMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.595Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.MovimientoEquipoMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.606Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.SedeMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.618Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.SubcategoriaMapperTest.xml",
+                       "pruebas":  4,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.634Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.mapper.UsuarioLaboratorioMapperTest.xml",
+                       "pruebas":  2,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.687Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.MovimientoEquipoConcurrenciaTests.xml",
+                       "pruebas":  10,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:22.774Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.MovimientoEquipoIntegrationTests.xml",
+                       "pruebas":  12,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:24.784Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.OrganizacionConcurrenciaTests.xml",
+                       "pruebas":  9,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:27.299Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.OrganizacionIntegrationTests.xml",
+                       "pruebas":  14,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:28.562Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.ReporteAuditoriaIntegrationTests.xml",
+                       "pruebas":  11,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:04:56.305Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.security.JwtServiceTest.xml",
+                       "pruebas":  10,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:36.713Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.AdminUsuarioServiceTest.xml",
+                       "pruebas":  9,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:37.204Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.AlcanceLaboratorioServiceTest.xml",
+                       "pruebas":  3,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:38.617Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.AreaServiceTest.xml",
+                       "pruebas":  4,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:39.082Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.CategoriaServiceTest.xml",
+                       "pruebas":  7,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:39.451Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.EquipoServiceTest.xml",
+                       "pruebas":  7,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:39.870Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.LaboratorioServiceTest.xml",
+                       "pruebas":  6,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:40.389Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.MantenimientoServiceTest.xml",
+                       "pruebas":  14,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:40.428Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.MovimientoEquipoServiceTest.xml",
+                       "pruebas":  6,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:40.524Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.SedeServiceTest.xml",
+                       "pruebas":  3,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:40.732Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.SubcategoriaServiceTest.xml",
+                       "pruebas":  18,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:40.749Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.service.UsuarioLaboratorioServiceTest.xml",
+                       "pruebas":  5,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:40.860Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.SubcategoriaConcurrenciaTests.xml",
+                       "pruebas":  6,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:30.942Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.SubcategoriaIntegrationTests.xml",
+                       "pruebas":  28,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:31.548Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.UsuarioLaboratorioConcurrenciaTests.xml",
+                       "pruebas":  4,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:33.033Z"
+                   },
+                   {
+                       "archivo":  "TEST-com.utec.inventario.UsuarioLaboratorioIntegrationTests.xml",
+                       "pruebas":  12,
+                       "fallos":  0,
+                       "errores":  0,
+                       "omitidas":  0,
+                       "timestampUTC":  "2026-10-03T18:05:34.147Z"
+                   }
+               ]
+}

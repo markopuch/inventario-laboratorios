@@ -4,7 +4,8 @@ Frontend de trabajo actual: [versión Jason — Docker, ejecución local y prueb
 
 **Estado verificado al 3 de octubre de 2026:** flujo completo en Docker local comprobado,
 ambos trabajos de GitHub Actions en verde y ambas imágenes publicadas en GHCR para
-el commit `9956939`. El [reporte de Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+el commit `e1ce75a`. Las imágenes publicadas se descargaron y ejecutaron localmente:
+PostgreSQL, backend y frontend quedaron saludables. El [reporte de Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md)
 incluye resultados, manifiestos, capturas y preservación de la base habitual.
 El despliegue de PostgreSQL/backend/frontend en la nube queda pendiente.
 
@@ -12,16 +13,20 @@ El despliegue de PostgreSQL/backend/frontend en la nube queda pendiente.
 ## 1. Descripción
 
 API REST para organizar laboratorios, clasificar equipos, controlar su ubicación
-y registrar traslados con historial. El backend de `backend/inventario` llega al
-cierre técnico de **Sprint 7**, después de las funcionalidades de Sprint 1–6.
+y registrar traslados con historial, administrar usuarios, programar mantenimientos
+y consultar reportes. El cierre histórico de **Sprint 7** fue V9/233 pruebas;
+**Sprint 8** incorporó Docker y GHCR. La ampliación posterior del backend para
+integrar Jason está implementada y desplegada con **V1–V13**.
 El proyecto conserva el estilo de JPA/JWT de los ejemplos del profesor y su
 organización actual de carpetas.
 
 El alcance incluye autenticación, cinco catálogos, asignaciones de laboratorios,
-Equipos y Movimientos. La administración completa de usuarios y los módulos del
-[backlog](docs/backend-final/backlog.md) quedan fuera de este cierre.
-La [verificación final](docs/backend-final/verificacion-final.md) registra las
-pruebas medidas y la preservación de la base habitual.
+Equipos, Movimientos, administración de usuarios, Mantenimientos, Reportes y
+Auditoría administrativa. La [ampliación del backend](backend/inventario/ACTUALIZACION-BACKEND.md)
+describe los contratos añadidos. El [backlog vigente](docs/backend-final/backlog.md)
+separa las capacidades implementadas de las ampliaciones futuras.
+La [evidencia Docker actual](frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json)
+registra la preservación de la base habitual y las pruebas sobre una base temporal.
 
 ## 2. Stack
 
@@ -31,7 +36,7 @@ pruebas medidas y la preservación de la base habitual.
 | Spring Boot | 4.1.1 |
 | Gradle Wrapper | 9.7.1, Kotlin DSL |
 | Persistencia | Spring Data JPA / Hibernate y PostgreSQL |
-| Migraciones | Flyway, V1–V9 |
+| Migraciones | Flyway, V1–V13 |
 | Seguridad | Spring Security, BCrypt, JJWT 0.13.0 |
 | Mapeo | MapStruct 1.6.3, Lombok, lombok-mapstruct-binding 0.2.0 |
 | Validación y pruebas | Jakarta Validation, JUnit 5, Spring Boot Test |
@@ -66,12 +71,14 @@ Los paquetes de `src/main/java/com/utec/inventario/` son `config`, `controller`,
 `domain`, `dto/request`, `dto/response`, `entity`, `exception`, `mapper`,
 `repository`, `security` y `service`; todos contienen implementación.
 Consulta [arquitectura](docs/backend-final/arquitectura-backend.md) y los
-[ocho flujos principales](docs/backend-final/flujos-principales.md).
+[flujos principales](docs/backend-final/flujos-principales.md).
 
 ## 4. Modelo
 
-**10 entidades, 76 columnas y 13 relaciones FK**, sin cambios de esquema en
-Sprint 7. `flyway_schema_history` es infraestructura y no integra ese conteo.
+**12 entidades y 16 relaciones FK** en el esquema actual V13.
+`flyway_schema_history` es infraestructura y no integra ese conteo.
+Sprint 7 cerró históricamente con 10 entidades y 13 FK; V12 y V13 añadieron
+Mantenimiento y Auditoría.
 
 | Área del modelo | Entidades |
 |---|---|
@@ -79,18 +86,23 @@ Sprint 7. `flyway_schema_history` es infraestructura y no integra ese conteo.
 | Clasificación | Categoría → Subcategoría |
 | Identidad y autorización | Rol, Usuario, UsuarioLaboratorio |
 | Inventario | Equipo |
-| Trazabilidad | MovimientoEquipo |
+| Trazabilidad | MovimientoEquipo, Auditoría |
+| Mantenimiento | Mantenimiento |
 
 UsuarioLaboratorio resuelve Usuario N:M Laboratorio con PK compuesta. Equipo
 tiene Laboratorio y Subcategoría obligatorios y responsable opcional. Movimiento
 tiene Equipo, destino y actor obligatorios; origen permite null para datos legacy.
 Los traslados nuevos siempre toman el origen real del Equipo.
 
-Los diez modelos están integrados en Java/API; Rol y Usuario participan en
-JWT/autorización y esto no significa que tengan CRUD administrativo completo.
-Consulta el [ERD lógico](docs/Erd_actual/erd-logico-v2.md),
-[ERD físico](docs/Erd_actual/erd-fisico-v2.md) y
-[cotejo Entity/Flyway](docs/backend-final/auditoria-entity-flyway.md).
+Usuario dispone de operaciones administrativas protegidas para ADMIN; Rol se
+usa para autorización y selección de roles, sin un CRUD de roles independiente.
+Mantenimiento referencia Equipo y responsable opcional. Auditoría referencia
+al actor opcional y conserva su username; entidad/idEntidad no forman una FK.
+Consulta el [modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md).
+El [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md), el
+[ERD físico v2](docs/Erd_actual/erd-fisico-v2.md) y el
+[cotejo de Sprint 7](docs/backend-final/auditoria-entity-flyway.md) conservan
+el modelo histórico V1–V9 con su ampliación documentada por separado.
 
 ## 5. Roles
 
@@ -102,6 +114,9 @@ Consulta el [ERD lógico](docs/Erd_actual/erd-logico-v2.md),
 | Crear, editar o dar de baja Equipos | Global | Alcance vigente | No |
 | Trasladar | Global | Origen y destino autorizados | No |
 | Consultar historia | Global | Origen o destino autorizado | Origen o destino autorizado |
+| Administrar usuarios y consultar auditoría | Sí | No | No |
+| Leer Mantenimientos y Reportes | Global | Alcance vigente | Alcance vigente |
+| Crear, editar o cambiar estado de Mantenimiento | Global | Alcance vigente | No |
 
 Se comprueba el usuario y rol activos con el estado vigente de PostgreSQL.
 La [matriz de permisos](docs/matriz-permisos.md) desarrolla cada operación.
@@ -130,30 +145,47 @@ Los catálogos permanecen globales.
 - CRUD de Equipo, cuatro filtros combinables, responsables opcionales y estado BAJA.
 - Traslado atómico de Equipo con actor/origen/tipo/fecha controlados por servidor.
 - Historial inmutable desde la API, filtros por extremos y visibilidad actual.
+- Catálogos administrativos con filtro de activos/inactivos y reactivación.
+- Estado operativo de Laboratorio independiente de su baja lógica.
+- Administración de usuarios: alta, datos públicos, rol, estado, contraseña y
+  asignaciones, con protección del último ADMIN activo.
+- Mantenimiento preventivo/correctivo/calibración/otro con ciclo de estados y
+  protección del Equipo durante EN_PROCESO.
+- Cinco reportes agregados calculados por el servidor según filtros y alcance.
+- Auditoría administrativa de cambios, consultable por ADMIN desde la API.
 - Errores seguros, DTOs públicos y bloqueos para proteger operaciones concurrentes.
 
 PUT de Equipo rechaza código interno, laboratorio y otros campos inmutables.
 BAJA no se edita ni traslada. El traslado exige destino activo/diferente y motivo
 no blanco de máximo 500 caracteres; ubicación omitida/null/blanca se limpia.
 Los movimientos históricos no bloquean por sí solos la baja lógica de Laboratorio.
+Un Mantenimiento EN_PROCESO bloquea edición, baja y traslado del Equipo.
+Completarlo o cancelarlo restaura el estado previo del Equipo; no presupone que
+un Equipo INOPERATIVO se haya reparado.
 Consulta [RN-01–45 y su evidencia](docs/reglas-negocio.md).
 
 ## 8. Endpoints
 
-Se cuentan **42 combinaciones método+ruta**; los filtros no agregan endpoints.
+Se cuentan **70 combinaciones método+ruta** de aplicación; los filtros no agregan endpoints.
+Actuator health se documenta aparte y no se incluye en ese total.
 Las consultas jerárquicas se agrupan con el padre de la ruta.
 
 | Grupo | Cantidad |
 |---|---:|
 | AUTH | 3 |
-| CATEGORIA | 6 |
-| SUBCATEGORIA | 5 |
-| SEDE | 6 |
-| AREA | 6 |
-| LABORATORIO | 5 |
+| CATEGORIA | 7 |
+| SUBCATEGORIA | 6 |
+| SEDE | 7 |
+| AREA | 7 |
+| LABORATORIO | 6 |
+| CATALOGOS ADMIN | 5 |
+| USUARIO ADMIN | 7 |
 | USUARIO_LABORATORIO | 2 |
 | EQUIPO | 6 |
 | MOVIMIENTO | 3 |
+| MANTENIMIENTO | 5 |
+| REPORTES | 5 |
+| AUDITORIA | 1 |
 
 El [catálogo de endpoints](docs/backend-final/endpoints.md) incluye permisos,
 parámetros y respuestas. Base local: `http://localhost:8080`. Login público:
@@ -178,10 +210,18 @@ Flyway administra el esquema; Hibernate usa `ddl-auto=validate`.
 | V7 | Nombre de Subcategoría único dentro de Categoría |
 | V8 | Nombre de Área único dentro de Sede |
 | V9 | Código de Laboratorio único globalmente sin distinguir mayúsculas |
+| V10 | Estado operativo de Laboratorio, independiente de activo |
+| V11 | Unicidad de email sin distinguir mayúsculas; revisión previa de duplicados |
+| V12 | Mantenimiento, ciclo de estados y UNIQUE parcial por Equipo EN_PROCESO |
+| V13 | Auditoría administrativa de cambios |
 
-No se agrega V10 ni se modifica una migración aplicada. Las 13 FK usan RESTRICT
-para operaciones físicas; las restricciones de baja lógica pertenecen a Services.
-Las fechas son TIMESTAMPTZ. La fecha de Movimiento viene del default PostgreSQL;
+La actualización Docker aplicó las migraciones existentes V10–V13; no creó ni
+modificó SQL. Las trece migraciones tienen `success=true` y los checksums V1–V9
+permanecen iguales. Las FK de inventario/mantenimiento usan RESTRICT; la FK
+de actor de Auditoría usa `ON DELETE SET NULL` para conservar el evento.
+Las restricciones de baja lógica pertenecen a Services.
+Los instantes son TIMESTAMPTZ; `fecha_programada` de Mantenimiento es DATE.
+La fecha de Movimiento viene del default PostgreSQL;
 `fechaActualizacion` de Equipo se actualiza en Java UTC, sin trigger.
 
 La base habitual es `inventario_laboratorios`. Si preparas una instalación nueva,
@@ -194,7 +234,10 @@ CREATE DATABASE inventario_laboratorios;
 
 Ejecuta esa sentencia solo si no existe. No uses `repair`, `baseline` ni SQL
 manual para ocultar diferencias de un esquema ya existente. El arranque aplica
-V1–V9 en una base nueva o valida el historial de una ya preparada.
+V1–V13 en una base nueva o valida y completa el historial de una ya preparada.
+Antes de actualizar una base existente, conserva un respaldo y revisa el
+estado de Flyway. En el despliegue verificado se conservaron el mismo contenedor
+y volumen de PostgreSQL, los registros anteriores y las cuatro asignaciones.
 
 ## 10. Configuración
 
@@ -265,6 +308,22 @@ de construcción y ejecución están en el [README de Jason](frontend/version-ja
 Los secretos permanecen fuera de Git; iniciar Docker no cambia las contraseñas
 de cuentas existentes. Conserva el volumen habitual al detener los servicios.
 
+Para actualizar únicamente backend/frontend a las imágenes ya publicadas de
+esta entrega, desde `backend/inventario`, con la base existente respaldada:
+
+```powershell
+docker pull ghcr.io/markopuch/inventario-laboratorios-backend:sha-e1ce75a
+docker pull ghcr.io/markopuch/inventario-laboratorios-frontend-jason:sha-e1ce75a
+docker tag ghcr.io/markopuch/inventario-laboratorios-backend:sha-e1ce75a inventario-backend:local
+docker tag ghcr.io/markopuch/inventario-laboratorios-frontend-jason:sha-e1ce75a inventario-frontend-jason:local
+docker compose up -d --no-build --no-deps backend frontend
+docker compose ps
+```
+
+Las etiquetas SHA identifican la versión validada; `latest` puede cambiar.
+Este comando conserva PostgreSQL y deja que Flyway valide/aplique las migraciones
+incluidas en esa versión. No uses `down -v` para actualizar la instalación habitual.
+
 ### 11.2. Java, PowerShell o IDE — alternativa local
 
 Desde la raíz, con PostgreSQL iniciado:
@@ -299,6 +358,8 @@ dos copias del backend en el mismo puerto.
 
 ## 12. Tests
 
+### Evidencia histórica de Sprint 7
+
 Base anterior de Sprint 6: **233 pruebas**. Sprint 7 reejecutó las **233 y todas
 aprobaron**, sin fallos, errores ni omitidas; no se agregaron pruebas ni se
 modificaron las anteriores. compileJava y bootJar finalizaron correctamente.
@@ -307,20 +368,26 @@ obtuvieron el estado esperado. La instancia se detuvo y la base temporal se
 eliminó después de la revisión; la base habitual quedó idéntica. El detalle está
 en [verificación final](docs/backend-final/verificacion-final.md).
 
-### Evidencia posterior: frontend, Docker y CI
+### Evidencia posterior: ampliación, frontend, Docker y CI
 
 | Ejecución | Resultado | Alcance |
 |---|---|---|
-| Integración Jason con Vite, 3 de octubre | 27 pruebas del frontend y 42 solicitudes HTTP aprobadas | Auditoría inicial y recorridos UI documentados |
-| Flujo integrado en Docker, 3 de octubre | 33/33 solicitudes HTTP adicionales y 24/24 aserciones de verificación | Login de tres roles, alta/consulta/edición/traslado/historial/baja, filtros, SQL y limpieza |
-| GitHub Actions del commit `9956939` | Backend y frontend Jason en verde; 27/27 pruebas frontend | Construcción y publicación de ambas imágenes en GHCR |
+| Backend ampliado: XML locales previos leídos el 3 de octubre | 319 pruebas, 0 fallos, 0 errores, 0 omitidas en 40 suites | [Resumen de artefactos existentes](docs/despliegue/evidencias/reportes-backend-2026-10-03.json); no es una nueva ejecución ni acredita por sí solo el commit exacto |
+| Adaptación Jason a V13, 3 de octubre | 67/67 pruebas frontend y build aprobado | [Evidencia de adaptación](frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json); conserva 27 y añade 40 |
+| GitHub Actions del commit `e1ce75a` | Backend y frontend Jason en verde; 67 pruebas frontend | [Run 37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428), construcción y publicación GHCR |
+| Docker con imágenes `sha-e1ce75a`, 3 de octubre | 94/94 comprobaciones HTTP, 30 aserciones funcionales y siete controles SQL con 0 inconsistencias | Flujo aislado V13, actualización habitual y limpieza verificadas |
 
 Son ejecuciones distintas: no se suman solicitudes HTTP o aserciones al total
-JUnit ni se presenta la publicación del backend como una nueva regresión de 233
-pruebas. El job backend usa `bootJar -x test`. La verificación Docker utilizó
+JUnit ni se presenta la publicación del backend o el smoke como una nueva
+regresión. El job backend usa `bootJar -x test`. La verificación Docker utilizó
 solo una base `inventario_verificacion_*`, eliminada al terminar; los nueve
 conteos habituales permanecieron iguales. Consulta el
 [reporte consolidado](docs/despliegue/verificacion-docker-actions-2026-10-03.md).
+La auditoría inicial de Jason (27 pruebas/42 HTTP), Docker previo (33 HTTP/24
+aserciones) y Actions `9956939` son antecedentes separados. La documentación
+actualizada no reejecutó suites ni modificó datos. La baja del último smoke se
+verificó por API debido al bloqueo de su confirmación nativa en la automatización
+del navegador; la UI mostró BAJA sin acciones de edición y conservó el historial.
 
 ### Repetir la suite del backend
 
@@ -350,6 +417,10 @@ La verificación automatizada escribe fixtures solo en la base de pruebas.
 
 Importa la [colección](docs/backend-final/postman/Inventario-Laboratorios.postman_collection.json)
 y el [environment](docs/backend-final/postman/Inventario-Laboratorios.postman_environment.json).
+La colección conserva el alcance histórico de Sprint 7; no incluye todas las
+ampliaciones V10–V13. Para estudiar/probar las 70 operaciones actuales usa el
+[catálogo vigente](docs/backend-final/endpoints.md) y los ejemplos de la
+[ampliación](backend/inventario/ACTUALIZACION-BACKEND.md).
 Completa los secretos localmente; tokens e IDs iniciales están vacíos. Sigue el
 [orden guiado](docs/backend-final/endpoints.md), crea padres propios y conserva
 asignaciones anteriores antes de reemplazarlas. Los IDs deben proceder de
@@ -366,42 +437,45 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 
 | Documento vigente | Contenido |
 |---|---|
-| [Resumen del backend](docs/backend-final/resumen-backend.md) | Lectura general del cierre |
-| [Inventario de auditoría](docs/backend-final/inventario-auditoria.md) | Estado inicial y hallazgos |
+| [Resumen del backend](docs/backend-final/resumen-backend.md) | Cierre histórico y ampliación vigente |
+| [Inventario de auditoría Sprint 7](docs/backend-final/inventario-auditoria.md) | Estado inicial histórico y hallazgos del cierre |
 | [Arquitectura](docs/backend-final/arquitectura-backend.md) | Capas y responsabilidades |
-| [Auditoría Entity/Flyway](docs/backend-final/auditoria-entity-flyway.md) | Correspondencia con PostgreSQL |
-| [Flujos principales](docs/backend-final/flujos-principales.md) | Ocho recorridos de una solicitud |
-| [Endpoints](docs/backend-final/endpoints.md) | Las 42 operaciones y Postman |
+| [Auditoría Entity/Flyway Sprint 7](docs/backend-final/auditoria-entity-flyway.md) | Cotejo histórico V9 y alcance de la ampliación |
+| [Flujos principales](docs/backend-final/flujos-principales.md) | Recorridos y ampliaciones de una solicitud |
+| [Endpoints](docs/backend-final/endpoints.md) | Las 70 operaciones; cobertura de la colección histórica |
 | [Códigos HTTP](docs/backend-final/codigos-http.md) | Éxitos y errores reales |
 | [Reglas](docs/reglas-negocio.md) / [permisos](docs/matriz-permisos.md) | RN-01–45 y autorización |
 | [JWT](docs/autenticacion-jwt.md) | Login, variables y comprobaciones |
-| [Verificación final](docs/backend-final/verificacion-final.md) | Evidencia de tests, arranque y preservación |
+| [Verificación final Sprint 7](docs/backend-final/verificacion-final.md) | Evidencia histórica V9/233, con enlace al estado vigente |
 | [Checklist](docs/backend-final/checklist-entrega.md) | Criterios de entrega |
 | [Sprint 7](docs/sprints_realizados-backend/sprint-7.md) | Reporte del cierre técnico |
 | [Sprint 8](docs/sprints_realizados-backend/sprint-8.md) | Docker local y publicación GHCR verificados |
+| [Estado de sprints backend](docs/sprints_realizados-backend/README.md) | Cierres históricos, ampliación posterior y evidencia vigente |
+| [Ampliación del backend](backend/inventario/ACTUALIZACION-BACKEND.md) | Contratos V10–V13 para integrar Jason |
 | [Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md) | Flujo completo, ambos trabajos verdes, imágenes y evidencias persistentes |
 | [Sprints Jason](docs/sprints_realizados-frontend-Jason/README.md) | Estado actual de la implementación frontend y sus límites |
 | [Frontend](frontend/readme.md) | Versiones Jason/Marko y modos de ejecución |
-| [ERD lógico](docs/Erd_actual/erd-logico-v2.md) / [físico](docs/Erd_actual/erd-fisico-v2.md) | Mermaid editable y SVG |
+| [Modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md) | 12 entidades y 16 FK; ampliación sobre V9 |
+| [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md) / [físico v2](docs/Erd_actual/erd-fisico-v2.md) | Mermaid y SVG históricos V1–V9 |
 | [Cambios de ERD](docs/Erd_actual/erd-v2-cambios.md) | Comparación con los PDF iniciales |
 
 Los documentos de [Sprint 3](docs/sprints_realizados-backend/sprint-3-categorias.md),
 [Sprint 4](docs/sprints_realizados-backend/sprint-4.md), [Sprint 5](docs/sprints_realizados-backend/sprint-5.md) y
 [Sprint 6](docs/sprints_realizados-backend/sprint-6.md) conservan resultados y pendientes de cada
 cierre. Sus cifras históricas no sustituyen la verificación final. Los PDF
-`docs/erd-logico.pdf` y `docs/erd-fisico.pdf` son diseños anteriores; el ERD v2 es
-el modelo vigente. En Sprint 7 solo se reparan enlaces rotos de las guías antiguas.
+`docs/erd-logico.pdf` y `docs/erd-fisico.pdf` son diseños anteriores; el ERD v2
+describe V1–V9 y el documento del modelo V13 registra la ampliación actual.
 
 ## 15. Backlog
 
-Quedan fuera del alcance implementado: administración completa de usuarios, gestión
-de mantenimiento como Entity, auditoría general, refresh token y permisos dinámicos.
-Frontend Jason, Docker local y publicación GHCR se implementaron después del
-cierre funcional de Sprint 7; ya no son pendientes generales del proyecto.
-Siguen pendientes el despliegue en la nube y los módulos frontend de
-Mantenimientos, Reportes y Configuración. El estado MANTENIMIENTO y el filtro de Equipo ya existen;
-no constituyen un módulo de órdenes de mantenimiento.
+Usuarios administrativos, Mantenimiento como Entity, Reportes, Auditoría
+administrativa, frontend Jason, Docker local y publicación GHCR están
+implementados después del cierre histórico de Sprint 7.
+Siguen pendientes el despliegue en la nube, Configuración persistida,
+una pantalla frontend de Auditoría, exportación de reportes, refresh tokens,
+permisos dinámicos y paginación para escala futura. La auditoría administrativa
+existente no equivale a una plataforma general de auditoría/observabilidad.
 
 El [backlog](docs/backend-final/backlog.md) separa esas ampliaciones de mejoras
-opcionales como paginación y uniformidad futura de IDs inválidos. No hay rutas,
-tablas ni funcionalidades nuevas de negocio agregadas para cerrar Sprint 7.
+opcionales y no las presenta como defectos del alcance entregado.
+La actualización de evidencia/documentación no agregó nuevas funcionalidades.

@@ -1,13 +1,25 @@
 # FE-08 — Mantenimientos
 
 Fecha de inicio: 1 de octubre de 2026.
+Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
 
-**Estado: estructura visual preparada; módulo funcional pendiente. La pantalla existe y está integrada en navegación, pero la versión entregada no implementa programación, calendario ni operaciones de mantenimiento contra endpoints específicos.**
+**Estado vigente: Mantenimiento de Equipo implementado e integrado; programación, edición y seguimiento usan API real y alcance.**
 
-Actualización del 3 de octubre de 2026: la
-[validación Docker y publicación de Jason](../despliegue/verificacion-docker-actions-2026-10-03.md)
-acredita las funcionalidades existentes. FE-08 conserva este estado; construir o
-publicar su placeholder no implementa mantenimiento ni cierra este módulo.
+## Implementación y verificación actuales
+
+`Mantenimientos.jsx` reemplaza el placeholder. ADMIN y GESTOR autorizados crean/gestionan; LECTOR consulta dentro del alcance. Consume GET/POST `/api/mantenimientos`, GET/PUT `/{id}` y PATCH `/{id}/estado`. Filtros: Equipo, Laboratorio, Estado, Tipo y fechas. Tipos: PREVENTIVO, CORRECTIVO, CALIBRACION y OTRO.
+
+Estados: PROGRAMADO → EN_PROCESO → COMPLETADO; PROGRAMADO o EN_PROCESO pueden pasar a CANCELADO. El formulario ofrece transiciones válidas; edición mientras está PROGRAMADO. El servidor conserva fechas/observaciones; no existe DELETE de mantenimiento. Al iniciar, Equipo pasa a MANTENIMIENTO y edición/baja/traslado reciben 409; completar/cancelar restaura el estado previo.
+
+En Docker actual se programó/inició/completó mediante interfaz y se verificó otra cancelación por HTTP. Ocho pruebas de mantenimiento se incluyen en las 67 frontend. El calendario del mockup sigue fuera de la interfaz actual; el módulo funcional ya no es placeholder. Véase la [captura de mantenimiento](../../frontend/version-jason/frontend/evidencias/mantenimientos-2026-10-03.png).
+
+La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
+
+La [evidencia de adaptación](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) acredita la ejecución anterior de **67/67 pruebas frontend** y el build aprobado con 1677 módulos. En la actualización Docker no se repitieron las suites npm/Gradle. Las cuatro asignaciones y las filas previas del inventario habitual se conservaron; la base de escritura temporal y sus recursos se eliminaron. No se publican credenciales.
+
+## Registro de entrega original (histórico)
+
+Las secciones siguientes conservan la inspección inicial del 3 de octubre de 2026, anterior a la adaptación V10–V13. Sus pendientes no sustituyen el estado vigente indicado arriba.
 
 ## Avance comprobado en archivos
 
