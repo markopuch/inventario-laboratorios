@@ -27,6 +27,15 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
 
     boolean existsByUserNameIgnoreCase(String userName);
 
+    boolean existsByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCaseAndIdUsuarioNot(String email, Integer idUsuario);
+
+    @EntityGraph(attributePaths = "rol")
+    List<UsuarioEntity> findAllByOrderByIdUsuarioAsc();
+
+    long countByActivoTrueAndRol_NombreAndRol_ActivoTrue(String nombreRol);
+
     // Bloquea solo Usuario, incluso inactivo, sin seleccionar password_hash ni unirse al rol.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u.idUsuario from UsuarioEntity u where u.idUsuario = :idUsuario")
@@ -41,7 +50,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
     // Proyección pública: administrar asignaciones no necesita credenciales ni la Entity usuario.
     @Query("""
             select new com.utec.inventario.domain.Usuario(
-                u.idUsuario, u.userName, u.nombre, u.apellido, u.email,
+                u.idUsuario, u.userName, u.nombre, u.apellido, u.email, u.cargo,
                 r.nombre, u.activo, u.fechaCreacion)
             from UsuarioEntity u join u.rol r
             where u.idUsuario = :idUsuario
@@ -50,7 +59,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
 
     @Query("""
             select new com.utec.inventario.domain.Usuario(
-                u.idUsuario, u.userName, u.nombre, u.apellido, u.email,
+                u.idUsuario, u.userName, u.nombre, u.apellido, u.email, u.cargo,
                 r.nombre, u.activo, u.fechaCreacion)
             from UsuarioEntity u join u.rol r
             where u.idUsuario in :idsUsuario
@@ -59,7 +68,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
 
     @Query("""
             select new com.utec.inventario.domain.Usuario(
-                u.idUsuario, u.userName, u.nombre, u.apellido, u.email,
+                u.idUsuario, u.userName, u.nombre, u.apellido, u.email, u.cargo,
                 r.nombre, u.activo, u.fechaCreacion)
             from UsuarioEntity u join u.rol r
             where u.idUsuario = :idUsuario and u.activo = true and r.activo = true

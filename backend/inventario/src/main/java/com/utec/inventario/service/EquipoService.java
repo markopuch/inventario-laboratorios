@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.AlcanceLaboratorios;
+import com.utec.inventario.domain.AccionAuditoria;
+import com.utec.inventario.domain.EstadoMantenimiento;
 import com.utec.inventario.domain.Equipo;
 import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.domain.Laboratorio;
@@ -25,6 +27,7 @@ import com.utec.inventario.exception.ConflictException;
 import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.EquipoMapper;
 import com.utec.inventario.repository.EquipoRepository;
+import com.utec.inventario.repository.MantenimientoRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.SubcategoriaRepository;
 import com.utec.inventario.repository.UsuarioRepository;
@@ -39,17 +42,22 @@ public class EquipoService {
     private final UsuarioRepository usuarioRepository;
     private final AlcanceLaboratorioService alcanceService;
     private final EquipoMapper mapper;
+    private final MantenimientoRepository mantenimientoRepository;
+    private final AuditoriaService auditoria;
 
     @Autowired
     public EquipoService(EquipoRepository equipoRepository, SubcategoriaRepository subcategoriaRepository,
             LaboratorioRepository laboratorioRepository, UsuarioRepository usuarioRepository,
-            AlcanceLaboratorioService alcanceService, EquipoMapper mapper) {
+            AlcanceLaboratorioService alcanceService, EquipoMapper mapper,
+            MantenimientoRepository mantenimientoRepository, AuditoriaService auditoria) {
         this.equipoRepository = equipoRepository;
         this.subcategoriaRepository = subcategoriaRepository;
         this.laboratorioRepository = laboratorioRepository;
         this.usuarioRepository = usuarioRepository;
         this.alcanceService = alcanceService;
         this.mapper = mapper;
+        this.mantenimientoRepository = mantenimientoRepository;
+        this.auditoria = auditoria;
     }
 
     public List<Equipo> listarEquipos(Integer idUsuario, EstadoEquipo estado, Integer idLaboratorio,
@@ -108,6 +116,9 @@ public class EquipoService {
         nuevo.setLaboratorio(laboratorio);
         nuevo.setResponsable(this.referenciaResponsable(responsable));
         EquipoEntity guardado = this.equipoRepository.saveAndFlush(nuevo);
+        this.auditoria.registrar(AccionAuditoria.CREAR, "equipo", guardado.getIdEquipo(),
+                "laboratorio=" + laboratorio.getIdLaboratorio() + "; subcategoria=" + subcategoria.getIdSubcategoria()
+                        + "; estado=" + guardado.getEstado());
         return this.mapper.convert(guardado, responsable);
     }
 
@@ -119,6 +130,7 @@ public class EquipoService {
         this.validarAlcance(usuario, equipo.getLaboratorio().getIdLaboratorio());
         this.validarEstadoEditable(equipo.getEstado());
         this.validarEstadoEditable(cambios.getEstado());
+        this.validarSinMantenimientoEnProceso(idEquipo);
 
         SubcategoriaEntity subcategoria = this.buscarSubcategoriaActiva(cambios.getSubcategoria().getId());
         // No cambia el laboratorio; este bloqueo también se comparte con su baja.
@@ -134,6 +146,8 @@ public class EquipoService {
         actualizado.setResponsable(this.referenciaResponsable(responsable));
         actualizado.setFechaActualizacion(OffsetDateTime.now(ZoneOffset.UTC));
         EquipoEntity guardado = this.equipoRepository.saveAndFlush(actualizado);
+        this.auditoria.registrar(AccionAuditoria.EDITAR, "equipo", idEquipo,
+                "Campos editables; subcategoria=" + subcategoria.getIdSubcategoria() + "; estado=" + guardado.getEstado());
         return this.mapper.convert(guardado, responsable);
     }
 
@@ -144,9 +158,17 @@ public class EquipoService {
                 .orElseThrow(() -> this.equipoInexistente(idEquipo));
         this.validarAlcance(usuario, equipo.getLaboratorio().getIdLaboratorio());
         this.validarEstadoEditable(equipo.getEstado());
+        this.validarSinMantenimientoEnProceso(idEquipo);
         equipo.setEstado(EstadoEquipo.BAJA);
         equipo.setFechaActualizacion(OffsetDateTime.now(ZoneOffset.UTC));
         this.equipoRepository.saveAndFlush(equipo);
+        this.auditoria.registrar(AccionAuditoria.DESACTIVAR, "equipo", idEquipo, "estado=BAJA");
+    }
+
+    private void validarSinMantenimientoEnProceso(Integer idEquipo) {
+        if (this.mantenimientoRepository.existsByEquipo_IdEquipoAndEstado(idEquipo, EstadoMantenimiento.EN_PROCESO)) {
+            throw new ConflictException("El equipo tiene un mantenimiento en proceso; debe finalizarse o cancelarse antes de modificarlo.");
+        }
     }
 
     private Usuario buscarUsuarioVigente(Integer idUsuario) {

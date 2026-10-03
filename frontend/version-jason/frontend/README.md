@@ -3,6 +3,13 @@
 Aplicación React/Vite conectada al backend Spring Boot del repositorio. Esta versión
 está en `frontend/version-jason/frontend/`; la versión Marko se conserva por separado.
 
+**Adaptación al backend ampliado — 3 de octubre de 2026:** esta versión consume
+los contratos actuales de catálogos administrativos, usuarios, mantenimientos y
+reportes. Requiere un backend que incorpore las migraciones V10–V13 y los nuevos
+Controllers. Una imagen Docker anterior conserva su API anterior: hay que
+reconstruirla para usar estos módulos. Esta adaptación modifica únicamente Jason;
+no reconstruye ni reemplaza tu backend habitual.
+
 ## Ejecución local en Windows
 
 Se necesitan Node.js con npm y Docker Desktop en ejecución. Los comandos siguientes
@@ -64,7 +71,7 @@ la imagen final contiene Nginx y los archivos de `dist`, no Node ni `node_module
 es una configuración pública de compilación, no una contraseña. La configuración
 privada del backend permanece en su carpeta; no se copia al frontend.
 
-Las 27 pruebas se ejecutan con `npm.cmd test` desde esta carpeta del repositorio
+Las pruebas se ejecutan con `npm.cmd test` desde esta carpeta del repositorio
 completo y también en GitHub Actions antes de publicar Jason. Algunas verifican
 los contratos leyendo los DTO Java del backend, por lo que no se ejecutan dentro
 del contexto aislado del Dockerfile del frontend.
@@ -120,7 +127,9 @@ despliegue del build necesita que su servidor también enrute `/api` al backend.
 ## Sesión, roles y datos iniciales
 
 El login utiliza **usuario**, no correo institucional. Se ingresa con una cuenta
-existente del backend; no hay registro público ni directorio de usuarios en esta UI.
+existente del backend. No hay registro público; ADMIN dispone de un directorio
+administrativo en `/usuarios`, con creación, edición, rol, estado, restablecimiento
+de contraseña y gestión de laboratorios mediante endpoints independientes.
 No se documentan ni precargan contraseñas.
 
 El JWT y el usuario se conservan únicamente en memoria. Recargar la página, cerrar
@@ -130,16 +139,19 @@ implementados. Un 401 de una solicitud de la sesión vigente cierra esa sesión.
 
 | Rol | Recorridos de interfaz |
 |---|---|
-| `ADMIN` | Alcance global, catálogos/ubicaciones, gestión de equipos y asignaciones. |
-| `GESTOR` | Consulta y gestión de equipos dentro de los laboratorios asignados. |
-| `LECTOR` | Consulta de equipos y movimientos dentro de su alcance, sin acciones de escritura. |
+| `ADMIN` | Alcance global; catálogos activos/inactivos, organización, usuarios/asignaciones, equipos, movimientos, mantenimientos y reportes. |
+| `GESTOR` | Consulta global de catálogos; equipos, movimientos, mantenimientos y reportes según sus laboratorios autorizados. |
+| `LECTOR` | Consulta de catálogos, equipos, movimientos, mantenimientos y reportes; sin acciones de escritura. |
 
 Los tres roles pueden leer los catálogos y la organización global. El alcance por
 laboratorio restringe equipos y movimientos, no la lectura de todos los laboratorios
 del catálogo. El alcance de menú/filtros se obtiene al iniciar sesión; el contador
 del dashboard vuelve a consultar `/auth/me/laboratorios` en cada entrada.
+Los autocambios de rol o de asignaciones refrescan perfil y alcance; un autocambio
+de actividad que desactive la cuenta cierra la sesión. El backend revalida siempre
+los permisos de cada solicitud, aunque una sesión ajena conserve datos visuales antiguos.
 
-El backend autoriza cada operación. La lectura de catálogos y organización es global para los tres roles; el alcance por laboratorio restringe equipos y movimientos. Los movimientos pueden seguir siendo visibles por su origen aunque el equipo haya salido de ese laboratorio. Las rutas `/asignaciones`, `/usuarios` (alias)
+El backend autoriza cada operación. La lectura de catálogos y organización es global para los tres roles; el alcance por laboratorio restringe equipos, movimientos, mantenimientos y reportes. Los movimientos pueden seguir siendo visibles por su origen aunque el equipo haya salido de ese laboratorio. Las rutas `/asignaciones` y `/usuarios`
 y `/configuracion` además están protegidas por rol en el frontend.
 
 En la comprobación del entorno habitual del 3 de octubre de 2026 existían `marko`
@@ -151,15 +163,19 @@ entorno aislado, separado de ese inventario habitual.
 ## Alcance y pendientes
 
 La integración implementa login/alcance, dashboard, equipos, categorías/subcategorías,
-sedes/áreas/laboratorios, historial de movimientos y asignación administrativa de
-laboratorios. Asignaciones permite consultar por ID y seleccionar laboratorios activos;
+sedes/áreas/laboratorios, historial de movimientos, usuarios administrativos,
+mantenimientos y reportes. ADMIN puede consultar activos/inactivos y cambiar su
+estado real. Laboratorio distingue `activo` de `estadoOperativo`.
+Asignaciones permite consultar por ID y seleccionar laboratorios activos, también
+desde la acción Laboratorios de cada usuario;
 guardar una lista vacía retira las asignaciones del usuario consultado.
 
-Mantenimientos, Reportes y Configuración siguen siendo módulos pendientes, identificados
-como Próximamente en el menú. No se implementaron su calendario, reportes/exportación,
-preferencias ni seguridad configurable. Los estados de proceso de movimientos y el
-estado Mantenimiento de laboratorio que aparecen en algunos mockups no tienen contrato
-en el backend actual. No se simulan como operaciones funcionales.
+Configuración permanece como Próximamente: no tiene contrato API para preferencias
+ni seguridad configurable. No se inventa una pantalla de Auditoría. Los reportes
+consumen agregados reales; no se implementa exportación sin contrato acordado.
+El mantenimiento de Laboratorio es un estado operativo independiente del ciclo
+de Mantenimiento de Equipo. Los Movimientos siguen siendo traslados confirmados,
+sin estados pendientes/en proceso inventados.
 
 La aplicación conserva el lenguaje visual Jason, pero no es una reproducción 1:1 de
 los mockups. La [auditoría de integración](../../../docs/sprints_realizados-frontend-Jason/auditoria-integracion.md)
@@ -173,6 +189,49 @@ Desde esta carpeta:
 npm.cmd test
 npm.cmd run build
 ```
+
+### Resultado de la adaptación al backend actual
+
+Verificación del 3 de octubre de 2026: **67/67 pruebas aprobadas**, cero fallos,
+cero cancelaciones y cero omitidas. Se conservan las 27 pruebas anteriores y se
+añaden 40 sobre contratos, estados de catálogos, usuarios, sesión, mantenimientos
+y reportes. El build de producción pasó con **1677 módulos**.
+
+Se ejecutaron 13 comprobaciones con los servicios reales del frontend contra el
+JAR existente del backend ampliado: estados de los cinco catálogos, laboratorio
+operativo, usuarios, asignaciones, último ADMIN, conflictos, mantenimiento,
+LECTOR y cinco reportes filtrados. En el navegador se comprobaron además creación
+y edición de usuario, rol, actividad, asignaciones, estados de los cinco catálogos,
+ciclo de mantenimiento, cancelación por GESTOR, filtros, reportes y lectura LECTOR.
+Un autocambio ADMIN → LECTOR actualizó perfil/alcance y retiró Usuarios sin recargar.
+El restablecimiento de contraseña se verificó mediante el servicio HTTP del
+frontend; su diálogo se revisó vacío, sin automatizar la entrada de una contraseña
+nueva en ese formulario. El recorrido manual de abajo permite corroborarlo.
+
+Todas las escrituras se realizaron en **`inventario_verificacion_front_actual_7f93e1c4`**,
+con PostgreSQL aislado, backend **49860** y Vite **49861**. Flyway aplicó V1–V13
+correctamente y las siete consultas de inconsistencias devolvieron cero.
+Al terminar se confirmaron cero conexiones, eliminación de la base, contenedor y
+volumen temporales y ausencia de procesos escuchando en esos dos puertos. No se
+escribió en el inventario habitual ni se reconstruyeron sus contenedores.
+
+La [evidencia de esta adaptación](evidencias/adaptacion-backend-2026-10-03.json)
+incluye resultados, escenarios y límites; las capturas muestran
+[el conflicto del último ADMIN](evidencias/usuarios-conflicto-admin-2026-10-03.png),
+[mantenimientos completados](evidencias/mantenimientos-2026-10-03.png) y
+[reportes filtrados](evidencias/reportes-2026-10-03.png).
+No se reejecutó la suite JUnit del backend ni se publicó un nuevo build en Actions.
+
+**Comentario para el backend/despliegue:** no se encontró un cambio de código
+backend necesario para esta adaptación. Para usarla con Docker, la imagen del
+backend debe contener sus cambios V10–V13; arrancar una imagen anterior no los
+incorpora automáticamente. La edición de registros inactivos requiere reactivarlos
+primero según el contrato actual, y la interfaz muestra errores de cualquier paso
+sin presentar operaciones parciales como una transacción completada.
+
+Las dos verificaciones históricas siguientes corresponden a la versión anterior
+a la ampliación V10–V13. Se conservan como antecedentes; no describen los módulos
+que se conectaron después ni sustituyen las comprobaciones de la adaptación actual.
 
 Resultado de la auditoría inicial del 3 de octubre de 2026: **27/27 pruebas automatizadas aprobadas**
 (10 de autenticación/sesión, 5 de contratos de equipos/catálogos, 5 de movimientos
@@ -191,8 +250,8 @@ ya se eliminaron. Durante esa verificación, el frontend en **5173** apuntó al 
 los dos contenedores de base/backend estaban saludables y el dashboard mostró 2 laboratorios,
 0 equipos y 0 movimientos. Los conteos del inventario habitual permanecieron iguales.
 
-Conclusión: **integración local operativa en las funcionalidades implementadas**.
-Continúan pendientes FE-08–FE-10, la fidelidad visual 1:1 y la revisión exhaustiva de
+Conclusión de aquella auditoría: **integración local operativa en las funcionalidades implementadas**.
+En ese momento seguían pendientes FE-08–FE-10, la fidelidad visual 1:1 y la revisión exhaustiva de
 accesibilidad. La [evidencia final](../../../docs/sprints_realizados-frontend-Jason/evidencias/verificacion-2026-10-03.json)
 y la auditoría detallan los escenarios comprobados; no se declara una reejecución
 completa de la suite backend histórica.
@@ -218,7 +277,9 @@ eliminaron la base, contenedores, volumen y red temporales. El entorno habitual
 final tiene sus tres contenedores saludables y utiliza frontend **3000** y backend
 **8080**. El [informe consolidado](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
 separa esta evidencia de la auditoría Vite anterior y de la publicación en GHCR.
-FE-08–FE-10 y los límites visuales y de accesibilidad conservan su estado pendiente.
+En aquella comprobación FE-08–FE-10 y los límites visuales y de accesibilidad
+conservaban su estado pendiente. Mantenimientos y Reportes ahora consumen sus APIs;
+Configuración y las revisiones visuales adicionales conservan sus límites indicados.
 
 Versiones verificadas: Node 24.16.0, npm 11.13.0, Docker 29.8.0, React 18.3.1,
 Vite 6.4.3, Axios 1.20.0, React Router 7.18.4, plugin React 4.7.0 y Lucide 0.468.0.
@@ -234,7 +295,8 @@ El entorno temporal empleado en la verificación ya no existe.
    Identifica los datos iniciales del entorno que vas a utilizar.
 2. Inicia sesión como ADMIN y comprueba dashboard, laboratorios y ausencia de errores.
    Las cifras deben corresponder a los datos reales, incluso cuando sean cero.
-3. En Asignaciones, consulta el ID de un GESTOR. Selecciona explícitamente los
+3. En Usuarios, abre Laboratorios para un GESTOR; también puedes usar `/asignaciones`
+   para consultar su ID. Selecciona explícitamente los
    laboratorios de prueba y pulsa Guardar asignaciones para modificar ese usuario.
    Repite con un LECTOR si deseas preparar esa cuenta. Comprueba la respuesta mostrada.
 4. Tras consultar un usuario, cambia el ID: su resumen y Guardar deben desaparecer.
@@ -255,6 +317,49 @@ El entorno temporal empleado en la verificación ya no existe.
    390 × 844, menú y tablas; documenta cualquier diferencia adicional encontrada.
 
 Después de cambiar asignaciones, vuelve a iniciar sesión con el usuario afectado para actualizar las selecciones de la interfaz. El backend verifica los permisos vigentes en cada solicitud; el contador de laboratorios del Dashboard consulta el alcance actualizado al entrar.
+
+### Recorrido de los contratos ampliados
+
+Utiliza registros propios de prueba. Los mensajes 409 son resultados de negocio
+esperados, no una indicación de que React haya cambiado el dato localmente.
+
+1. Como ADMIN, crea Categoría y Subcategoría sin Equipos asociados. En Editar cambia
+   Estado a Inactivo, guarda y verifica su permanencia en el listado administrativo.
+   Reactiva y comprueba nuevamente el resultado. Intenta desactivar una Categoría
+   con Subcategorías activas: debe mostrarse el mensaje 409 de la API.
+2. Repite con una Sede y un Área sin dependencias. Para reactivar Área, su Sede debe
+   estar activa. El backend requiere reactivar antes de editar campos de una fila
+   inactiva; la interfaz no presenta ambos pasos como una sola transacción.
+3. En Laboratorios, cambia Activo → En mantenimiento → Activo. Comprueba el badge
+   y que `activo` permanezca true. Inactivo usa el endpoint de estado y conserva el
+   registro; asignaciones/equipos vigentes pueden impedirlo con 409.
+4. En Usuarios, crea una cuenta de prueba con username y email únicos. Edita nombre,
+   apellido, email y cargo; username permanece bloqueado. Cambia GESTOR ↔ LECTOR,
+   desactiva/reactiva y comprueba que las cuentas inactivas siguen en el listado.
+5. Intenta desactivar o degradar al último ADMIN activo: debe mostrarse 409 y la
+   cuenta debe conservar su rol/actividad. Un autocambio permitido refresca sesión
+   y navegación; desactivar la cuenta propia cierra su sesión.
+6. Abre Restablecer contraseña: escribe y confirma una contraseña de prueba de
+   4–72 caracteres y máximo 72 bytes UTF-8. El campo queda vacío al cerrar/guardar;
+   la contraseña solo se envía a su endpoint. Comprueba un nuevo login. El backend
+   no revoca automáticamente todos los JWT existentes al restablecer password.
+7. En Laboratorios de un usuario, selecciona los disponibles, guarda y vuelve a
+   consultar. La operación reemplaza la lista; vaciarla retira sus asignaciones.
+8. En Mantenimientos, programa una tarea sobre un Equipo no BAJA. Edita su tipo,
+   descripción, fecha y opcionales mientras está PROGRAMADO. Inicia y comprueba
+   Equipo MANTENIMIENTO; mientras está EN_PROCESO el backend impide edición,
+   baja y traslado del Equipo con 409. Completa o cancela y revisa fechas/historia
+   y la restauración del estado previo del Equipo.
+9. Prueba filtros reales de mantenimiento (Equipo, Laboratorio, Estado, Tipo,
+   fecha desde/hasta). Un rango invertido debe mostrar validación y no enviarse.
+10. En Reportes, filtra laboratorio, organización, estados y fechas. Contrasta
+    totales con los registros de ese alcance. Equipos usa fechaCreacion, Movimientos
+    fechaMovimiento y Mantenimientos fechaProgramada; los timestamps usan días UTC.
+11. Repite con GESTOR: solo gestiona Equipos/Mantenimientos autorizados. Con LECTOR
+    no deben aparecer acciones de escritura ni Usuarios. Intenta una ruta ADMIN
+    directa y comprueba su redirección; la API también conserva 403.
+12. Configuración sigue como Próximamente. No se presentan éxitos ni preferencias
+    guardadas sin un endpoint que las persista.
 
 La auditoría Vite anterior utilizó 5173/8080. La verificación posterior dejó el
 entorno habitual Docker en 3000/8080, con sus tres contenedores saludables.

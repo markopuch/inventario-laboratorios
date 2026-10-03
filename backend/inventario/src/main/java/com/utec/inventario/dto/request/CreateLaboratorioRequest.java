@@ -1,5 +1,7 @@
 package com.utec.inventario.dto.request;
 
+import com.utec.inventario.domain.EstadoOperativoLaboratorio;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -29,4 +31,11 @@ public class CreateLaboratorioRequest {
     @NotNull(message = "El área es obligatoria")
     @Positive(message = "El ID de área debe ser mayor que cero")
     private Integer idArea;
+
+    private EstadoOperativoLaboratorio estadoOperativo;
+
+    // Conserva la construcción usada por los contratos previos del proyecto.
+    public CreateLaboratorioRequest(String nombre, String codigo, String ubicacion, Integer idArea) {
+        this(nombre, codigo, ubicacion, idArea, null);
+    }
 }

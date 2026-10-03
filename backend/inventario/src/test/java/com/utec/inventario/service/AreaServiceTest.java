@@ -33,7 +33,7 @@ class AreaServiceTest {
     private AreaService service;
 
     @BeforeEach
-    void preparar() { service = new AreaService(areas, sedes, laboratorios, Mappers.getMapper(AreaMapper.class)); }
+    void preparar() { service = new AreaService(areas, sedes, laboratorios, Mappers.getMapper(AreaMapper.class), mock(AuditoriaService.class)); }
 
     @Test
     void padreAusenteOInactivoSeDistingueAntesDePersistir() {

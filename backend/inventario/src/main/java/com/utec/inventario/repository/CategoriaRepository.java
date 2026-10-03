@@ -14,6 +14,13 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Integer> {
 
+    List<CategoriaEntity> findAllByOrderByIdCategoriaAsc();
+
+    List<CategoriaEntity> findAllByActivoOrderByIdCategoriaAsc(boolean activo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<CategoriaEntity> findForUpdateByIdCategoria(Integer idCategoria);
+
     List<CategoriaEntity> findAllByActivoTrueOrderByIdCategoriaAsc();
 
     Optional<CategoriaEntity> findByIdCategoriaAndActivoTrue(Integer idCategoria);

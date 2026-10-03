@@ -64,5 +64,6 @@ public interface LaboratorioMapper {
     @Mapping(target = "activo", ignore = true)
     @Mapping(target = "fechaCreacion", ignore = true)
     @Mapping(target = "area", ignore = true)
+    @Mapping(target = "estadoOperativo", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     LaboratorioEntity copy(@MappingTarget LaboratorioEntity entity, Laboratorio laboratorio);
 }

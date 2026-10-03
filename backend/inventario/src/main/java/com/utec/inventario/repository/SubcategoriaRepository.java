@@ -16,6 +16,15 @@ import jakarta.persistence.LockModeType;
 public interface SubcategoriaRepository extends JpaRepository<SubcategoriaEntity, Integer> {
 
     @EntityGraph(attributePaths = "categoria")
+    List<SubcategoriaEntity> findAllByOrderByIdSubcategoriaAsc();
+
+    @EntityGraph(attributePaths = "categoria")
+    List<SubcategoriaEntity> findAllByActivoOrderByIdSubcategoriaAsc(boolean activo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<SubcategoriaEntity> findForUpdateByIdSubcategoria(Integer idSubcategoria);
+
+    @EntityGraph(attributePaths = "categoria")
     List<SubcategoriaEntity> findAllByActivoTrueOrderByIdSubcategoriaAsc();
 
     @EntityGraph(attributePaths = "categoria")

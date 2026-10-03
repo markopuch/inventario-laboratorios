@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.utec.inventario.domain.Sede;
+import com.utec.inventario.dto.request.CambiarEstadoCatalogoRequest;
 import com.utec.inventario.dto.request.CreateSedeRequest;
 import com.utec.inventario.dto.request.UpdateSedeRequest;
 import com.utec.inventario.dto.response.SedeResponse;
@@ -72,6 +74,13 @@ public class SedeController {
         Sede cambios = this.mapper.convert(request);
         Sede actualizado = this.sedeService.actualizarSede(id, cambios);
         return this.mapper.toResponse(actualizado);
+    }
+
+    @PatchMapping("/{id}/estado")
+    @ResponseStatus(HttpStatus.OK)
+    public SedeResponse cambiarEstadoSede(@Positive @PathVariable("id") Integer id,
+            @Valid @RequestBody CambiarEstadoCatalogoRequest request) {
+        return this.mapper.toResponse(this.sedeService.cambiarEstadoSede(id, request.getActivo()));
     }
 
     @DeleteMapping("/{id}")

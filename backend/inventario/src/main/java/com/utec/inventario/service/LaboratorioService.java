@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.Laboratorio;
+import com.utec.inventario.domain.AccionAuditoria;
 import com.utec.inventario.domain.EstadoEquipo;
+import com.utec.inventario.domain.EstadoOperativoLaboratorio;
 import com.utec.inventario.entity.AreaEntity;
 import com.utec.inventario.entity.LaboratorioEntity;
 import com.utec.inventario.exception.ConflictException;
@@ -22,6 +24,8 @@ import com.utec.inventario.repository.EquipoRepository;
 @Transactional(readOnly = true)
 public class LaboratorioService {
 
+    private final AuditoriaService auditoriaService;
+
     private final LaboratorioRepository laboratorioRepository;
     private final AreaRepository areaRepository;
     private final LaboratorioMapper mapper;
@@ -31,16 +35,43 @@ public class LaboratorioService {
     @Autowired
     public LaboratorioService(LaboratorioRepository laboratorioRepository,
             AreaRepository areaRepository, LaboratorioMapper mapper,
-            UsuarioLaboratorioRepository usuarioLaboratorioRepository, EquipoRepository equipoRepository) {
+            UsuarioLaboratorioRepository usuarioLaboratorioRepository, EquipoRepository equipoRepository, AuditoriaService auditoriaService) {
         this.laboratorioRepository = laboratorioRepository;
         this.areaRepository = areaRepository;
         this.mapper = mapper;
         this.usuarioLaboratorioRepository = usuarioLaboratorioRepository;
         this.equipoRepository = equipoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     public List<Laboratorio> listarLaboratorios() {
         return this.mapper.convert(this.laboratorioRepository.findAllByActivoTrueOrderByIdLaboratorioAsc());
+    }
+
+    public List<Laboratorio> listarLaboratoriosAdmin(Boolean activo) {
+        return this.mapper.convert(activo == null
+                ? this.laboratorioRepository.findAllByOrderByIdLaboratorioAsc()
+                : this.laboratorioRepository.findAllByActivoOrderByIdLaboratorioAsc(activo));
+    }
+
+    @Transactional
+    public Laboratorio cambiarEstadoLaboratorio(Integer id, boolean activo) {
+        LaboratorioEntity laboratorio = this.laboratorioRepository.findForUpdateByIdLaboratorio(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe un laboratorio con el ID " + id + "."));
+        if (laboratorio.isActivo() == activo) {
+            return this.mapper.convert(laboratorio);
+        }
+        if (activo) {
+            this.buscarAreaActivaParaRelacionar(laboratorio.getArea().getIdArea());
+        } else {
+            this.validarDesactivacion(id);
+        }
+        laboratorio.setActivo(activo);
+        LaboratorioEntity guardado = this.laboratorioRepository.saveAndFlush(laboratorio);
+        this.auditoriaService.registrar(activo ? AccionAuditoria.ACTIVAR : AccionAuditoria.DESACTIVAR,
+                "laboratorio", id, "activo: " + !activo + " -> " + activo);
+        return this.mapper.convert(guardado);
     }
 
     public Laboratorio obtenerLaboratorio(Integer id) {
@@ -71,17 +102,23 @@ public class LaboratorioService {
         laboratorio.setCodigo(codigo);
         laboratorio.setUbicacion(this.normalizarUbicacion(laboratorio.getUbicacion()));
         laboratorio.setActivo(true);
+        if (laboratorio.getEstadoOperativo() == null) {
+            laboratorio.setEstadoOperativo(EstadoOperativoLaboratorio.OPERATIVO);
+        }
         laboratorio.setFechaCreacion(null);
 
         LaboratorioEntity nuevoLaboratorio = this.mapper.toEntity(laboratorio);
         nuevoLaboratorio.setArea(area);
         LaboratorioEntity laboratorioGuardado = this.laboratorioRepository.saveAndFlush(nuevoLaboratorio);
+        this.auditoriaService.registrar(AccionAuditoria.CREAR, "laboratorio", laboratorioGuardado.getIdLaboratorio(),
+                "Creación de catálogo; activo: true");
         return this.mapper.convert(laboratorioGuardado);
     }
 
     @Transactional
     public Laboratorio actualizarLaboratorio(Integer id, Laboratorio cambios) {
         LaboratorioEntity laboratorio = this.buscarLaboratorioActivoParaModificar(id);
+        EstadoOperativoLaboratorio estadoAnterior = laboratorio.getEstadoOperativo();
         AreaEntity area = this.buscarAreaActivaParaRelacionar(cambios.getArea().getId());
         String codigo = cambios.getCodigo().trim();
         if (this.laboratorioRepository.existsByCodigoIgnoreCaseAndIdLaboratorioNot(codigo, id)) {
@@ -95,12 +132,22 @@ public class LaboratorioService {
         LaboratorioEntity laboratorioActualizado = this.mapper.copy(laboratorio, cambios);
         laboratorioActualizado.setArea(area);
         LaboratorioEntity laboratorioGuardado = this.laboratorioRepository.saveAndFlush(laboratorioActualizado);
+        this.auditoriaService.registrar(AccionAuditoria.EDITAR, "laboratorio", id,
+                "Actualización de nombre, codigo, ubicacion, idArea: " + area.getIdArea()
+                        + "; estadoOperativo: " + estadoAnterior + " -> " + laboratorioGuardado.getEstadoOperativo());
         return this.mapper.convert(laboratorioGuardado);
     }
 
     @Transactional
     public void eliminarLaboratorio(Integer id) {
         LaboratorioEntity laboratorio = this.buscarLaboratorioActivoParaModificar(id);
+        this.validarDesactivacion(id);
+        laboratorio.setActivo(false);
+        this.laboratorioRepository.saveAndFlush(laboratorio);
+        this.auditoriaService.registrar(AccionAuditoria.DESACTIVAR, "laboratorio", id, "activo: true -> false");
+    }
+
+    private void validarDesactivacion(Integer id) {
         // Comparte el bloqueo con PUT de asignaciones; no depende de usuario.activo.
         if (this.usuarioLaboratorioRepository.existsByLaboratorio_IdLaboratorioAndActivoTrue(id)) {
             throw new ConflictException(
@@ -110,8 +157,6 @@ public class LaboratorioService {
             throw new ConflictException(
                     "No se puede desactivar el laboratorio porque contiene equipos no dados de baja.");
         }
-        laboratorio.setActivo(false);
-        this.laboratorioRepository.saveAndFlush(laboratorio);
     }
 
     private LaboratorioEntity buscarLaboratorioActivoParaModificar(Integer id) {

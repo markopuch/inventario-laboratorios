@@ -39,6 +39,23 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET,"/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/usuarios", "/api/admin/usuarios/*",
+                                "/api/admin/auditoria", "/api/admin/categorias", "/api/admin/subcategorias",
+                                "/api/admin/sedes", "/api/admin/areas", "/api/admin/laboratorios").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/usuarios").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/usuarios/*", "/api/admin/usuarios/*/password")
+                                .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/usuarios/*/estado", "/api/admin/usuarios/*/rol",
+                                "/api/categorias/*/estado", "/api/subcategorias/*/estado", "/api/sedes/*/estado",
+                                "/api/areas/*/estado", "/api/laboratorios/*/estado").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/mantenimientos", "/api/mantenimientos/*",
+                                "/api/reportes/resumen", "/api/reportes/equipos/por-estado",
+                                "/api/reportes/equipos/por-laboratorio", "/api/reportes/movimientos",
+                                "/api/reportes/mantenimientos").hasAnyRole("ADMIN", "GESTOR", "LECTOR")
+                        .requestMatchers(HttpMethod.POST, "/api/mantenimientos").hasAnyRole("ADMIN", "GESTOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/mantenimientos/*").hasAnyRole("ADMIN", "GESTOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/mantenimientos/*/estado")
+                                .hasAnyRole("ADMIN", "GESTOR")
                         .requestMatchers(HttpMethod.GET, "/api/admin/equipos").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/equipos/*/traslados")
                         .hasAnyRole("ADMIN", "GESTOR")

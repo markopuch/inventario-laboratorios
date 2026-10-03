@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.Equipo;
+import com.utec.inventario.domain.AccionAuditoria;
+import com.utec.inventario.domain.EstadoMantenimiento;
 import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.domain.Laboratorio;
 import com.utec.inventario.domain.MovimientoEquipo;
@@ -27,6 +29,7 @@ import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.EquipoMapper;
 import com.utec.inventario.mapper.MovimientoEquipoMapper;
 import com.utec.inventario.repository.EquipoRepository;
+import com.utec.inventario.repository.MantenimientoRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.MovimientoEquipoRepository;
 import com.utec.inventario.repository.UsuarioRepository;
@@ -42,12 +45,15 @@ public class MovimientoEquipoService {
     private final AlcanceLaboratorioService alcanceService;
     private final MovimientoEquipoMapper mapper;
     private final EquipoMapper equipoMapper;
+    private final MantenimientoRepository mantenimientoRepository;
+    private final AuditoriaService auditoria;
 
     @Autowired
     public MovimientoEquipoService(MovimientoEquipoRepository movimientoRepository,
             EquipoRepository equipoRepository, LaboratorioRepository laboratorioRepository,
             UsuarioRepository usuarioRepository, AlcanceLaboratorioService alcanceService,
-            MovimientoEquipoMapper mapper, EquipoMapper equipoMapper) {
+            MovimientoEquipoMapper mapper, EquipoMapper equipoMapper,
+            MantenimientoRepository mantenimientoRepository, AuditoriaService auditoria) {
         this.movimientoRepository = movimientoRepository;
         this.equipoRepository = equipoRepository;
         this.laboratorioRepository = laboratorioRepository;
@@ -55,6 +61,8 @@ public class MovimientoEquipoService {
         this.alcanceService = alcanceService;
         this.mapper = mapper;
         this.equipoMapper = equipoMapper;
+        this.mantenimientoRepository = mantenimientoRepository;
+        this.auditoria = auditoria;
     }
 
     @Transactional
@@ -74,6 +82,9 @@ public class MovimientoEquipoService {
             throw new ConflictException("No se puede trasladar un equipo dado de baja.");
         }
         Integer idOrigen = equipo.getLaboratorio().getIdLaboratorio();
+        if (this.mantenimientoRepository.existsByEquipo_IdEquipoAndEstado(idEquipo, EstadoMantenimiento.EN_PROCESO)) {
+            throw new ConflictException("No se puede trasladar un equipo con mantenimiento en proceso.");
+        }
         if (idOrigen.equals(idLaboratorioDestino)) {
             throw new ConflictException("El laboratorio destino debe ser diferente al laboratorio actual.");
         }
@@ -111,6 +122,9 @@ public class MovimientoEquipoService {
         EquipoEntity equipoGuardado = this.equipoRepository.saveAndFlush(equipo);
         // Si este INSERT falla, la misma transacción revierte también el UPDATE ya enviado.
         MovimientoEquipoEntity movimientoGuardado = this.movimientoRepository.saveAndFlush(nuevoMovimiento);
+        this.auditoria.registrar(AccionAuditoria.TRASLADAR, "equipo", idEquipo,
+                "laboratorio: " + idOrigen + " -> " + idLaboratorioDestino
+                        + "; movimiento=" + movimientoGuardado.getIdMovimiento());
 
         Usuario responsable = equipoGuardado.getResponsable() == null ? null
                 : this.usuarioRepository.findPublicByIdUsuario(equipoGuardado.getResponsable().getIdUsuario())
@@ -199,4 +213,3 @@ public class MovimientoEquipoService {
         return new ResourceNotFoundException("No existe un equipo con el ID " + idEquipo + ".");
     }
 }
-

@@ -16,6 +16,12 @@ import jakarta.persistence.LockModeType;
 public interface LaboratorioRepository extends JpaRepository<LaboratorioEntity, Integer> {
 
     @EntityGraph(attributePaths = {"area", "area.sede"})
+    List<LaboratorioEntity> findAllByOrderByIdLaboratorioAsc();
+
+    @EntityGraph(attributePaths = {"area", "area.sede"})
+    List<LaboratorioEntity> findAllByActivoOrderByIdLaboratorioAsc(boolean activo);
+
+    @EntityGraph(attributePaths = {"area", "area.sede"})
     List<LaboratorioEntity> findAllByActivoTrueOrderByIdLaboratorioAsc();
 
     @EntityGraph(attributePaths = {"area", "area.sede"})

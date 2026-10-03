@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.utec.inventario.domain.Subcategoria;
+import com.utec.inventario.dto.request.CambiarEstadoCatalogoRequest;
 import com.utec.inventario.dto.request.CreateSubcategoriaRequest;
 import com.utec.inventario.dto.request.UpdateSubcategoriaRequest;
 import com.utec.inventario.dto.response.SubcategoriaResponse;
@@ -72,6 +74,13 @@ public class SubcategoriaController {
         Subcategoria cambios = this.mapper.convert(request);
         Subcategoria subcategoriaActualizada = this.subcategoriaService.actualizarSubcategoria(id, cambios);
         return this.mapper.toResponse(subcategoriaActualizada);
+    }
+
+    @PatchMapping("/{id}/estado")
+    @ResponseStatus(HttpStatus.OK)
+    public SubcategoriaResponse cambiarEstadoSubcategoria(@Positive @PathVariable("id") Integer id,
+            @Valid @RequestBody CambiarEstadoCatalogoRequest request) {
+        return this.mapper.toResponse(this.subcategoriaService.cambiarEstadoSubcategoria(id, request.getActivo()));
     }
 
     @DeleteMapping("/{id}")

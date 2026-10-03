@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.utec.inventario.domain.Categoria;
+import com.utec.inventario.dto.request.CambiarEstadoCatalogoRequest;
 import com.utec.inventario.dto.request.CreateCategoriaRequest;
 import com.utec.inventario.dto.request.UpdateCategoriaRequest;
 import com.utec.inventario.dto.response.CategoriaResponse;
@@ -25,6 +27,7 @@ import com.utec.inventario.mapper.CategoriaMapper;
 import com.utec.inventario.service.CategoriaService;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 @RestController
 @RequestMapping("/api/categorias")
@@ -71,6 +74,13 @@ public class CategoriaController {
         Categoria cambios = this.mapper.convert(request);
         Categoria categoriaActualizada = this.categoriaService.actualizarCategoria(id, cambios);
         return this.mapper.toResponse(categoriaActualizada);
+    }
+
+    @PatchMapping("/{id}/estado")
+    @ResponseStatus(HttpStatus.OK)
+    public CategoriaResponse cambiarEstadoCategoria(@Positive @PathVariable("id") Integer id,
+            @Valid @RequestBody CambiarEstadoCatalogoRequest request) {
+        return this.mapper.toResponse(this.categoriaService.cambiarEstadoCategoria(id, request.getActivo()));
     }
 
     @DeleteMapping("/{id}")

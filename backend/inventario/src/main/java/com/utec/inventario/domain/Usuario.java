@@ -18,7 +18,14 @@ public class Usuario {
     private String nombre;
     private String apellido;
     private String email;
+    private String cargo;
     private String rol;
     private boolean activo;
     private OffsetDateTime fechaCreacion;
+
+    // Conserva el constructor público utilizado por las proyecciones y contratos anteriores.
+    public Usuario(Integer id, String userName, String nombre, String apellido, String email,
+            String rol, boolean activo, OffsetDateTime fechaCreacion) {
+        this(id, userName, nombre, apellido, email, null, rol, activo, fechaCreacion);
+    }
 }

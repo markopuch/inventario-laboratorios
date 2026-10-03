@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.Usuario;
+import com.utec.inventario.domain.AccionAuditoria;
 import com.utec.inventario.domain.UsuarioLaboratorio;
 import com.utec.inventario.domain.UsuarioLaboratorios;
 import com.utec.inventario.entity.LaboratorioEntity;
@@ -34,16 +35,18 @@ public class UsuarioLaboratorioService {
     private final LaboratorioRepository laboratorioRepository;
     private final UsuarioLaboratorioRepository asignacionRepository;
     private final UsuarioLaboratorioMapper mapper;
+    private final AuditoriaService auditoria;
 
     @Autowired
     public UsuarioLaboratorioService(UsuarioRepository usuarioRepository,
             LaboratorioRepository laboratorioRepository,
             UsuarioLaboratorioRepository asignacionRepository,
-            UsuarioLaboratorioMapper mapper) {
+            UsuarioLaboratorioMapper mapper, AuditoriaService auditoria) {
         this.usuarioRepository = usuarioRepository;
         this.laboratorioRepository = laboratorioRepository;
         this.asignacionRepository = asignacionRepository;
         this.mapper = mapper;
+        this.auditoria = auditoria;
     }
 
     public UsuarioLaboratorios listarAsignacionesActivas(Integer idUsuario) {
@@ -97,6 +100,8 @@ public class UsuarioLaboratorioService {
         }
         if (!cambios.isEmpty()) {
             this.asignacionRepository.saveAllAndFlush(cambios);
+            this.auditoria.registrar(AccionAuditoria.ASIGNAR_LABORATORIOS, "usuario_laboratorio", idUsuario,
+                    "Laboratorios activos=" + idsDestino);
         }
         return this.obtenerAsignacionesActivas(usuario);
     }
@@ -134,4 +139,3 @@ public class UsuarioLaboratorioService {
                 .build();
     }
 }
-

@@ -30,6 +30,7 @@ import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.EquipoMapper;
 import com.utec.inventario.mapper.MovimientoEquipoMapper;
 import com.utec.inventario.repository.EquipoRepository;
+import com.utec.inventario.repository.MantenimientoRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.MovimientoEquipoRepository;
 import com.utec.inventario.repository.UsuarioRepository;
@@ -42,12 +43,14 @@ class MovimientoEquipoServiceTest {
     @Mock private LaboratorioRepository laboratorios;
     @Mock private UsuarioRepository usuarios;
     @Mock private AlcanceLaboratorioService alcance;
+    @Mock private MantenimientoRepository mantenimientos;
+    @Mock private AuditoriaService auditoria;
     private MovimientoEquipoService service;
 
     @BeforeEach
     void preparar() {
         service = new MovimientoEquipoService(movimientos, equipos, laboratorios, usuarios, alcance,
-                Mappers.getMapper(MovimientoEquipoMapper.class), Mappers.getMapper(EquipoMapper.class));
+                Mappers.getMapper(MovimientoEquipoMapper.class), Mappers.getMapper(EquipoMapper.class), mantenimientos, auditoria);
     }
 
     @Test

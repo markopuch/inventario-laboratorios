@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.utec.inventario.domain.Area;
+import com.utec.inventario.dto.request.CambiarEstadoCatalogoRequest;
 import com.utec.inventario.dto.request.CreateAreaRequest;
 import com.utec.inventario.dto.request.UpdateAreaRequest;
 import com.utec.inventario.dto.response.AreaResponse;
@@ -72,6 +74,13 @@ public class AreaController {
         Area cambios = this.mapper.convert(request);
         Area actualizado = this.areaService.actualizarArea(id, cambios);
         return this.mapper.toResponse(actualizado);
+    }
+
+    @PatchMapping("/{id}/estado")
+    @ResponseStatus(HttpStatus.OK)
+    public AreaResponse cambiarEstadoArea(@Positive @PathVariable("id") Integer id,
+            @Valid @RequestBody CambiarEstadoCatalogoRequest request) {
+        return this.mapper.toResponse(this.areaService.cambiarEstadoArea(id, request.getActivo()));
     }
 
     @DeleteMapping("/{id}")

@@ -18,6 +18,7 @@ public class Laboratorio {
     private String codigo;
     private String ubicacion;
     private boolean activo;
+    private EstadoOperativoLaboratorio estadoOperativo;
     private OffsetDateTime fechaCreacion;
     private Area area;
 }

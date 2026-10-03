@@ -1,0 +1,116 @@
+{
+  "fecha": "2026-10-03",
+  "zonaHoraria": "America/Lima",
+  "alcanceCambios": "frontend/version-jason/frontend/",
+  "backendModificadoEnEstaAdaptacion": false,
+  "backendFuenteDeContrato": "Controllers, DTOs, SecurityConfig y Services actuales; migraciones V1–V13",
+  "automatizadas": {
+    "comando": "npm.cmd test",
+    "anterioresConservadas": 27,
+    "nuevas": 40,
+    "total": 67,
+    "aprobadas": 67,
+    "fallidas": 0,
+    "canceladas": 0,
+    "omitidas": 0,
+    "pendientes": 0,
+    "porArchivo": {
+      "api.test.js": 14,
+      "contratos.test.js": 4,
+      "asignaciones.test.js": 7,
+      "catalogos.test.js": 11,
+      "equipos.test.js": 6,
+      "mantenimientos.test.js": 8,
+      "movimientos.test.js": 5,
+      "reportes.test.js": 5,
+      "usuarios.test.js": 7
+    }
+  },
+  "build": {
+    "comando": "npm.cmd run build",
+    "resultado": "APROBADO",
+    "modulosTransformados": 1677,
+    "duracionSegundos": 6.03,
+    "versionVite": "6.4.3"
+  },
+  "serviciosFrontendContraBackendReal": {
+    "comprobacionesAprobadas": 13,
+    "solicitudesRegistradasEnBloqueInicial": 61,
+    "nota": "Las solicitudes no equivalen a endpoints distintos ni a pruebas JUnit. Hubo llamadas adicionales de preparación y pruebas de interfaz que no se suman a ese contador.",
+    "escenarios": [
+      "Restablecimiento HTTP de contraseña en tres cuentas exclusivamente temporales",
+      "Categoría: desactivar, consultar inactiva y reactivar",
+      "Subcategoría: desactivar, consultar inactiva y reactivar",
+      "Sede: desactivar, consultar inactiva y reactivar",
+      "Área: desactivar, consultar inactiva y reactivar",
+      "Laboratorio: desactivar, consultar inactivo y reactivar",
+      "Laboratorio: estadoOperativo MANTENIMIENTO y OPERATIVO independiente de activo",
+      "Usuario: datos públicos, rol, actividad, listado de inactivos y asignaciones",
+      "409 al desactivar o degradar al último ADMIN activo",
+      "409 por dependencias activas en los cinco catálogos",
+      "Mantenimiento PROGRAMADO, edición, inicio, finalización GESTOR y conflictos de Equipo durante EN_PROCESO",
+      "LECTOR lee dentro de alcance; escritura, administración de usuarios y reporte fuera de alcance reciben 403",
+      "Cinco reportes reales con filtros válidos y totales contrastados con los fixtures"
+    ]
+  },
+  "navegador": {
+    "resultado": "APROBADO en los escenarios enumerados",
+    "escenarios": [
+      "ADMIN: crear usuario y editar cargo; username permanece inmutable",
+      "ADMIN: cambiar rol, desactivar y reactivar usuario; inactivos permanecen en listado",
+      "ADMIN: asignar laboratorio y comprobar recarga del detalle y del listado",
+      "Último ADMIN: conflicto visible y cuenta conservada sin éxito falso",
+      "Diálogo de contraseña: campos vacíos; cierre sin cambio de contraseña",
+      "Categoría: formulario Inactivo, filtro Inactivos y reactivación",
+      "Subcategoría, Sede y Área: formularios de desactivación y reactivación",
+      "Laboratorio: Activo → En mantenimiento → Inactivo → Activo",
+      "Crear y editar mantenimiento PROGRAMADO, iniciar y completar desde interfaz",
+      "Equipo recibido cambia a MANTENIMIENTO al iniciar y vuelve a OPERATIVO al completar",
+      "Reportes: cinco agregados reales, filtro de laboratorio/COMPLETADO y rango invertido rechazado localmente",
+      "LECTOR: sin Usuarios, sin Nuevo mantenimiento ni acciones de escritura; filtro limitado a L201",
+      "Autocambio de rol de una cuenta temporal ADMIN → LECTOR: perfil/alcance refrescados y redirección con Usuarios retirado",
+      "GESTOR: catálogo sin edición; cancelación de mantenimiento en su laboratorio y filtro CANCELADO",
+      "Logout y recarga: vuelve a Login, JWT conservado únicamente en memoria"
+    ],
+    "ultimaSesionGestorErroresConsola": 0,
+    "capturas": [
+      "usuarios-conflicto-admin-2026-10-03.png",
+      "mantenimientos-2026-10-03.png",
+      "reportes-2026-10-03.png"
+    ],
+    "limites": [
+      "El formulario de restablecimiento se inspeccionó; su envío se probó por el servicio HTTP real, no mediante automatización de una nueva contraseña en el navegador.",
+      "Estas comprobaciones no declaran fidelidad visual completa al mockup ni una auditoría exhaustiva de accesibilidad.",
+      "La imagen Docker habitual anterior necesita incorporar los cambios del backend para ofrecer los nuevos endpoints. No se reconstruyó ni reemplazó en esta tarea."
+    ]
+  },
+  "entornoTemporal": {
+    "base": "inventario_verificacion_front_actual_7f93e1c4",
+    "contenedor": "inventario-front-verificacion-7f93e1c4",
+    "volumen": "inventario-front-verificacion-7f93e1c4-datos",
+    "puertoBackend": 49860,
+    "puertoFrontend": 49861,
+    "instanciaBackend": "JAR previamente existente; no se compiló ni modificó el backend",
+    "flyway": { "migracionesExitosas": 13, "fallidas": 0, "versiones": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    "sqlInconsistencias": {
+      "equipoVigenteSubcategoriaInactiva": 0,
+      "equipoVigenteLaboratorioInactivo": 0,
+      "asignacionActivaLaboratorioInactivo": 0,
+      "movimientosHuerfanos": 0,
+      "trasladoOrigenIgualDestino": 0,
+      "mantenimientosHuerfanos": 0,
+      "mantenimientoEnProcesoEquipoIncoherente": 0
+    },
+    "fixturesFinales": { "usuarios": 5, "equipos": 1, "mantenimientos": 3, "completados": 2, "cancelados": 1 },
+    "limpieza": {
+      "conexionesAntesDeEliminar": 0,
+      "baseAusenteConfirmada": true,
+      "contenedorEliminado": true,
+      "volumenEliminado": true,
+      "procesosBackendFrontendDetenidos": true,
+      "puertosTemporalesSinEscucha": true
+    },
+    "inventarioHabitual": "No se realizaron conexiones de prueba ni escrituras; recursos Docker habituales no se reemplazaron."
+  },
+  "fueraDelTrabajo": ["cambios de backend", "SQL o migraciones del proyecto", "Compose", "publicación en Actions/GHCR", "Configuración persistida", "pantalla de Auditoría", "exportación de reportes"]
+}

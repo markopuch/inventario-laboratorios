@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utec.inventario.domain.Sede;
+import com.utec.inventario.domain.AccionAuditoria;
 import com.utec.inventario.entity.SedeEntity;
 import com.utec.inventario.exception.ConflictException;
 import com.utec.inventario.exception.ResourceNotFoundException;
@@ -18,19 +19,46 @@ import com.utec.inventario.repository.SedeRepository;
 @Transactional(readOnly = true)
 public class SedeService {
 
+    private final AuditoriaService auditoriaService;
+
     private final SedeRepository sedeRepository;
     private final AreaRepository areaRepository;
     private final SedeMapper mapper;
 
     @Autowired
-    public SedeService(SedeRepository sedeRepository, AreaRepository areaRepository, SedeMapper mapper) {
+    public SedeService(SedeRepository sedeRepository, AreaRepository areaRepository, SedeMapper mapper, AuditoriaService auditoriaService) {
         this.sedeRepository = sedeRepository;
         this.areaRepository = areaRepository;
         this.mapper = mapper;
+        this.auditoriaService = auditoriaService;
     }
 
     public List<Sede> listarSedes() {
         return this.mapper.convert(this.sedeRepository.findAllByActivoTrueOrderByIdSedeAsc());
+    }
+
+    public List<Sede> listarSedesAdmin(Boolean activo) {
+        return this.mapper.convert(activo == null
+                ? this.sedeRepository.findAllByOrderByIdSedeAsc()
+                : this.sedeRepository.findAllByActivoOrderByIdSedeAsc(activo));
+    }
+
+    @Transactional
+    public Sede cambiarEstadoSede(Integer id, boolean activo) {
+        SedeEntity sede = this.sedeRepository.findForUpdateByIdSede(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe una sede con el ID " + id + "."));
+        if (sede.isActivo() == activo) {
+            return this.mapper.convert(sede);
+        }
+        if (!activo) {
+            this.validarDesactivacion(id);
+        }
+        sede.setActivo(activo);
+        SedeEntity guardado = this.sedeRepository.saveAndFlush(sede);
+        this.auditoriaService.registrar(activo ? AccionAuditoria.ACTIVAR : AccionAuditoria.DESACTIVAR,
+                "sede", id, "activo: " + !activo + " -> " + activo);
+        return this.mapper.convert(guardado);
     }
 
     public Sede obtenerSede(Integer id) {
@@ -49,6 +77,8 @@ public class SedeService {
 
         SedeEntity nuevaSede = this.mapper.toEntity(sede);
         SedeEntity sedeGuardada = this.sedeRepository.saveAndFlush(nuevaSede);
+        this.auditoriaService.registrar(AccionAuditoria.CREAR, "sede", sedeGuardada.getIdSede(),
+                "Creación de catálogo; activo: true");
         return this.mapper.convert(sedeGuardada);
     }
 
@@ -59,18 +89,25 @@ public class SedeService {
 
         SedeEntity sedeActualizada = this.mapper.copy(sede, cambios);
         SedeEntity sedeGuardada = this.sedeRepository.saveAndFlush(sedeActualizada);
+        this.auditoriaService.registrar(AccionAuditoria.EDITAR, "sede", id,
+                "Actualización de nombre, direccion, distrito, departamento");
         return this.mapper.convert(sedeGuardada);
     }
 
     @Transactional
     public void eliminarSede(Integer id) {
         SedeEntity sede = this.buscarSedeActivaParaModificar(id);
+        this.validarDesactivacion(id);
+        sede.setActivo(false);
+        this.sedeRepository.saveAndFlush(sede);
+        this.auditoriaService.registrar(AccionAuditoria.DESACTIVAR, "sede", id, "activo: true -> false");
+    }
+
+    private void validarDesactivacion(Integer id) {
         // Crear o mover un Area a esta Sede necesita el mismo bloqueo del padre.
         if (this.areaRepository.existsBySede_IdSedeAndActivoTrue(id)) {
             throw new ConflictException("No se puede desactivar la sede porque contiene áreas activas.");
         }
-        sede.setActivo(false);
-        this.sedeRepository.saveAndFlush(sede);
     }
 
     private SedeEntity buscarSedeActivaParaModificar(Integer id) {

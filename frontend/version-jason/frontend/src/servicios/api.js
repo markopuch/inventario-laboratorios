@@ -60,11 +60,11 @@ export function mensajeError(error, alternativa = 'No se pudo completar la opera
   const estado = error?.response?.status;
   if (estado === 401) return error.config?.url === '/auth/login'
     ? 'Usuario o contraseña incorrectos.' : 'La sesión expiró. Inicia sesión nuevamente.';
-  if (estado === 403) return 'No tienes permiso para realizar esta operación.';
   if (estado >= 500) return 'El servidor no pudo completar la operación. Intenta nuevamente.';
   if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') return 'El servidor está tardando en responder. Intenta nuevamente.';
   if (!estado && (error?.request || error?.code === 'ERR_NETWORK')) return 'No se pudo conectar con el servidor. Revisa la conexión e intenta nuevamente.';
-  if ([400, 404, 409, 422].includes(estado)) {
+  if (error?.code === 'VALIDACION_LOCAL') return error.message;
+  if ([400, 403, 404, 409, 422].includes(estado)) {
     const textoSeguro = (valor) => typeof valor === 'string' && valor.length <= 300 && !/[<>\r\n]/.test(valor);
     const errores = error.response?.data?.errors;
     const campos = errores && typeof errores === 'object' && !Array.isArray(errores)
@@ -72,6 +72,7 @@ export function mensajeError(error, alternativa = 'No se pudo completar la opera
     if (campos.length) return campos.join(' ');
     if (textoSeguro(error.response?.data?.message)) return error.response.data.message;
   }
+  if (estado === 403) return 'No tienes permiso para realizar esta operación.';
   return alternativa;
 }
 
@@ -86,9 +87,13 @@ function sesionInvalida() {
 }
 
 function validarLogin(data) {
-  const usuario = data?.usuario;
   if (!textoValido(data?.accessToken) || typeof data.tokenType !== 'string' || data.tokenType.toLowerCase() !== 'bearer' ||
-      !Number.isFinite(data.expiresIn) || data.expiresIn <= 0 || !idValido(usuario?.id) ||
+      !Number.isFinite(data.expiresIn) || data.expiresIn <= 0) throw sesionInvalida();
+  return validarUsuario(data.usuario);
+}
+
+function validarUsuario(usuario) {
+  if (!idValido(usuario?.id) ||
       !textoValido(usuario.userName) || usuario.activo !== true ||
       !['ADMIN', 'GESTOR', 'LECTOR'].includes(usuario.rol)) throw sesionInvalida();
   return usuario;
@@ -107,6 +112,11 @@ export function crearControlSesion(publicar, cliente = authApi) {
   let operacion = 0;
   let pendiente = null;
   let activo = false;
+  let sesionActual = vacia();
+  const publicarEstado = (estado) => {
+    sesionActual = estado;
+    publicar(estado);
+  };
   const cancelar = () => {
     operacion += 1;
     pendiente?.abort();
@@ -116,7 +126,7 @@ export function crearControlSesion(publicar, cliente = authApi) {
   const logout = (mensajeSesion = '') => {
     cancelar();
     limpiarSesionLegacy();
-    if (activo) publicar({ ...vacia(), mensajeSesion });
+    if (activo) publicarEstado({ ...vacia(), mensajeSesion });
   };
   const expirar = () => logout('La sesión expiró. Inicia sesión nuevamente.');
   return {
@@ -134,13 +144,37 @@ export function crearControlSesion(publicar, cliente = authApi) {
     cancelarLogin() {
       if (pendiente) logout();
     },
+    async refrescarSesion() {
+      if (!activo || !sesionActual.token) throw new axios.CanceledError();
+      pendiente?.abort();
+      const numero = ++operacion;
+      const solicitud = new AbortController();
+      pendiente = solicitud;
+      const token = sesionActual.token;
+      const sigueVigente = () => activo && numero === operacion && !solicitud.signal.aborted;
+      try {
+        const { data } = await cliente.me({ signal: solicitud.signal });
+        if (!sigueVigente()) throw new axios.CanceledError();
+        const usuario = validarUsuario(data);
+        const { data: laboratorios } = await cliente.laboratorios({ signal: solicitud.signal });
+        if (!sigueVigente()) throw new axios.CanceledError();
+        const alcance = validarAlcance(laboratorios, usuario);
+        publicarEstado({ token, usuario, alcance, cargando: false, mensajeSesion: '' });
+        return usuario;
+      } catch (error) {
+        if (sigueVigente()) logout('Vuelve a iniciar sesión para comprobar tus permisos actuales.');
+        throw error;
+      } finally {
+        if (numero === operacion) pendiente = null;
+      }
+    },
     async login(userName, password) {
       if (!activo) throw new axios.CanceledError();
       cancelar();
       const numero = operacion;
       const solicitud = new AbortController();
       pendiente = solicitud;
-      publicar({ ...vacia(), cargando: true });
+      publicarEstado({ ...vacia(), cargando: true });
       const sigueVigente = () => activo && numero === operacion && !solicitud.signal.aborted;
       try {
         const { data } = await cliente.login({ userName: userName.trim(), password }, { signal: solicitud.signal });
@@ -150,12 +184,12 @@ export function crearControlSesion(publicar, cliente = authApi) {
         const { data: laboratorios } = await cliente.laboratorios({ signal: solicitud.signal });
         if (!sigueVigente()) throw new axios.CanceledError();
         const alcance = validarAlcance(laboratorios, usuario);
-        publicar({ token: data.accessToken, usuario, alcance, cargando: false, mensajeSesion: '' });
+        publicarEstado({ token: data.accessToken, usuario, alcance, cargando: false, mensajeSesion: '' });
         return data;
       } catch (error) {
         if (sigueVigente()) {
           establecerToken(null);
-          publicar(vacia());
+          publicarEstado(vacia());
         }
         throw error;
       } finally {
@@ -185,7 +219,17 @@ export const catalogoApi = {
   laboratorios: () => api.get('/laboratorios'),
   crearLaboratorio: (data) => api.post('/laboratorios', data),
   actualizarLaboratorio: (id, data) => api.put(`/laboratorios/${id}`, data),
-  eliminarLaboratorio: (id) => api.delete(`/laboratorios/${id}`)
+  eliminarLaboratorio: (id) => api.delete(`/laboratorios/${id}`),
+  listarCategoriasAdmin: (params = {}) => api.get('/admin/categorias', { params: parametrosPermitidos(params, ['activo']) }),
+  listarSubcategoriasAdmin: (params = {}) => api.get('/admin/subcategorias', { params: parametrosPermitidos(params, ['activo']) }),
+  listarSedesAdmin: (params = {}) => api.get('/admin/sedes', { params: parametrosPermitidos(params, ['activo']) }),
+  listarAreasAdmin: (params = {}) => api.get('/admin/areas', { params: parametrosPermitidos(params, ['activo']) }),
+  listarLaboratoriosAdmin: (params = {}) => api.get('/admin/laboratorios', { params: parametrosPermitidos(params, ['activo']) }),
+  cambiarEstadoCategoria: (id, activo) => api.patch(`/categorias/${id}/estado`, { activo }),
+  cambiarEstadoSubcategoria: (id, activo) => api.patch(`/subcategorias/${id}/estado`, { activo }),
+  cambiarEstadoSede: (id, activo) => api.patch(`/sedes/${id}/estado`, { activo }),
+  cambiarEstadoArea: (id, activo) => api.patch(`/areas/${id}/estado`, { activo }),
+  cambiarEstadoLaboratorio: (id, activo) => api.patch(`/laboratorios/${id}/estado`, { activo })
 };
 
 export const equiposApi = {
@@ -204,8 +248,39 @@ export const movimientosApi = {
 };
 
 export const usuariosApi = {
+  listar: () => api.get('/admin/usuarios'),
+  detalle: (id) => api.get(`/admin/usuarios/${id}`),
+  crear: (data) => api.post('/admin/usuarios', data),
+  actualizar: (id, data) => api.put(`/admin/usuarios/${id}`, data),
+  cambiarRol: (id, rol) => api.patch(`/admin/usuarios/${id}/rol`, { rol }),
+  cambiarEstado: (id, activo) => api.patch(`/admin/usuarios/${id}/estado`, { activo }),
+  cambiarPassword: (id, password) => api.put(`/admin/usuarios/${id}/password`, { password }),
   laboratorios: (id) => api.get(`/admin/usuarios/${id}/laboratorios`),
   actualizarLaboratorios: (id, data) => api.put(`/admin/usuarios/${id}/laboratorios`, data)
+};
+
+function parametrosPermitidos(params, campos) {
+  return Object.fromEntries(campos.filter(campo => params[campo] !== undefined && params[campo] !== null && params[campo] !== '')
+    .map(campo => [campo, params[campo]]));
+}
+
+const filtrosMantenimiento = ['idEquipo', 'idLaboratorio', 'estado', 'tipo', 'fechaDesde', 'fechaHasta'];
+const filtrosReporte = ['idSede', 'idArea', 'idLaboratorio', 'estado', 'fechaDesde', 'fechaHasta', 'estadoMantenimiento', 'tipoMantenimiento'];
+
+export const mantenimientosApi = {
+  listar: (params = {}, config = {}) => api.get('/mantenimientos', { ...config, params: parametrosPermitidos(params, filtrosMantenimiento) }),
+  detalle: (id) => api.get(`/mantenimientos/${id}`),
+  crear: (data) => api.post('/mantenimientos', data),
+  actualizar: (id, data) => api.put(`/mantenimientos/${id}`, data),
+  cambiarEstado: (id, data) => api.patch(`/mantenimientos/${id}/estado`, data)
+};
+
+export const reportesApi = {
+  resumen: (params = {}, config = {}) => api.get('/reportes/resumen', { ...config, params: parametrosPermitidos(params, filtrosReporte) }),
+  equiposPorEstado: (params = {}, config = {}) => api.get('/reportes/equipos/por-estado', { ...config, params: parametrosPermitidos(params, filtrosReporte) }),
+  equiposPorLaboratorio: (params = {}, config = {}) => api.get('/reportes/equipos/por-laboratorio', { ...config, params: parametrosPermitidos(params, filtrosReporte) }),
+  movimientos: (params = {}, config = {}) => api.get('/reportes/movimientos', { ...config, params: parametrosPermitidos(params, filtrosReporte) }),
+  mantenimientos: (params = {}, config = {}) => api.get('/reportes/mantenimientos', { ...config, params: parametrosPermitidos(params, filtrosReporte) })
 };
 
 export default api;

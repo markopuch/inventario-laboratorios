@@ -34,12 +34,13 @@ class UsuarioLaboratorioServiceTest {
     @Mock private UsuarioRepository usuarios;
     @Mock private LaboratorioRepository laboratorios;
     @Mock private UsuarioLaboratorioRepository asignaciones;
+    @Mock private AuditoriaService auditoria;
     private UsuarioLaboratorioService service;
 
     @BeforeEach
     void preparar() {
         service = new UsuarioLaboratorioService(usuarios, laboratorios, asignaciones,
-                Mappers.getMapper(UsuarioLaboratorioMapper.class));
+                Mappers.getMapper(UsuarioLaboratorioMapper.class), auditoria);
     }
 
     @Test

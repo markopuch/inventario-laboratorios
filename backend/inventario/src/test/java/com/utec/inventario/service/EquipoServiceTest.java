@@ -28,6 +28,7 @@ import com.utec.inventario.entity.UsuarioEntity;
 import com.utec.inventario.exception.ConflictException;
 import com.utec.inventario.mapper.EquipoMapper;
 import com.utec.inventario.repository.EquipoRepository;
+import com.utec.inventario.repository.MantenimientoRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.SubcategoriaRepository;
 import com.utec.inventario.repository.UsuarioRepository;
@@ -40,11 +41,14 @@ class EquipoServiceTest {
     @Mock private LaboratorioRepository laboratorios;
     @Mock private UsuarioRepository usuarios;
     @Mock private AlcanceLaboratorioService alcance;
+    @Mock private MantenimientoRepository mantenimientos;
+    @Mock private AuditoriaService auditoria;
     private EquipoService service;
 
     @BeforeEach
     void preparar() {
-        service = new EquipoService(equipos, subcategorias, laboratorios, usuarios, alcance, Mappers.getMapper(EquipoMapper.class));
+        service = new EquipoService(equipos, subcategorias, laboratorios, usuarios, alcance,
+                Mappers.getMapper(EquipoMapper.class), mantenimientos, auditoria);
     }
 
     @Test

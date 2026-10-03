@@ -50,6 +50,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return error(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 
+    @ExceptionHandler(PasswordUsuarioInvalidaException.class)
+    public ResponseEntity<Object> handlePasswordInvalida(PasswordUsuarioInvalidaException exception, WebRequest request) {
+        return error(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleIntegrity(DataIntegrityViolationException exception, WebRequest request) {
         // La restricción de PostgreSQL cubre también dos escrituras concurrentes.
@@ -95,6 +100,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
         if ("uq_equipo_numero_serie".equals(nombre)) {
             return "Ya existe un equipo con ese número de serie.";
+        }
+        if ("uq_usuario_username".equals(nombre) || "uq_usuario_username_ignore_case".equals(nombre)) {
+            return "Ya existe un usuario con ese nombre de usuario.";
+        }
+        if ("uq_usuario_email".equals(nombre) || "uq_usuario_email_ignore_case".equals(nombre)) {
+            return "Ya existe un usuario con ese email.";
+        }
+        if ("uq_mantenimiento_equipo_en_proceso".equals(nombre)) {
+            return "El equipo ya tiene un mantenimiento en proceso.";
         }
         return null;
     }

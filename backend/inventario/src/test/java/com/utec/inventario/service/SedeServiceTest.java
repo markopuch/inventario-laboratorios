@@ -29,7 +29,7 @@ class SedeServiceTest {
     private SedeService service;
 
     @BeforeEach
-    void preparar() { service = new SedeService(sedes, areas, Mappers.getMapper(SedeMapper.class)); }
+    void preparar() { service = new SedeService(sedes, areas, Mappers.getMapper(SedeMapper.class), mock(AuditoriaService.class)); }
 
     @Test
     void crearNormalizaCamposYReiniciaCamposControladosPorServidor() {

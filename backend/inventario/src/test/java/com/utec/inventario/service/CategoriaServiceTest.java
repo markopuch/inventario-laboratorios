@@ -48,7 +48,8 @@ class CategoriaServiceTest {
     @BeforeEach
     void prepararServicio() {
         this.categoriaService = new CategoriaService(this.categoriaRepository,
-                Mappers.getMapper(CategoriaMapper.class), this.subcategoriaRepository);
+                Mappers.getMapper(CategoriaMapper.class), this.subcategoriaRepository,
+                org.mockito.Mockito.mock(AuditoriaService.class));
     }
 
     @Test

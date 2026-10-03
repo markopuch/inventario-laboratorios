@@ -2,6 +2,8 @@ package com.utec.inventario.dto.response;
 
 import java.time.OffsetDateTime;
 
+import com.utec.inventario.domain.EstadoOperativoLaboratorio;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,7 @@ public class LaboratorioResponse {
     private String codigo;
     private String ubicacion;
     private boolean activo;
+    private EstadoOperativoLaboratorio estadoOperativo;
     private OffsetDateTime fechaCreacion;
     private AreaResumenResponse area;
 }

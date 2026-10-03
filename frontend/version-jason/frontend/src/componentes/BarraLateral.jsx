@@ -9,10 +9,10 @@ export default function BarraLateral({ abierta, onClose }) {
     { to:'/equipos', label:'Equipos', icon:Boxes },
     { to:'/categorias', label:'Categorías', icon:BookOpen },
     { to:'/laboratorios', label:'Laboratorios', icon:MapPinned },
-    { to:'/asignaciones', label:'Asignaciones', icon:UsersRound, admin:true },
+    { to:'/usuarios', label:'Usuarios', icon:UsersRound, admin:true },
     { to:'/movimientos', label:'Movimientos', icon:ArrowRightLeft },
-    { to:'/mantenimientos', label:'Mantenimientos', icon:Wrench, pendiente:true },
-    { to:'/reportes', label:'Reportes', icon:BarChart3, pendiente:true },
+    { to:'/mantenimientos', label:'Mantenimientos', icon:Wrench },
+    { to:'/reportes', label:'Reportes', icon:BarChart3 },
     { to:'/configuracion', label:'Configuración', icon:Settings, admin:true, pendiente:true },
   ];
   return <aside className={`barra-lateral ${abierta ? 'abierta':''}`}>

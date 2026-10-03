@@ -56,3 +56,13 @@ test('destinos de gestión requieren laboratorio activo y asignación vigente; A
   assert.deepEqual(laboratoriosPermitidos(labs, null, false), []);
   assert.deepEqual(laboratoriosPermitidos(labs, alcance, true).map((lab) => lab.id), [1, 3]);
 });
+
+test('estado operativo del laboratorio es independiente de activo y del estado de equipo', () => {
+  const form = { nombre: 'Laboratorio', codigo: 'L-1', idArea: '1', activo: false, estado: 'BAJA', estadoOperativo: 'MANTENIMIENTO' };
+  const payload = payloadOrganizacion('laboratorios', form);
+  assert.equal(payload.estadoOperativo, 'MANTENIMIENTO');
+  assert.ok(!Object.hasOwn(payload, 'activo'));
+  assert.ok(!Object.hasOwn(payload, 'estado'));
+  assert.equal(payloadOrganizacion('laboratorios', { ...form, estadoOperativo: undefined }).estadoOperativo, 'OPERATIVO');
+  assert.throws(() => payloadOrganizacion('laboratorios', { ...form, estadoOperativo: 'INOPERATIVO' }));
+});

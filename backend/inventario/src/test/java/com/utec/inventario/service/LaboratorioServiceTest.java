@@ -36,7 +36,7 @@ class LaboratorioServiceTest {
     private LaboratorioService service;
 
     @BeforeEach
-    void preparar() { service = new LaboratorioService(laboratorios, areas, Mappers.getMapper(LaboratorioMapper.class), asignaciones, equipos); }
+    void preparar() { service = new LaboratorioService(laboratorios, areas, Mappers.getMapper(LaboratorioMapper.class), asignaciones, equipos, mock(AuditoriaService.class)); }
 
     @Test
     void areaAusenteOInactivaSeDistingueAntesDePersistir() {

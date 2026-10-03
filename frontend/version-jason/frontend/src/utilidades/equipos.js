@@ -41,6 +41,9 @@ export function payloadOrganizacion(tipo, form) {
     payload.descripcion = opcional(form.descripcion); payload.idSede = idPositivo(form.idSede, 'una sede');
   } else {
     payload.codigo = texto(form.codigo); payload.ubicacion = opcional(form.ubicacion); payload.idArea = idPositivo(form.idArea, 'un área');
+    const estadoOperativo = form.estadoOperativo ?? 'OPERATIVO';
+    if (!['OPERATIVO', 'MANTENIMIENTO'].includes(estadoOperativo)) throw errorValidacion('Selecciona un estado operativo válido para el laboratorio.');
+    payload.estadoOperativo = estadoOperativo;
   }
   return payload;
 }

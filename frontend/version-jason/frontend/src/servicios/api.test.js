@@ -183,3 +183,54 @@ test('mensajes de red y 500 no revelan detalles internos', () => {
   assert.match(mensajeError({ code: 'ERR_NETWORK' }), /conectar/);
   assert.match(mensajeError({ response: { status: 403 } }), /permiso/);
 });
+
+test('refrescar tras un autocambio de rol actualiza perfil y alcance sin persistir ni reemplazar JWT', async t => {
+  let rol = 'ADMIN';
+  const { control, ultimo } = controlar(t, {
+    login: async () => ({ data: respuestaLogin(1, rol) }),
+    me: async () => ({ data: respuestaLogin(1, rol).usuario }),
+    laboratorios: async () => ({ data: rol === 'ADMIN' ? { alcanceGlobal: true, laboratorios: [] } : alcance })
+  });
+  await control.login('prueba', 'clave');
+  const token = ultimo().token;
+  rol = 'LECTOR';
+  await control.refrescarSesion();
+  assert.equal(ultimo().usuario.rol, 'LECTOR');
+  assert.equal(ultimo().alcance.alcanceGlobal, false);
+  assert.equal(ultimo().token, token);
+});
+
+test('una consulta de perfil tardía no restaura la sesión después de logout', async t => {
+  const perfil = diferida();
+  const { control, ultimo } = controlar(t, {
+    login: async () => ({ data: respuestaLogin() }),
+    me: () => perfil.promise, laboratorios: async () => ({ data: alcance })
+  });
+  await control.login('prueba', 'clave');
+  const refresco = control.refrescarSesion();
+  const rechazado = assert.rejects(refresco, esCancelacion);
+  control.logout();
+  perfil.resolve({ data: respuestaLogin().usuario });
+  await rechazado;
+  assert.equal(ultimo().token, null);
+});
+
+test('un perfil inactivo al refrescar borra permisos obsoletos', async t => {
+  const { control, ultimo } = controlar(t, {
+    login: async () => ({ data: respuestaLogin() }),
+    me: async () => ({ data: { ...respuestaLogin().usuario, activo: false } }),
+    laboratorios: async () => ({ data: alcance })
+  });
+  await control.login('prueba', 'clave');
+  await assert.rejects(control.refrescarSesion(), { code: 'SESION_INVALIDA' });
+  assert.equal(ultimo().usuario, null);
+  assert.equal(ultimo().token, null);
+});
+
+test('400, 403, 404 y 409 muestran mensajes seguros de negocio; 500 los oculta', () => {
+  for (const status of [400, 403, 404, 409]) {
+    assert.equal(mensajeError({ response: { status, data: { message: 'No se puede desactivar al último ADMIN activo.' } } }),
+      'No se puede desactivar al último ADMIN activo.');
+  }
+  assert.equal(mensajeError({ response: { status: 409, data: { message: '<script>detalle</script>' } } }, 'Conflicto.'), 'Conflicto.');
+});

@@ -14,6 +14,13 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface SedeRepository extends JpaRepository<SedeEntity, Integer> {
 
+    List<SedeEntity> findAllByOrderByIdSedeAsc();
+
+    List<SedeEntity> findAllByActivoOrderByIdSedeAsc(boolean activo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<SedeEntity> findForUpdateByIdSede(Integer idSede);
+
     List<SedeEntity> findAllByActivoTrueOrderByIdSedeAsc();
 
     Optional<SedeEntity> findByIdSedeAndActivoTrue(Integer idSede);

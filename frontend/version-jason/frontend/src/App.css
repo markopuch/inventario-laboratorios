@@ -12,7 +12,23 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .asignaciones-lista { display: grid; gap: 10px; }
 .asignacion-opcion { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 8px; background: #f6faff; }
 .asignacion-opcion input { width: 18px; height: 18px; flex-shrink: 0; accent-color: #1299df; }
+.filtros-modulo { align-items: end; }
+.filtros-modulo label { display: grid; gap: 6px; color: var(--text); font-size: 12px; font-weight: 600; }
+.filtros-modulo input, .filtros-modulo select { min-height: 40px; max-width: 230px; border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; background: white; color: var(--navy); }
+.reportes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.tabla-reporte { min-width: 300px; }
+.acciones-mantenimiento, .acciones-tabla { flex-wrap: wrap; }
+.nota-reporte { color: var(--text); font-size: 12px; line-height: 1.6; }
+.total-reporte { padding: 0 20px 14px; font-weight: 700; }
+.resumen-mantenimientos { margin: 20px 0; }
+.estado-programado { background: var(--blue-soft); color: #178fce; }
+.estado-en_proceso { background: var(--yellow-soft); color: #c27b08; }
+.estado-completado { background: var(--green-soft); color: #12945e; }
+.estado-cancelado { background: #eef2f6; color: #66788e; }
+.form-grid .campo-ancho { grid-column: 1 / -1; }
 @media (max-width: 800px) {
+  .reportes-grid { grid-template-columns: 1fr; }
+  .filtros-modulo label, .filtros-modulo input, .filtros-modulo select { width: 100%; max-width: none; }
   .menu-fondo { display: block; position: fixed; inset: 0; z-index: 19; background: #12324f66; border: 0; }
   .barra-lateral { z-index: 20; }
   .encabezado-contexto { font-size: 12px; }

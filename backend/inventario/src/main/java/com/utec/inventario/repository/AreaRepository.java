@@ -16,6 +16,15 @@ import jakarta.persistence.LockModeType;
 public interface AreaRepository extends JpaRepository<AreaEntity, Integer> {
 
     @EntityGraph(attributePaths = "sede")
+    List<AreaEntity> findAllByOrderByIdAreaAsc();
+
+    @EntityGraph(attributePaths = "sede")
+    List<AreaEntity> findAllByActivoOrderByIdAreaAsc(boolean activo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<AreaEntity> findForUpdateByIdArea(Integer idArea);
+
+    @EntityGraph(attributePaths = "sede")
     List<AreaEntity> findAllByActivoTrueOrderByIdAreaAsc();
 
     @EntityGraph(attributePaths = "sede")

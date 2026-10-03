@@ -15,7 +15,8 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     ...sesion,
     login: control.login,
-    logout: () => control.logout(),
+    logout: (mensaje = '') => control.logout(typeof mensaje === 'string' ? mensaje : ''),
+    refrescarSesion: control.refrescarSesion,
     cancelarLogin: control.cancelarLogin,
     esAdmin: Boolean(sesion.token && sesion.usuario?.rol === 'ADMIN' && sesion.alcance?.alcanceGlobal),
     puedeGestionar: Boolean(sesion.token && sesion.alcance && ['ADMIN', 'GESTOR'].includes(sesion.usuario?.rol))

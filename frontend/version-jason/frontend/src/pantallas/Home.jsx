@@ -2,18 +2,20 @@ import { useEffect, useState } from 'react';
 import { Activity, Boxes, MapPinned, Wrench } from 'lucide-react';
 import TarjetaBienvenida from '../componentes/TarjetaBienvenida';
 import ResumenSeleccion from '../componentes/ResumenSeleccion';
-import { authApi, equiposApi, movimientosApi, mensajeError } from '../servicios/api';
+import { authApi, equiposApi, movimientosApi, reportesApi, mensajeError } from '../servicios/api';
 import { Link } from 'react-router-dom';
 import FilaMovimiento from '../componentes/FilaMovimiento';
 import Boton from '../componentes/Boton';
 import { useAuth } from '../contextos/AuthContext';
 import { validarListaMovimientos } from '../utilidades/movimientos';
+import { conteoReportado, validarResumenReporte } from '../utilidades/reportes.js';
 
 export default function Home() {
   const { esAdmin, puedeGestionar, token } = useAuth();
   const [inventario, setInventario] = useState({ estado: 'cargando', datos: null, error: '' });
   const [laboratorios, setLaboratorios] = useState({ estado: 'cargando', cantidad: null, error: '' });
   const [historial, setHistorial] = useState({ estado: 'cargando', datos: [], error: '' });
+  const [resumen, setResumen] = useState({ estado: 'cargando', datos: null, error: '' });
   const [intento, setIntento] = useState(0);
 
   useEffect(() => {
@@ -21,6 +23,13 @@ export default function Home() {
     setInventario({ estado: 'cargando', datos: null, error: '' });
     setLaboratorios({ estado: 'cargando', cantidad: null, error: '' });
     setHistorial({ estado: 'cargando', datos: [], error: '' });
+    setResumen({ estado: 'cargando', datos: null, error: '' });
+    reportesApi.resumen().then(({ data }) => {
+      const datos = validarResumenReporte(data);
+      if (vigente) setResumen({ estado: 'listo', datos, error: '' });
+    }).catch(error => {
+      if (vigente) setResumen({ estado: 'error', datos: null, error: mensajeError(error, 'No se pudo cargar el resumen de mantenimientos.') });
+    });
     authApi.laboratorios().then(({ data }) => {
       if (typeof data?.alcanceGlobal !== 'boolean' || !Array.isArray(data.laboratorios) ||
           data.laboratorios.some(laboratorio => !Number.isInteger(laboratorio?.id) || laboratorio.id <= 0)) {
@@ -72,6 +81,14 @@ export default function Home() {
       <ResumenSeleccion titulo="Mantenimiento" valor={inventario.datos?.mantenimiento ?? '—'} detalle={detalleInventario || 'Requieren atención'}/>
       <ResumenSeleccion titulo="Equipos de baja" valor={inventario.datos?.bajas ?? '—'} detalle={detalleInventario || 'Históricos visibles'}/>
     </div>
+    <section className="panel resumen-mantenimientos" aria-busy={resumen.estado === 'cargando'}>
+      <div className="panel-titulo"><div><span className="eyebrow">Seguimiento</span><h2>Mantenimientos</h2></div><Link to="/mantenimientos" className="enlace">Ver mantenimientos →</Link></div>
+      {resumen.estado === 'error' ? <div className="mensaje-error" role="alert"><span>{resumen.error}</span><Boton variante="secundario" onClick={reintentar}>Reintentar</Boton></div> : <div className="contadores-grid tres">
+        <ResumenSeleccion titulo="Total mantenimientos" valor={resumen.datos?.totalMantenimientos ?? '—'} detalle={resumen.estado === 'cargando' ? 'Cargando...' : 'Registros dentro de tu alcance'}/>
+        <ResumenSeleccion titulo="Programados" valor={resumen.datos ? conteoReportado(resumen.datos.mantenimientosPorEstado, 'PROGRAMADO') : '—'}/>
+        <ResumenSeleccion titulo="En proceso" valor={resumen.datos ? conteoReportado(resumen.datos.mantenimientosPorEstado, 'EN_PROCESO') : '—'}/>
+      </div>}
+    </section>
     <section className="panel" aria-busy={historial.estado === 'cargando'}>
       <div className="panel-titulo"><div><span className="eyebrow">Trazabilidad</span><h2>Movimientos recientes</h2></div><Link to="/movimientos" className="enlace">Ver historial →</Link></div>
       {historial.estado === 'cargando' ? <div className="vacio" role="status">Cargando movimientos recientes...</div>

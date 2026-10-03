@@ -5,8 +5,8 @@ import { useAuth } from '../contextos/AuthContext';
 import { catalogoApi, esCancelacion, mensajeError, usuariosApi } from '../servicios/api';
 import { crearControlAsignaciones, prepararGuardadoAsignaciones, validarRespuestaAsignaciones } from '../utilidades/asignaciones.js';
 
-export default function Asignaciones() {
-  const { esAdmin } = useAuth();
+export default function Asignaciones({ usuarioId = null, onGuardar, onOcupacion }) {
+  const { esAdmin, usuario: actor, refrescarSesion } = useAuth();
   const control = useRef(null);
   if (!control.current) control.current = crearControlAsignaciones();
   const [id, setId] = useState('');
@@ -17,6 +17,10 @@ export default function Asignaciones() {
   const [ocupacion, setOcupacion] = useState('');
   const [error, setError] = useState('');
   const [exito, setExito] = useState('');
+
+  useEffect(() => {
+    onOcupacion?.(Boolean(ocupacion));
+  }, [ocupacion, onOcupacion]);
 
   useEffect(() => {
     if (!esAdmin) {
@@ -30,6 +34,14 @@ export default function Asignaciones() {
     }
     return () => control.current.invalidar();
   }, [esAdmin]);
+
+  useEffect(() => {
+    if (esAdmin && usuarioId != null) {
+      cambiarId(String(usuarioId));
+      consultarUsuario();
+    }
+    return () => control.current.invalidar();
+  }, [esAdmin, usuarioId]);
 
   function cambiarId(value) {
     control.current.cambiarId(value);
@@ -62,6 +74,10 @@ export default function Asignaciones() {
 
   async function consultar(event) {
     event.preventDefault();
+    await consultarUsuario();
+  }
+
+  async function consultarUsuario() {
     const solicitud = iniciar();
     if (!solicitud) return;
     setOcupacion('consultando');
@@ -112,16 +128,27 @@ export default function Asignaciones() {
     setOcupacion('guardando');
     setError('');
     setExito('');
+    let escrituraConfirmada = false;
     try {
-      const respuesta = await usuariosApi.actualizarLaboratorios(guardado.idUsuario, guardado.payload);
+      await usuariosApi.actualizarLaboratorios(guardado.idUsuario, guardado.payload);
+      escrituraConfirmada = true;
+      if (!control.current.vigente(solicitud)) return;
+      // Reconsulta tras escribir: el resultado mostrado siempre procede de la API vigente.
+      const respuesta = await usuariosApi.laboratorios(guardado.idUsuario);
       if (!control.current.vigente(solicitud)) return;
       validarRespuestaAsignaciones(respuesta.data, guardado.idUsuario);
       setData(respuesta.data);
       setIds(respuesta.data.laboratorios.map(lab => lab.id));
+      if (guardado.idUsuario === actor?.id) await refrescarSesion();
+      if (!control.current.vigente(solicitud)) return;
+      await onGuardar?.(guardado.idUsuario);
+      if (!control.current.vigente(solicitud)) return;
       setExito(`Asignaciones del usuario ${guardado.idUsuario} guardadas correctamente.`);
     } catch (err) {
       if (control.current.vigente(solicitud) && !esCancelacion(err)) {
-        setError(mensajeError(err, 'No se pudieron actualizar las asignaciones. Intenta nuevamente.'));
+        setError(escrituraConfirmada
+          ? 'El servidor guardó las asignaciones, pero no se pudo completar su recarga. Vuelve a consultar antes de continuar.'
+          : mensajeError(err, 'No se pudieron actualizar las asignaciones. Intenta nuevamente.'));
       }
     } finally {
       finalizar(solicitud);
@@ -131,16 +158,16 @@ export default function Asignaciones() {
   if (!esAdmin) return <div className="pagina"><div className="mensaje-error" role="alert">Solo los administradores pueden gestionar asignaciones.</div></div>;
   const noDisponibles = (data?.laboratorios || []).filter(asignado => !laboratorios.some(lab => lab.id === asignado.id));
 
-  return <div className="pagina">
-    <div className="pagina-cabecera">
+  return <div className={usuarioId == null ? 'pagina' : ''}>
+    {usuarioId == null && <div className="pagina-cabecera">
       <div><span className="eyebrow">Administración</span><h1>Asignaciones</h1><p>Consulta un usuario y selecciona sus laboratorios activos.</p></div>
       <UsersRound size={34} aria-hidden="true" />
-    </div>
+    </div>}
     <section className="panel asignaciones-panel" aria-busy={Boolean(ocupacion)}>
-      <form className="form-inline" onSubmit={consultar}>
+      {usuarioId == null ? <form className="form-inline" onSubmit={consultar}>
         <label>ID de usuario<input type="number" min="1" step="1" required value={id} disabled={ocupacion === 'guardando'} onChange={event => cambiarId(event.target.value)} placeholder="Ej. 1" /></label>
         <Boton tipo="submit" disabled={Boolean(ocupacion)}>{ocupacion === 'consultando' ? 'Consultando...' : 'Consultar'}</Boton>
-      </form>
+      </form> : <div className="form-inline"><p>Usuario seleccionado: ID {usuarioId}</p><Boton variante="secundario" disabled={Boolean(ocupacion)} onClick={consultarUsuario}>Actualizar asignaciones</Boton></div>}
       {ocupacion === 'consultando' && <p role="status">Cargando usuario y laboratorios activos...</p>}
       {data && <div className="asignacion-resumen">
         <h2>{[data.usuario.nombre, data.usuario.apellido].filter(Boolean).join(' ') || data.usuario.userName}</h2>

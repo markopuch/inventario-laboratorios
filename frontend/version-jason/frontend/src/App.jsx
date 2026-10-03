@@ -12,6 +12,9 @@ import Movimientos from './pantallas/Movimientos';
 import Catalogo from './pantallas/Catalogo';
 import Laboratorios from './pantallas/Laboratorios';
 import Asignaciones from './pantallas/Asignaciones';
+import Usuarios from './pantallas/Usuarios';
+import Mantenimientos from './pantallas/Mantenimientos';
+import Reportes from './pantallas/Reportes';
 import ModuloVisual from './pantallas/ModuloVisual';
 import './App.css';
 
@@ -34,11 +37,11 @@ function Layout(){
         <Route path="/categorias" element={<Catalogo/>}/>
         <Route path="/catalogo" element={<Catalogo/>}/>
         <Route path="/laboratorios" element={<Laboratorios/>}/>
-        <Route path="/usuarios" element={<Protegida roles={['ADMIN']}><Asignaciones/></Protegida>}/>
+        <Route path="/usuarios" element={<Protegida roles={['ADMIN']}><Usuarios/></Protegida>}/>
         <Route path="/asignaciones" element={<Protegida roles={['ADMIN']}><Asignaciones/></Protegida>}/>
         <Route path="/movimientos" element={<Movimientos/>}/>
-        <Route path="/mantenimientos" element={<ModuloVisual titulo="Mantenimientos" subtitulo="Programación y seguimiento del mantenimiento de equipos."/>}/>
-        <Route path="/reportes" element={<ModuloVisual titulo="Reportes" subtitulo="Indicadores y exportación de información del inventario."/>}/>
+        <Route path="/mantenimientos" element={<Mantenimientos/>}/>
+        <Route path="/reportes" element={<Reportes/>}/>
         <Route path="/configuracion" element={<Protegida roles={['ADMIN']}><ModuloVisual titulo="Configuración" subtitulo="Preferencias generales y seguridad del sistema."/></Protegida>}/>
         <Route path="*" element={<Navigate to="/" replace/>}/>
       </Routes></main>
