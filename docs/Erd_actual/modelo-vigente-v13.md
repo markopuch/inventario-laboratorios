@@ -1,15 +1,19 @@
 # Modelo vigente — Flyway V1–V13
 
 **Revisión documental:** 3 de octubre de 2026, commit `e1ce75a`.
+**Revisión gráfica:** 11 de octubre de 2026, con las migraciones V1–V13 y las Entities actuales.
 Fuente de verdad: [migraciones Flyway](../../backend/inventario/src/main/resources/db/migration/)
 y [Entities JPA](../../backend/inventario/src/main/java/com/utec/inventario/entity/).
 El modelo contiene **12 entidades/tablas del dominio y 16 relaciones FK**.
 `flyway_schema_history` es infraestructura y no cuenta como entidad del negocio.
 
+El [ERD lógico v3](erd-logico-v3.md) y el [ERD físico v3](erd-fisico-v3.md)
+representan el modelo completo V1–V13, con 12 entidades, 98 columnas y 16 FK.
+Están disponibles también como [SVG lógico](erd-logico-v3.svg) y
+[SVG físico](erd-fisico-v3.svg), con PNG y fuentes DOT para consulta y edición.
 El [ERD lógico v2](erd-logico-v2.md), el [ERD físico v2](erd-fisico-v2.md)
-y sus SVG conservan el corte V1–V9: 10 entidades y 13 relaciones.
-No fueron regenerados como imágenes V13. Este Markdown incorpora las dos
-entidades posteriores y las modificaciones de V10/V11, sin rediseñar esquema.
+y sus SVG conservan el corte histórico V1–V9: 10 entidades y 13 relaciones.
+Este Markdown conserva el contraste documental de V10–V13, sin rediseñar esquema.
 La [evidencia Docker](../despliegue/verificacion-docker-actions-2026-10-03.md)
 confirma las 13 migraciones exitosas y los checksums antiguos preservados.
 

@@ -99,10 +99,11 @@ usa para autorización y selección de roles, sin un CRUD de roles independiente
 Mantenimiento referencia Equipo y responsable opcional. Auditoría referencia
 al actor opcional y conserva su username; entidad/idEntidad no forman una FK.
 Consulta el [modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md).
-El [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md), el
-[ERD físico v2](docs/Erd_actual/erd-fisico-v2.md) y el
-[cotejo de Sprint 7](docs/backend-final/auditoria-entity-flyway.md) conservan
-el modelo histórico V1–V9 con su ampliación documentada por separado.
+El [ERD lógico v3](docs/Erd_actual/erd-logico-v3.md) y el
+[ERD físico v3](docs/Erd_actual/erd-fisico-v3.md) muestran el esquema completo
+V1–V13: 12 entidades, 98 columnas y 16 relaciones FK, con versiones SVG y PNG.
+Los ERD v2 y el [cotejo de Sprint 7](docs/backend-final/auditoria-entity-flyway.md)
+conservan el modelo histórico V1–V9.
 
 ## 5. Roles
 
@@ -455,7 +456,8 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 | [Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md) | Flujo completo, ambos trabajos verdes, imágenes y evidencias persistentes |
 | [Sprints Jason](docs/sprints_realizados-frontend-Jason/README.md) | Estado actual de la implementación frontend y sus límites |
 | [Frontend](frontend/readme.md) | Versiones Jason/Marko y modos de ejecución |
-| [Modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md) | 12 entidades y 16 FK; ampliación sobre V9 |
+| [Modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md) | Contraste de migraciones y Entities; 12 entidades y 16 FK |
+| [ERD lógico v3](docs/Erd_actual/erd-logico-v3.md) / [físico v3](docs/Erd_actual/erd-fisico-v3.md) | Modelo completo V1–V13; Mermaid, SVG, PNG y fuentes DOT |
 | [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md) / [físico v2](docs/Erd_actual/erd-fisico-v2.md) | Mermaid y SVG históricos V1–V9 |
 | [Cambios de ERD](docs/Erd_actual/erd-v2-cambios.md) | Comparación con los PDF iniciales |
 
@@ -463,8 +465,8 @@ Los documentos de [Sprint 3](docs/sprints_realizados-backend/sprint-3-categorias
 [Sprint 4](docs/sprints_realizados-backend/sprint-4.md), [Sprint 5](docs/sprints_realizados-backend/sprint-5.md) y
 [Sprint 6](docs/sprints_realizados-backend/sprint-6.md) conservan resultados y pendientes de cada
 cierre. Sus cifras históricas no sustituyen la verificación final. Los PDF
-`docs/erd-logico.pdf` y `docs/erd-fisico.pdf` son diseños anteriores; el ERD v2
-describe V1–V9 y el documento del modelo V13 registra la ampliación actual.
+`docs/erd-logico.pdf` y `docs/erd-fisico.pdf` son diseños anteriores. El ERD v2
+describe V1–V9; los diagramas v3 representan el modelo actual V1–V13 completo.
 
 ## 15. Backlog
 
