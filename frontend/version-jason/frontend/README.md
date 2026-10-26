@@ -1,7 +1,9 @@
 # Frontend Jason — Inventario de Laboratorios
 
 Aplicación React/Vite conectada al backend Spring Boot del repositorio. Esta versión
-está en `frontend/version-jason/frontend/`; la versión Marko se conserva por separado.
+está en `frontend/version-jason/frontend/`. La variante de tutoría Marko y sus
+registros de sprints se conservan solo en el equipo local, excluidos del seguimiento
+de Git desde el 26 de octubre de 2026; no se incluyen en nuevos clones.
 
 **Estado al 3 de octubre de 2026:** esta versión consume los contratos actuales de
 catálogos administrativos, usuarios, mantenimientos y reportes. El Docker local ya
@@ -52,7 +54,8 @@ El navegador solicita `/api` al mismo origen y Vite lo reenvía al backend en 80
 
 Se utiliza un solo archivo Compose: `backend/inventario/docker-compose.yml`.
 Cada aplicación tiene su contenedor: PostgreSQL, Spring Boot y React servido por Nginx.
-La versión Marko no se construye ni se publica con este flujo.
+La versión Marko, conservada únicamente en el equipo local, no es una dependencia
+de este build ni se publica con este flujo.
 
 Desde la raíz del repositorio, en PowerShell:
 

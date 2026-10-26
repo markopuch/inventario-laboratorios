@@ -1,0 +1,468 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-26",
+  "timezone": "America/Lima",
+  "capturedAtUtc": "2026-10-26T15:29:56.3943134Z",
+  "repository": "https://github.com/markopuch/inventario-laboratorios",
+  "branch": "main",
+  "head": "0344b3301c93f5b50894fbf454a21c7b129af37b",
+  "scope": "Selected application configs, entrypoints, all controller/service/security/entity files and all Flyway migrations; not a complete backup",
+  "excludes": "Private env files, credentials, database rows, dumps and raw chat transcripts",
+  "files": [
+    {
+      "path": ".github/workflows/imagen.yml",
+      "bytes": 2457,
+      "sha256": "d2383bc6581562ac15909e0d5dda3805d9b473fc63f8122c990290e6472bf091"
+    },
+    {
+      "path": ".vscode/settings.json",
+      "bytes": 265,
+      "sha256": "9a02cf0b44285d7a553043a5b0cc2b91f7e0e68233eb6c6fb2059c1a28e4b349"
+    },
+    {
+      "path": "backend/inventario/.dockerignore",
+      "bytes": 375,
+      "sha256": "c98a2a4b39000f873c8dec355a32d8238e0635d29bbd6a2055ae24ab4bef2d16"
+    },
+    {
+      "path": "backend/inventario/build.gradle.kts",
+      "bytes": 2050,
+      "sha256": "99c14f9c4994825872d975b21830ad14b36c5750427a83d18bb196ce2b057b10"
+    },
+    {
+      "path": "backend/inventario/docker-compose.yml",
+      "bytes": 1592,
+      "sha256": "3ab96e30a3366c062145cbc40d1091ff621a677d8e29aa4061623353a4457dfa"
+    },
+    {
+      "path": "backend/inventario/Dockerfile",
+      "bytes": 979,
+      "sha256": "89081572e52368f2b3c1eec1c24aa9b44727c2c791272aeccb2951cb2cf020e3"
+    },
+    {
+      "path": "backend/inventario/gradle/wrapper/gradle-wrapper.properties",
+      "bytes": 281,
+      "sha256": "d01b41913834fb3cb14e71f69a08898e6a47e663b08f5c9b8c7e0772c38889d2"
+    },
+    {
+      "path": "backend/inventario/settings.gradle.kts",
+      "bytes": 32,
+      "sha256": "d7e4724dba48d79c1a762613dcac62a3be93978afb88f7b978ec902a4d7cf9cf"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/AdminEquipoController.java",
+      "bytes": 1952,
+      "sha256": "fd164f15dcdf4f8ac8d513a7712055ffaaad71a1ceefd87779b699c4e1608a22"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/AdminUsuarioController.java",
+      "bytes": 3832,
+      "sha256": "5e93e7e7fefdfc4f54cbb32093633c6cda1a7b66826a2e85cfb9354ffb359928"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/AreaController.java",
+      "bytes": 3565,
+      "sha256": "4a9dfb0ccc28579dbacec9ba20ff62fe69740a43714d5de7ae17a833cd15cc29"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/AreaLaboratorioController.java",
+      "bytes": 1384,
+      "sha256": "3ef1a7fdfc5f3b6622c95e881b34d059986577ff2c7e1cc522bc7a5a30772a85"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/AuditoriaController.java",
+      "bytes": 990,
+      "sha256": "cd76ebcae2196a4600fa09ec6ebf58838c2edefb5e89efe34a331cfa1978a4d9"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/AuthController.java",
+      "bytes": 4264,
+      "sha256": "9aa2b6502ccd07d4475ecd1b02d26204bf875c5042cfb0d56ad07f8102ad5c80"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/CatalogoAdminController.java",
+      "bytes": 3850,
+      "sha256": "bef821d55ab5dd526d391d6bf2a57bae147970c57b9bb4d7b8c89c191fbaf27c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/CategoriaController.java",
+      "bytes": 3817,
+      "sha256": "34fe580adde3eaaaba601333bb7d2569771fb2a293779af9ffffcde8e886153e"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/CategoriaSubcategoriaController.java",
+      "bytes": 1445,
+      "sha256": "471891b217e47e9bbb4b860d12e1625f4a52a4201038498fd470de81c248653e"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/EquipoController.java",
+      "bytes": 4101,
+      "sha256": "b3ff04aa192882854747f2fcca520bc0b8de06e6e72146cdfcc89406b9fa8f05"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/EquipoMovimientoController.java",
+      "bytes": 2891,
+      "sha256": "de432f149fa3473cd6c7d482e479e72c07368bdd361a77d0b154fedff7c1bece"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/LaboratorioController.java",
+      "bytes": 3908,
+      "sha256": "23f2c903028abcd437c5f84a8b51308cef8ba4d76009ba22202695e85f78860f"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/MantenimientoController.java",
+      "bytes": 4035,
+      "sha256": "7b27883ef2bd451bab30c263922b0a76959e76601a81ca313df64bd98394acfd"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/MovimientoEquipoController.java",
+      "bytes": 1661,
+      "sha256": "c4a5229a8ee591b35ba5787b5b9d734535c7ff74eab32f39ecc2bfcca6f9a9b0"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/ReporteController.java",
+      "bytes": 2471,
+      "sha256": "bb52fbd37c2f4853d787ea01cec3d9a5c8559740ba8fe9aff15d99dc4d2fdf52"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/SedeAreaController.java",
+      "bytes": 1272,
+      "sha256": "92095528fcb6f8207e521413a17141743485ee4bc6bbede5620dd2e0009f067e"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/SedeController.java",
+      "bytes": 3565,
+      "sha256": "04d70839c6966790de2a232f81f3c87ee4080afa5d2a0a03f0d2609bbd9c9268"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/SubcategoriaController.java",
+      "bytes": 4005,
+      "sha256": "7e8163f2c436fe4a9fce2de651f840cbdbdc0fd2d18a7531be56904fb420a27c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/controller/UsuarioLaboratorioController.java",
+      "bytes": 2112,
+      "sha256": "45b929c98bc4b1f9e367439d9ce93fe42ff3a5a742b56bdd95f1df235ed0b5f0"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/AreaEntity.java",
+      "bytes": 1505,
+      "sha256": "5bee0f021b965414d9b8b3e9dcc273d4802658a27b0382568b81c134c2a18b0c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/AuditoriaEntity.java",
+      "bytes": 1405,
+      "sha256": "ac9002c1ab045e58c207cf5137575653ec38949b6378e29af7168b44e890df8f"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/CategoriaEntity.java",
+      "bytes": 1304,
+      "sha256": "4eadc2e13faac408b5207d6e03f8daf7aaad794ca5a05b8ee989033795d4a018"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/EquipoEntity.java",
+      "bytes": 3099,
+      "sha256": "948907971af090efbd2815e55e59dcef44f292852ffc35da0e749d7a1ad02bd9"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/LaboratorioEntity.java",
+      "bytes": 1976,
+      "sha256": "1b78f2b9aea7c55b610ddeb075f26eccaf92d9cae513847c196cf05552e314d1"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/MantenimientoEntity.java",
+      "bytes": 2643,
+      "sha256": "0ef7d67fe5ef4027e4ee3a615c553cc8857f2e7100644db6059b6bdb49933de1"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/MovimientoEquipoEntity.java",
+      "bytes": 2174,
+      "sha256": "a9844c2ea5c3c8a0689983cb81fbb537d73c661260eab064e7b38f38c55d6902"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/RolEntity.java",
+      "bytes": 1193,
+      "sha256": "579d67c29cf4dfc6b1e00b9d7ec631cebe6aa4c0bcf108a776d79188859de159"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/SedeEntity.java",
+      "bytes": 1423,
+      "sha256": "b686406cc54afe4ef6aad22efa26012f39c565acfd0bb6baad4c95aac81489cc"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/SubcategoriaEntity.java",
+      "bytes": 1552,
+      "sha256": "bbf32035be8ef3d8e4fcdd2c608d35b1532dd4bfc122e5d002ea1f5975a76e34"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/UsuarioEntity.java",
+      "bytes": 1823,
+      "sha256": "9613ff52b8c317f1108d537dabc349175becd39199cdef7f7ee23d9832c4e50b"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/UsuarioLaboratorioEntity.java",
+      "bytes": 1495,
+      "sha256": "3204d9b462e25229a4f587e636c2f95a2237198a397c0d0ea4cd1d3c1e07372c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/entity/UsuarioLaboratorioId.java",
+      "bytes": 695,
+      "sha256": "0bf7e4068ba4b23c9cb2f4c8636594869bf8e852047d2a4142383d4ec7343622"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/security/JwtAuthFilter.java",
+      "bytes": 4199,
+      "sha256": "b6947bc95e16236f0dcf4efee305a86e825783209b08643b1e1d63cd94a3f93c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/security/JwtService.java",
+      "bytes": 2964,
+      "sha256": "843c9241313bbd483fb775e0de4653ef765dfd89072d801b43c8ddc9c2e1a87d"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/security/SecurityErrorHandler.java",
+      "bytes": 2891,
+      "sha256": "ae16e91019f5f3ec1f7194b103a1007cd8a66c0dfb16bcd21334db78fafdf448"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/security/UserInfoDetails.java",
+      "bytes": 1753,
+      "sha256": "4134ed4c32cd879af9c19a043ccbd50fb512a04d16f83804730cc9b6f26af82d"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/AdminUsuarioService.java",
+      "bytes": 9619,
+      "sha256": "6c8cb6e5e6ba91a912d4d00da83c4dd2dcb44baba6d8fd83d4ed4e8f4cfe4522"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/AlcanceLaboratorioService.java",
+      "bytes": 3840,
+      "sha256": "1e93daa7c27e97e90ba0f0878a53e5087f0b9f847f93ce01b24037dad08a3932"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/AreaService.java",
+      "bytes": 7318,
+      "sha256": "a3cdc7a1260c9a507f68e803471a576816f1d75e6bbdecf643ef581681f9d7e6"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/AuditoriaService.java",
+      "bytes": 3630,
+      "sha256": "1893668cda4858189c26210419b1063963a409abdd3d60d910d388c21ed7804c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/CategoriaService.java",
+      "bytes": 6117,
+      "sha256": "129c97b5354d4008a263fbd6f28c7baab87136d65438cd8aa41f2f720ce4bab9"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/EquipoService.java",
+      "bytes": 15938,
+      "sha256": "18a05c795218f681c6aea25f757f2e787a55106f50c0ab4c8b2b235ca05b0108"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/LaboratorioService.java",
+      "bytes": 9078,
+      "sha256": "4ff74a0d88fe7400c65677a9e044f326f11db1f3959cd248ce7b70fa7ffb0786"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/MantenimientoService.java",
+      "bytes": 15792,
+      "sha256": "67e743bdae08c737470034dc2c62d2ec662e7682a5cd3cecaa868bc728b10114"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/MovimientoEquipoService.java",
+      "bytes": 11422,
+      "sha256": "a822b548f6b17562c78aa61dc55b2aa0ed4ec3e5db83a3da529ab93524e26a0c"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/ReporteService.java",
+      "bytes": 3943,
+      "sha256": "4577878568514f9a7ca9ac9f36c0b62c14cf1a9d9d262f21d05d61a42a2a3053"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/SedeService.java",
+      "bytes": 5238,
+      "sha256": "511896392ab0dc5c86cd8cede4f43bf51061e4f75e3a7e2362439fa70a60fd23"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/SubcategoriaService.java",
+      "bytes": 8500,
+      "sha256": "9f49a2ae666f00ada5cdc96b933799809f1580eddbbe277f9552073350547ee3"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/UsuarioLaboratorioService.java",
+      "bytes": 6781,
+      "sha256": "c80250226554456a185f802f85f821eebd4ccc86726c3eaa2bd88f9c6b7152e3"
+    },
+    {
+      "path": "backend/inventario/src/main/java/com/utec/inventario/service/UsuarioService.java",
+      "bytes": 2141,
+      "sha256": "a1eaffab76b027180368d094f4015641c12c03c7c69d1df021cd05c9cc986de9"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/application-dev.properties",
+      "bytes": 121,
+      "sha256": "b7ffb2620ff4130e21c49faaef5bad6750ed77742cc50e80c787be85682d3c31"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/application.properties",
+      "bytes": 874,
+      "sha256": "52061e0673bc5bcb42c486fdbea9186213192e2022deb6a695a88684deb8def7"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V1__crear_organizacion_y_catalogos.sql",
+      "bytes": 2284,
+      "sha256": "70afbed2035810e64c860368a7ab553083570c31b80e911eb47d6e01848ab879"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V10__estado_operativo_laboratorio.sql",
+      "bytes": 316,
+      "sha256": "7b6c956716812b83efa48890e421537440af81543cc5b54303047d8242b4f237"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V11__administracion_usuarios.sql",
+      "bytes": 908,
+      "sha256": "5d809ca34182c30a9ac1fb9fdf923ea47ca858ac3657f57f9cc9380850899e7d"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V12__crear_mantenimientos.sql",
+      "bytes": 2612,
+      "sha256": "ad1d375da20a9e1ae9efbf46242e91f06057c9965cb4bef2ba9ed40b7d320630"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V13__crear_auditoria.sql",
+      "bytes": 1339,
+      "sha256": "d95bd5b94653d163c7953daf98ec2ba2ecc829eb2d7dd244232c1f6d6075b526"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V2__crear_usuarios_y_seguridad.sql",
+      "bytes": 1732,
+      "sha256": "29635adbf98c88c7d62e5ee2e595ab5311da10c67636cd6f1e8198923136896e"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V3__crear_equipos_y_movimientos.sql",
+      "bytes": 3305,
+      "sha256": "0bccdd9f15b6da037c969e057ac1dbecd0158c41854963f13dd2c75fe31e324e"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V4__insertar_datos_iniciales.sql",
+      "bytes": 1921,
+      "sha256": "125d950b588dada3ae8c2a665ac0331281bfdb4c72050579144b5aab8773a63f"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V5__categoria_nombre_unico_sin_mayusculas.sql",
+      "bytes": 317,
+      "sha256": "60279312e8d8e5e95e5582ad7955accfacc5c7c701e20ae5a932e37b1cf38329"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V6__agregar_username_usuario.sql",
+      "bytes": 330,
+      "sha256": "ea8ca30b5eb5d49e18fec3213dab70f73d86daf5e16ae63dfa34f43b23697242"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V7__subcategoria_nombre_unico_por_categoria_sin_mayusculas.sql",
+      "bytes": 774,
+      "sha256": "5e9db32c24d5b3c85c214c31a9a7ce12c2e9b48f6d62ad25e735af1f7883bdda"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V8__area_nombre_unico_por_sede_sin_mayusculas.sql",
+      "bytes": 678,
+      "sha256": "52de6d08606ba99f9fdbdc24e832c2a082972882a4ce1fa8b4156f7b5d5426f1"
+    },
+    {
+      "path": "backend/inventario/src/main/resources/db/migration/V9__laboratorio_codigo_unico_sin_mayusculas.sql",
+      "bytes": 707,
+      "sha256": "d1c7a42421d5dae61379a347e50abbbbe618ebc3c8887f893cc0cae6a0d8107c"
+    },
+    {
+      "path": "frontend/version-jason/frontend/.dockerignore",
+      "bytes": 296,
+      "sha256": "6bd97f31dd8a6d50e9fe50ed4238ec937d344d10fc64152d5429482097be246f"
+    },
+    {
+      "path": "frontend/version-jason/frontend/Dockerfile",
+      "bytes": 745,
+      "sha256": "daf85f0ba49650f292411a1e46690e55fe1e5e21006af758280cc778e89d6c6f"
+    },
+    {
+      "path": "frontend/version-jason/frontend/nginx.conf",
+      "bytes": 1425,
+      "sha256": "1cc98236a9e3c696fb53fa65f41ee304ed2fd1702e981254f05afe9d8c438722"
+    },
+    {
+      "path": "frontend/version-jason/frontend/package-lock.json",
+      "bytes": 74118,
+      "sha256": "cfcae511e8390c1f65c9fa9b5fa0dea007d85b7c38e190cfc99a0cb0cc0d58a2"
+    },
+    {
+      "path": "frontend/version-jason/frontend/package.json",
+      "bytes": 460,
+      "sha256": "f74c8edf86d4855141999007b2c0d87ba4f493bb1e838844d7b67047bf6efff2"
+    },
+    {
+      "path": "frontend/version-jason/frontend/src/App.jsx",
+      "bytes": 2732,
+      "sha256": "fe91316596ca3ed6623ae29f9398e6172ef8f2a0445670a9a71dfdf94b6452cd"
+    },
+    {
+      "path": "frontend/version-jason/frontend/src/contextos/AuthContext.jsx",
+      "bytes": 1148,
+      "sha256": "c8f013d4da0ab9518e143f4a7845c0e13977ab976d544f9d26817407c3bbd194"
+    },
+    {
+      "path": "frontend/version-jason/frontend/src/servicios/api.js",
+      "bytes": 13307,
+      "sha256": "ce136454303ab89986fe0529e83ee3b41f7ba8b18b2e9627fc7b691f7f8721b3"
+    },
+    {
+      "path": "frontend/version-jason/frontend/vercel.json",
+      "bytes": 278,
+      "sha256": "48ef677cc1c681818022f4ac237c71df61ce9f8e8dde8397e4370116e9886dae"
+    },
+    {
+      "path": "frontend/version-jason/frontend/vite.config.js",
+      "bytes": 458,
+      "sha256": "c702d7e39657c94b98663385de40b458807e7f71d173096a1171aaab744d48d0"
+    },
+    {
+      "path": "frontend/version-marko/inventario-frontend/package-lock.json",
+      "bytes": 97016,
+      "sha256": "df67a08217ca2cd8de1762626e83b3e3a91da966b6fac97f20d356d64b25edc0"
+    },
+    {
+      "path": "frontend/version-marko/inventario-frontend/package.json",
+      "bytes": 637,
+      "sha256": "b91cc78aab310543ab53539075b52e3a1eb6b506330dd20ff84844ab6b772d95"
+    },
+    {
+      "path": "frontend/version-marko/inventario-frontend/src/App.jsx",
+      "bytes": 380,
+      "sha256": "6e8966795cdd637672a4a999f43899ae3b2877b85bfebafe35f64c83c4c7b510"
+    },
+    {
+      "path": "frontend/version-marko/inventario-frontend/src/servicios/api.js",
+      "bytes": 2227,
+      "sha256": "677446548764d6991471a6ce5603c376475958afc591148b8c714fad2a6b4de8"
+    },
+    {
+      "path": "frontend/version-marko/inventario-frontend/vite.config.js",
+      "bytes": 301,
+      "sha256": "60407310023ec5309b966e84b04c1a7d42998ae19d112ef3167ec968a67356d9"
+    },
+    {
+      "path": "iniciar-backend.ps1",
+      "bytes": 2761,
+      "sha256": "696de698d38a79e5e3b86435cbf123bcaccd83bc457ebf0bf75d75667e37d3a4"
+    },
+    {
+      "path": "README.md",
+      "bytes": 26209,
+      "sha256": "c7de0b78e75d71913d82412da352e0c4073287108080151f1e064ef70e07f110"
+    },
+    {
+      "path": "verificar-backend.ps1",
+      "bytes": 5150,
+      "sha256": "06dc0661f63ff970ec65d703bf124855dbd7c50b29e22d91b35e849680a5c2c6"
+    }
+  ]
+}

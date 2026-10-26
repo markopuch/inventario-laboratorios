@@ -94,3 +94,7 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/java,visualstudiocode,gradle,maven
+
+# Variante educativa y sprints de Marko: conservar solo en la computadora local.
+/frontend/version-marko/
+/docs/sprints_realizados-frontend-Marko/

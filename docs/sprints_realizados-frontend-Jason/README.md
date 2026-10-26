@@ -4,6 +4,11 @@ Estado documental actualizado el **3 de octubre de 2026**, después de la adapta
 
 Esta carpeta registra el frontend de `frontend/version-jason/frontend/`. Cada FE presenta primero su estado vigente y después la entrega original como historia. Los resultados de Marko no certifican Jason. Los sprints organizan trabajo por módulos; no equivalen por sí solos a aprobación completa de cada mockup o escenario.
 
+**Organización desde el 26 de octubre de 2026:** la variante de tutoría Marko y
+sus sprints se conservan solo en el equipo local, excluidos del seguimiento de Git
+y de nuevos clones. Las referencias a ese material son antecedentes históricos;
+esta carpeta continúa documentando únicamente Jason.
+
 ## Estado actual
 
 | Bloque | Estado y evidencia |

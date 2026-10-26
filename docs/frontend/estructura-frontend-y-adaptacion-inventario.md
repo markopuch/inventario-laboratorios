@@ -12,8 +12,7 @@ guía se conserva como referencia del curso. La versión activa está en
 los módulos compatibles con la API. Su flujo completo en Docker y la publicación
 de backend/frontend en GitHub Actions están
 [verificados con evidencia](../despliegue/verificacion-docker-actions-2026-10-03.md).
-La versión Marko permanece separada. Las diferencias entre la propuesta inicial,
-Jason y los mockups se registran en la
+Las diferencias entre la propuesta inicial, Jason y los mockups se registran en la
 [auditoría de integración](../sprints_realizados-frontend-Jason/auditoria-integracion.md);
 no se afirma fidelidad visual 1:1 ni accesibilidad exhaustiva. Jason ya incorpora
 Usuarios administrativos, Mantenimientos y Reportes del backend V13; su adaptación
@@ -21,6 +20,12 @@ aprobó 67 pruebas frontend y el smoke Docker `e1ce75a` pasó 94 comprobaciones 
 Configuración persistida continúa fuera del alcance funcional. Las pantallas
 presentadas como futuras en el diseño inicial de esta guía son antecedentes;
 el índice de sprints Jason registra qué módulos están implementados hoy.
+
+**Nota de organización — 26 de octubre de 2026:** la variante de tutoría
+`frontend/version-marko/` y sus registros `docs/sprints_realizados-frontend-Marko/`
+quedan excluidos del seguimiento de Git y se conservan solo en el equipo local.
+No están presentes en nuevos clones ni son necesarios para la aplicación Jason;
+sus antecedentes siguen disponibles en el historial de Git.
 
 ## 1. Contexto y alcance
 

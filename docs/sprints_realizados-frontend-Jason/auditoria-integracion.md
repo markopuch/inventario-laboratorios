@@ -81,6 +81,11 @@ dependencias, los contratos relevantes del backend y las diez imágenes de
 `docs/frontend/mockup/`. No se usó la versión Marko como evidencia de funcionamiento
 de Jason. No se encontraron instrucciones `AGENTS.md` aplicables durante la revisión.
 
+**Nota de organización — 26 de octubre de 2026:** la variante de tutoría Marko y
+sus sprints se conservan solo en el equipo local, excluidos del seguimiento de Git
+y de nuevos clones. Esta decisión no modifica los resultados históricos de la
+auditoría ni las fuentes de Jason usadas para comprobarlos.
+
 Los sprints conservan las afirmaciones de la entrega original. Los hallazgos de esta
 auditoría las precisan cuando son incompletas o contradicen el código. Las referencias
 de línea de la sección de hallazgos corresponden a la lectura inicial, anterior a las

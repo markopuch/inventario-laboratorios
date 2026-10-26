@@ -1,6 +1,12 @@
 # Inventario de Laboratorios
 
-Frontend de trabajo actual: [versión Jason — Docker, ejecución local y pruebas manuales](frontend/version-jason/frontend/README.md), conectado al backend Docker del [Sprint 8](docs/sprints_realizados-backend/sprint-8.md). El Compose de `backend/inventario` levanta PostgreSQL, backend y Jason (puerto 3000); `imagen.yml` publica backend y frontend Jason por separado. La [auditoría de integración](docs/sprints_realizados-frontend-Jason/auditoria-integracion.md) registra el estado comprobado; la versión Marko se conserva por separado.
+Frontend de trabajo actual: [versión Jason — Docker, ejecución local y pruebas manuales](frontend/version-jason/frontend/README.md), conectado al backend Docker del [Sprint 8](docs/sprints_realizados-backend/sprint-8.md). El Compose de `backend/inventario` levanta PostgreSQL, backend y Jason (puerto 3000); `imagen.yml` publica backend y frontend Jason por separado. La [auditoría de integración](docs/sprints_realizados-frontend-Jason/auditoria-integracion.md) registra el estado comprobado.
+
+**Organización desde el 26 de octubre de 2026:** la variante de tutoría
+`frontend/version-marko/` y sus registros `docs/sprints_realizados-frontend-Marko/`
+se conservan solo en el equipo local y quedan excluidos del seguimiento de Git.
+No forman parte de nuevos clones ni del build o despliegue de Jason. Su contenido
+anterior permanece en el historial de Git.
 
 **Estado verificado al 3 de octubre de 2026:** flujo completo en Docker local comprobado,
 ambos trabajos de GitHub Actions en verde y ambas imágenes publicadas en GHCR para
@@ -455,7 +461,8 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 | [Ampliación del backend](backend/inventario/ACTUALIZACION-BACKEND.md) | Contratos V10–V13 para integrar Jason |
 | [Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md) | Flujo completo, ambos trabajos verdes, imágenes y evidencias persistentes |
 | [Sprints Jason](docs/sprints_realizados-frontend-Jason/README.md) | Estado actual de la implementación frontend y sus límites |
-| [Frontend](frontend/readme.md) | Versiones Jason/Marko y modos de ejecución |
+| [Frontend](frontend/readme.md) | Jason, modos de ejecución y ubicación del material local de Marko |
+| [Memoria técnica](memory.md) | Arquitectura, estado, decisiones y conservación local de Marko; anexos con comprobaciones fechadas |
 | [Modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md) | Contraste de migraciones y Entities; 12 entidades y 16 FK |
 | [ERD lógico v3](docs/Erd_actual/erd-logico-v3.md) / [físico v3](docs/Erd_actual/erd-fisico-v3.md) | Modelo completo V1–V13; Mermaid, SVG, PNG y fuentes DOT |
 | [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md) / [físico v2](docs/Erd_actual/erd-fisico-v2.md) | Mermaid y SVG históricos V1–V9 |

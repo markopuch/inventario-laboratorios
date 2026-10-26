@@ -135,7 +135,7 @@ logout, 401, backend caído, doble envío y navegación por teclado.
 ## Fuentes y continuidad
 
 - [Estado general de sprints](README.md).
-- [Antecedente de FE-01 en la versión Marko](../sprints_realizados-frontend-Marko/fe-01-login-sesion.md), conservado como historia; sus resultados no certifican la versión Jason.
+- [Antecedente de FE-01 en la versión Marko, copia histórica](https://github.com/markopuch/inventario-laboratorios/blob/0344b3301c93f5b50894fbf454a21c7b129af37b/docs/sprints_realizados-frontend-Marko/fe-01-login-sesion.md). Desde el 26 de octubre de 2026 la carpeta de tutoría y sus sprints se conservan solo en el equipo local, excluidos del seguimiento de Git; sus resultados no certifican la versión Jason.
 - `src/pantallas/Login.jsx`, `src/contextos/AuthContext.jsx`, `src/servicios/api.js`.
 - Referencias visuales del proyecto en `docs/frontend/mockup/`.
 

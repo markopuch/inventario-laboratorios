@@ -21,6 +21,12 @@ implementados en Jason; Configuración persistida continúa fuera del alcance.
 Las decisiones propuestas abajo no deben interpretarse como el estado actual
 ni como una obligación de reemplazar la arquitectura de Jason.
 
+**Organización del 26 de octubre de 2026:** este plan general se conserva como
+antecedente del curso. La variante de tutoría `frontend/version-marko/` y sus
+registros `docs/sprints_realizados-frontend-Marko/` quedan solo en el equipo local,
+excluidos de Git y de nuevos clones. Este documento no requiere esas carpetas
+para consultar la planificación ni define los sprints vigentes de Jason.
+
 ## 1. Objetivo y límites
 
 Construir una primera versión funcional que conserve el diseño de los mockups y consuma el backend existente. No ampliar automáticamente el backend para reproducir controles que todavía no tienen soporte.

@@ -1,8 +1,14 @@
-# Frontends — Inventario de Laboratorios
+# Frontend — Inventario de Laboratorios
 
 El frontend integrado y publicado es la versión **Jason**, ubicada en
-[`version-jason/frontend/`](version-jason/frontend/README.md). La versión Marko se
-conserva por separado como antecedente; sus resultados no certifican Jason.
+[`version-jason/frontend/`](version-jason/frontend/README.md).
+
+Desde el **26 de octubre de 2026**, la variante de tutoría
+`frontend/version-marko/` y sus registros `docs/sprints_realizados-frontend-Marko/`
+se conservan únicamente en el equipo local, excluidos del seguimiento de Git y
+ausentes en nuevos clones. No son necesarios para ejecutar, probar o desplegar
+Jason. Sus resultados históricos no certifican esta aplicación; el material
+anterior sigue disponible en el historial de Git.
 
 ## Ejecución y estado comprobado
 

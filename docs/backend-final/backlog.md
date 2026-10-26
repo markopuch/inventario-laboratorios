@@ -16,7 +16,7 @@ distingue publicación, despliegue y comprobaciones de funcionamiento.
 | Auditoría | Tabla V13, registro de acciones de los servicios y consulta/filtros exclusivamente ADMIN mediante `GET /api/admin/auditoria`. No es un versionado completo de cada entidad. |
 | Reportes | Cinco consultas reales de resumen, equipos, movimientos y mantenimiento; filtros y alcance en servidor. |
 | Catálogos | Consulta administrativa de activos/inactivos y PATCH de actividad, además del CRUD y consultas globales activas. |
-| Frontend | Cliente activo de Jason en React/Vite, adaptado a los contratos vigentes y servido por Nginx. La base frontend inicial de Marko se conserva como antecedente. |
+| Frontend | Cliente activo de Jason en React/Vite, adaptado a los contratos vigentes y servido por Nginx. La base de tutoría Marko y sus sprints son antecedentes conservados solo en el equipo local y en el historial; desde el 26 de octubre de 2026 sus carpetas quedan excluidas del seguimiento de Git y de nuevos clones. |
 | Docker y Actions | PostgreSQL, backend y frontend saludables; imágenes `sha-e1ce75a` publicadas en GHCR y desplegadas localmente. El workflow construye/publica ambos componentes. |
 
 Estas funciones se implementaron **después** del cierre Sprint 7. Reconocerlas
