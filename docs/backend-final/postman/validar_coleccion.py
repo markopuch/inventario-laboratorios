@@ -12,6 +12,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 JAVA = ROOT / 'backend/inventario/src/main/java/com/utec/inventario'
+PAGED = {
+    ('GET', '/api/equipos'): ('EquipoResponse', 'PaginaEquiposResponse'),
+    ('GET', '/api/admin/equipos'): ('EquipoResponse', 'PaginaEquiposResponse'),
+    ('GET', '/api/admin/auditoria'): ('AuditoriaResponse', 'PaginaAuditoriaResponse'),
+}
 
 
 def check(condition, message):
@@ -69,7 +74,16 @@ def main():
             # IDs in @PathVariable strings contain braces only in the Mapping,
             # not inside a method signature; source annotations can span lines.
             expected[key] = {'response': response[0] if response else None,
-                             'request': request_dto[1] if request_dto else None}
+                             'request': request_dto[1] if request_dto else None,
+                             'signature': tail.split('{', 1)[0]}
+            if key in PAGED:
+                item_response, page_response = PAGED[key]
+                check(item_response + '[].class' in text and page_response + '.class' in text,
+                      'Falta declarar las dos respuestas OpenAPI: ' + str(key))
+                check(fields_of(page_response, 'response') == {
+                    'content', 'number', 'size', 'totalElements', 'totalPages', 'first', 'last'},
+                    'Envelope paginado distinto del contrato: ' + page_response)
+                expected[key]['response'] = item_response
 
     actual = set()
     items = list(requests(collection['item']))
@@ -106,16 +120,32 @@ def main():
         else:
             check(request['method'] != 'GET' or not body, 'GET con cuerpo inesperado.')
         queries = url.get('query', []) if isinstance(url, dict) else []
+        query_names = {parameter['key'] for parameter in queries}
+        check(len(query_names) == len(queries), 'Parámetros duplicados: ' + item['name'])
         for parameter in queries:
             check(parameter.get('disabled') is True, 'Filtro opcional habilitado inicialmente: ' + parameter['key'])
             check(bool(parameter.get('description')), 'Filtro sin descripción.')
         filter_dto = re.search(r'DTO de filtros: (\w+Request)\.', description)
         if filter_dto:
-            check({parameter['key'] for parameter in queries} == fields_of(filter_dto[1], 'request'), 'Filtros distintos de ' + filter_dto[1])
+            expected_filters = fields_of(filter_dto[1], 'request')
+            if key in PAGED and queries:
+                expected_filters |= fields_of('PaginacionRequest', 'request')
+            check(query_names == expected_filters, 'Filtros distintos de ' + filter_dto[1])
             filters += 1
+        if key in PAGED and queries:
+            signature = expected[key]['signature']
+            check('PaginacionRequest' in signature, 'Controller sin DTO de paginación: ' + str(key))
+            expected_queries = fields_of('PaginacionRequest', 'request')
+            expected_queries |= set(re.findall(r'@RequestParam\(\s*(?:value\s*=\s*)?"([^"]+)"', signature))
+            if filter_dto:
+                expected_queries |= fields_of(filter_dto[1], 'request')
+            check(query_names == expected_queries, 'Queries distintos de Controller/DTO: ' + str(key))
         events = item.get('event', [])
         test = next(('\n'.join(e['script']['exec']) for e in events if e['listen'] == 'test'), '')
         check('HTTP esperado' in test, 'Falta check de status.')
+        if key in PAGED and queries:
+            check('const paginada =' in test and 'pagina.totalPages' in test and 'pagina.content.length' in test,
+                  'Falta validar respuesta condicional y metadata paginada: ' + item['name'])
         response_class = expected[key]['response']
         if response_class and not re.search(r'HTTP esperado (401|403)', test):
             checked = set(re.findall(r"pm\.expect\((?:data|item)\)\.to\.have\.property\('([^']+)'\)", test))

@@ -72,7 +72,8 @@ function sandbox(item, response = fixture(item), overrides = {}) {
     request:{method:item.request.method,body:item.request.body,
       url:{toString:()=>item.request.url.raw,query:{each:fn=>(item.request.url.query||[]).forEach(fn)}}},
     response:{code:response.status,
-      headers:{get:key=>key.toLowerCase()==='location'?'http://127.0.0.1:1/api/recurso/1':'application/json'},
+      headers:{get:key=>key.toLowerCase()==='location'?'http://127.0.0.1:1/api/recurso/1':
+        key.toLowerCase()==='content-type'?'application/json':response.headers?.[key.toLowerCase()]??null},
       json:()=>{if(response.status===204)throw new Error('Sin JSON');return response.data;},
       text:()=>response.status===204?'':JSON.stringify(response.data),
       to:{have:{status:code=>assert.equal(response.status,code)}}},
@@ -87,7 +88,7 @@ let executed=0, guarded=0, rejectedLogins=0, passwordCases=0;
 for (const item of items) {
   const run=sandbox(item);run.pre();
   if(item.request.body) JSON.parse(run.resolve(item.request.body.raw));
-  run.test();assert.deepEqual(run.failures,[]);executed++;
+  run.test();assert.deepEqual(run.failures,[],item.name);executed++;
   if(item.request.method!=='GET' && !item.request.url.raw.endsWith('/auth/login')){
     assert.throws(()=>sandbox(item,undefined,{habilitarEscrituras:'false'}).pre());guarded++;
   }
@@ -107,6 +108,86 @@ for (const item of items.filter(item=>item.request.url.raw.endsWith('/auth/login
     assert.equal(run.failures.length>0,true);rejectedLogins++;
   }
 }
+let limitedLoginCases=0, invalidLimitCases=0;
+for (const item of items.filter(item=>item.request.url.raw.endsWith('/auth/login'))) {
+  const role=item.name.match(/(ADMIN|GESTOR|LECTOR)/)[1];
+  const suffix=role[0]+role.slice(1).toLowerCase();
+  const limited=()=>({status:429,headers:{'retry-after':'900'},data:{
+    timestamp:'2026-10-27T00:00:00Z',status:429,error:'Too Many Requests',
+    message:'Espera antes de volver a intentarlo.',path:'/api/auth/login'}});
+  const valid=sandbox(item,limited());valid.pre();valid.test();
+  assert.deepEqual(valid.failures,[]);
+  assert.equal(valid.env.has('token'+suffix),false);
+  assert.equal(valid.env.has('idUsuario'+suffix),false);
+  limitedLoginCases++;
+  for (const mutate of [
+    response=>{delete response.headers['retry-after'];},
+    response=>{response.headers['retry-after']='0';},
+    response=>{response.headers['retry-after']='1.5';},
+    response=>{response.data.status=401;},
+    response=>{response.data.path='/otra-ruta';},
+    response=>{response.data.timestamp='fecha-invalida';},
+    response=>{response.data.passwordHash='campo-no-admitido';},
+  ]) {
+    const response=limited();mutate(response);
+    const run=sandbox(item,response);run.pre();run.test();
+    assert.equal(run.failures.length>0,true);
+    assert.equal(run.env.has('token'+suffix),false);
+    assert.equal(run.env.has('idUsuario'+suffix),false);
+    invalidLimitCases++;
+  }
+}
+const pagedItems=items.filter(item=>scripts(item,'test').join('\n').includes('const paginada ='));
+assert.equal(pagedItems.length,3);
+function paginatedItem(item,parameters) {
+  const copy=structuredClone(item);
+  for (const parameter of copy.request.url.query) {
+    parameter.disabled=!Object.prototype.hasOwnProperty.call(parameters,parameter.key);
+    if (!parameter.disabled) parameter.value=parameters[parameter.key];
+  }
+  return copy;
+}
+function pageResponse(item,parameters,totalElements=3) {
+  const number=Number(parameters.page??0),size=Number(parameters.size??20);
+  const length=Math.max(0,Math.min(size,totalElements-number*size));
+  const row=fixture(item).data[0],audit=item.request.url.raw.endsWith('/auditoria');
+  const content=Array.from({length},(_,index)=>({...row,
+    id:audit?totalElements-number*size-index:number*size+index+1}));
+  const totalPages=Math.ceil(totalElements/size);
+  return {status:200,data:{content,number,size,totalElements,totalPages,first:number===0,last:number>=totalPages-1}};
+}
+let validPageCases=0, invalidPageCases=0;
+for (const item of pagedItems) {
+  for (const [parameters,total] of [
+    [{page:'0'},0],[{page:'1'},21],[{size:'1'},2],
+    [{page:'1',size:'2'},3],[{page:'9',size:'2'},3],
+    [{page:'0',size:'100'},101],[{page:'2147483647',size:'1'},1],
+  ]) {
+    const copy=paginatedItem(item,parameters);
+    const run=sandbox(copy,pageResponse(item,parameters,total));run.pre();run.test();
+    assert.deepEqual(run.failures,[]);validPageCases++;
+  }
+  if (!item.request.url.raw.endsWith('/auditoria')) {
+    const copy=paginatedItem(item,{q:' Mesa '});
+    const run=sandbox(copy,fixture(item));run.pre();run.test();
+    assert.deepEqual(run.failures,[]);validPageCases++;
+  }
+  const parameters={page:'1',size:'2'},copy=paginatedItem(item,parameters);
+  for (const mutate of [
+    response=>{response.data.number=0;},response=>{response.data.size=101;},
+    response=>{response.data.totalElements=-1;},response=>{response.data.totalPages=99;},
+    response=>{response.data.first=true;},response=>{response.data.last=false;},
+    response=>{response.data.content=[];},response=>{delete response.data.content[0].id;},
+    response=>{response.data.content[0].passwordHash='campo-no-admitido';},
+    response=>{response.data=fixture(item).data;},
+  ]) {
+    const response=pageResponse(item,parameters);mutate(response);
+    const run=sandbox(copy,response);run.pre();run.test();
+    assert.equal(run.failures.length>0,true);invalidPageCases++;
+  }
+  const legacy=sandbox(item,pageResponse(item,{}));legacy.pre();legacy.test();
+  assert.equal(legacy.failures.length>0,true);invalidPageCases++;
+}
 const reset=items.find(item=>item.request.url.raw.endsWith('/password'));
 for (const [value,valid] of [
   [String.fromCharCode(97).repeat(14),false],[String.fromCharCode(97).repeat(15),true],
@@ -118,4 +199,6 @@ for (const [value,valid] of [
 }
 process.stdout.write(JSON.stringify({scripts_compilados:compiled,solicitudes_simuladas:executed,
   escrituras_bloqueadas:guarded,logins_invalidos_sin_token:rejectedLogins,
-  casos_password_unicode:passwordCases,http_real:false}));
+  casos_password_unicode:passwordCases,logins_limitados_validos:limitedLoginCases,
+  limites_invalidos_rechazados:invalidLimitCases,paginas_validas:validPageCases,
+  paginas_invalidas_rechazadas:invalidPageCases,http_real:false}));

@@ -38,7 +38,8 @@ public class OpenApiConfig {
                 .info(new Info().title("API Inventario de Laboratorios").version("0.0.1-SNAPSHOT")
                         .description("Contratos vigentes V1–V13. Roles ADMIN, GESTOR y LECTOR; el servidor valida "
                                 + "usuario activo y alcance por laboratorio en cada petición. ADMIN tiene alcance global; "
-                                + "GESTOR y LECTOR requieren asignaciones activas. Las listas son arreglos sin paginación. "
+                                + "GESTOR y LECTOR requieren asignaciones activas. Equipos y Auditoría admiten page/size "
+                                + "opcionales (base cero, tamaño por defecto 20, máximo 100); sin ambos conservan arreglos. "
                                 + "Los filtros de instantes usan días UTC; la programación de mantenimiento usa fechas de calendario. "
                                 + "Los CSV se generan en el frontend a partir de los reportes agregados. No existen refresh token, "
                                 + "logout con revocación ni registro público. Try it out ejecuta solicitudes reales en el servidor seleccionado."))

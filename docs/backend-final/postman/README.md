@@ -35,7 +35,9 @@ técnicas separadas de las setenta operaciones de negocio.
 4. Enviar individualmente los tres logins. Son públicos y usan **No Auth**.
    Solo una respuesta HTTP 200 con token, expiración, identidad, cuenta activa
    y rol válidos guarda `tokenAdmin/Gestor/Lector` y el ID del actor. Un test
-   fallido no autoriza guardar un token por sí mismo.
+   fallido no autoriza guardar un token por sí mismo. Si recibe 429, el script
+   valida ApiError/Retry-After y deja token/ID vacíos; esperar el tiempo indicado
+   antes de solicitar otro intento, sin reintentos automáticos.
 5. Consultar perfil, alcance y listados. La colección hereda por defecto
    `Bearer {{tokenAdmin}}`; las consultas negativas de GESTOR/LECTOR y la
    consulta anónima contienen su autorización específica. Para comparar otras
@@ -71,14 +73,22 @@ el JSON. Los cuerpos de login/restablecimiento no se imprimen en scripts.
   PUT general de usuario excluye username/rol/actividad/password; PUT Equipo
   excluye código interno/laboratorio/fechas; PUT Mantenimiento excluye idEquipo
   y los campos del ciclo. Actor y origen de traslado los decide el servidor.
-- Los filtros opcionales aparecen **deshabilitados** en la pestaña Params.
-  Completar su variable y habilitar solo los necesarios. Los listados no tienen
-  `page/size`; las respuestas válidas pueden ser `[]` y los reportes pueden
-  contener totales cero.
+- Los filtros opcionales aparecen **deshabilitados** en Params. En Equipos,
+  Equipos ADMIN y Auditoría, habilitar `page` o `size` activa el objeto
+  `{content,number,size,totalElements,totalPages,first,last}`. Sin ambos se
+  conserva el arreglo. `paginaListado=0` y `tamanoPaginaListado=20` son valores
+  iniciales; tamaño máximo 100. Página fuera de rango: contenido vacío con
+  totales reales. Los demás listados y reportes conservan sus contratos.
+- `q`, deshabilitado y con `filtroBusquedaEquipo` vacío, busca en servidor por
+  nombre/código/marca/modelo/laboratorio, con trim y máximo 200 caracteres,
+  sin distinguir mayúsculas y con comodines SQL tratados literalmente. Se
+  combina con alcance/filtros antes del conteo y no activa paginación por sí solo.
+  Véase [contrato de paginación y login](../paginacion-login.md).
 - Fechas de filtro usan `YYYY-MM-DD`, con `fechaHasta >= fechaDesde`.
   Reportes de Equipo/Movimiento y Auditoría interpretan timestamps por días UTC;
   mantenimiento utiliza fecha programada de calendario. Los ocho filtros de
-  Reporte y los seis de Mantenimiento/Auditoría corresponden a sus DTO actuales.
+  Reporte y los seis de negocio de Mantenimiento/Auditoría corresponden a sus
+  DTO actuales; Auditoría añade los dos parámetros de paginación.
 
 ## Escrituras y orden del recorrido
 
@@ -111,7 +121,10 @@ recorrido manual:
 
 Los checks de éxito verifican status exacto, JSON/contrato público y ausencia
 de campos sensibles; las altas comprueban Location y los 204 cuerpo vacío.
-Los 401/403 negativos comprueban ApiError. Los códigos generales mencionados
+Los 401/403 negativos comprueban ApiError. Los tres GET paginables verifican
+el formato según parámetros activos, campos públicos, número/tamaño, totales,
+primera/última página, longitud de contenido y orden estable. Los logins validan
+también 429 y Retry-After, sin conservar un token. Los códigos generales mencionados
 en descripciones dependen de cada operación: no se prometen todos en todas
 las rutas. Un 409 puede ser la respuesta correcta ante un duplicado o una
 precondición inválida; revisar el recurso antes de repetir una escritura.
@@ -135,6 +148,14 @@ Se compilaron **150 scripts** y se simularon las 75 solicitudes, con **33
 escrituras bloqueadas por defecto**, **24 respuestas de login inválidas sin
 guardar token/ID** y **ocho casos de contraseña Unicode**. Las contraseñas de
 esas simulaciones son datos sintéticos generados en memoria.
+
+La ampliación de paginación/login conserva esos conteos y añade **23 casos
+válidos de paginación/búsqueda**, **33 respuestas paginadas inválidas
+rechazadas**, **tres respuestas 429 válidas** y **21 contratos 429 inválidos
+rechazados**. Incluye parámetros únicos con defaults, conjuntos vacíos,
+páginas fuera de rango, formas array/objeto incoherentes, metadata incorrecta,
+campos privados y Retry-After ausente/inválido. Los casos son respuestas simuladas; no acreditan
+que el servidor haya ejecutado esas consultas o alcanzado un límite real.
 
 Esta comprobación acredita estructura y comportamiento local de scripts.
 La ejecución HTTP manual de esta colección en una instancia dedicada queda

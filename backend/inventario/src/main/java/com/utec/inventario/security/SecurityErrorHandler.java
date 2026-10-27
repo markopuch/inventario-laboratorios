@@ -16,6 +16,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import com.utec.inventario.exception.ApiError;
+import com.utec.inventario.exception.LoginRateLimitException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,6 +50,12 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
     public void internalServerError(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.writeError(request, response, HttpStatus.INTERNAL_SERVER_ERROR,
                 "Ocurrió un error interno. Inténtalo más tarde.");
+    }
+
+    public void tooManyRequests(HttpServletRequest request, HttpServletResponse response, long retryAfterSeconds)
+            throws IOException {
+        response.setHeader("Retry-After", Long.toString(Math.max(1, retryAfterSeconds)));
+        this.writeError(request, response, HttpStatus.TOO_MANY_REQUESTS, LoginRateLimitException.MESSAGE);
     }
 
     private void writeError(HttpServletRequest request, HttpServletResponse response, HttpStatus status,

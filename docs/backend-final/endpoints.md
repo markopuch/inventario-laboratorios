@@ -1,13 +1,13 @@
 # Endpoints del backend — catálogo vigente V13
 
-Revisión documental del **3 de octubre de 2026**, commit `e1ce75a`. Inventario contrastado con **19 Controllers**, SecurityConfig, DTOs y Services: **70 combinaciones método y ruta de aplicación**. Las 42 operaciones base de Sprint 7 permanecen; las 28 extensiones posteriores se documentan en secciones 10–14. Filtros y variantes de roles no aumentan el total. Actuator es infraestructura y no integra esas 70. [Evidencia vigente](../despliegue/verificacion-docker-actions-2026-10-03.md).
+Contrato actualizado el **27 de octubre de 2026**, incluidos paginación opcional, búsqueda de equipos y límite de login. Inventario contrastado con **19 Controllers**, SecurityConfig, DTOs y Services: **70 combinaciones método y ruta de aplicación**. Las 42 operaciones base de Sprint 7 y las 28 extensiones permanecen. Filtros, paginación y variantes de roles no aumentan el total. Actuator y OpenAPI son infraestructura separada. La [evidencia Docker del 3 de octubre](../despliegue/verificacion-docker-actions-2026-10-03.md) conserva su alcance histórico; esta revisión de contratos no acredita otro despliegue.
 
 Base backend local: `http://localhost:8080`; en Docker, el frontend de `http://localhost:3000` envía las mismas rutas `/api` mediante Nginx. Los cuerpos son JSON y requieren `Content-Type: application/json`. Todas las rutas salvo el login requieren `Authorization: Bearer <token>`.
 
 ## Cómo leer los contratos
 
 - A = ADMIN; G = GESTOR; L = LECTOR. El rol, usuario activo y alcance se comprueban en el servidor; no los concede un campo enviado por el cliente.
-- `—` significa sin cuerpo. `Lista<X>` es un arreglo JSON, no un objeto paginado. Una lista válida sin resultados devuelve `200 []`.
+- `—` significa sin cuerpo. `Lista<X>` es un arreglo JSON. Equipos, Equipos ADMIN y Auditoría conservan ese arreglo sin `page/size`; cualquiera de esos parámetros activa el objeto paginado descrito en [paginación y login](paginacion-login.md). Los demás listados no cambian.
 - Los POST de catálogos y equipos devuelven `201`, su respuesta JSON y la cabecera `Location`. Los DELETE son bajas lógicas con `204` sin cuerpo.
 - Los PUT reemplazan los campos editables: un opcional omitido o nulo se limpia. No son PATCH.
 - Errores comunes a las rutas protegidas: **401** por ausencia de JWT, token inválido/vencido o usuario/rol inactivo; **403** por rol o alcance insuficiente; **400** por JSON, tipo de parámetro o validación incorrectos. Los errores de negocio propios de cada operación aparecen en las tablas.
@@ -34,7 +34,7 @@ Base backend local: `http://localhost:8080`; en Docker, el frontend de `http://l
 
 | Método | Ruta | Descripción y alcance | Roles | Request | Response / éxito | Errores propios | Estado |
 |---|---|---|---|---|---|---|---|
-| POST | `/api/auth/login` | Autenticar y emitir JWT | Pública | `AuthRequest` | 200 `AuthResponse` | 400 validación; 401 credenciales o inactividad | IMPLEMENTADO |
+| POST | `/api/auth/login` | Autenticar y emitir JWT | Pública | `AuthRequest` | 200 `AuthResponse` | 400 validación; 401 credenciales o inactividad; 429 límite temporal con Retry-After | IMPLEMENTADO |
 | GET | `/api/auth/me` | Datos del principal autenticado | A/G/L | — | 200 `UsuarioResponse` | 404 si el usuario deja de existir/estar activo entre comprobaciones | IMPLEMENTADO |
 | GET | `/api/auth/me/laboratorios` | Alcance efectivo del principal; no admite elegir otro usuario | A/G/L | — | 200 `AlcanceLaboratoriosResponse` | 403 si ya no hay acceso vigente al comprobar el servicio | IMPLEMENTADO |
 
@@ -45,6 +45,8 @@ Base backend local: `http://localhost:8080`; en Docker, el frontend de `http://l
 ```
 
 `AuthResponse`: `accessToken`, `tokenType` (`Bearer`), `expiresIn` (segundos), `usuario: UsuarioResponse`.
+
+Login aplica por defecto cinco fallos por usuario normalizado/origen en 15 minutos y 60 solicitudes por origen/minuto. Los primeros cinco fallos secuenciales son 401; el siguiente dentro de la ventana es 429. Un éxito previo reinicia el contador de fallos de ese par, sin reiniciar la cuota del origen. El origen procede de `getRemoteAddr()`, no de cabeceras Forwarded/X-Forwarded-For interpretadas por el filtro. `429 ApiError` incluye `Retry-After` en segundos positivos. Los contadores son acotados, en memoria por instancia y se reinician con el proceso; no bloquean cuentas en BD. Configuración, límites y comportamiento detrás de proxy: [guía](paginacion-login.md#límite-temporal-de-inicio-de-sesión).
 
 `UsuarioResponse`: `id`, `userName`, `nombre`, `apellido`, `email`, `rol`, `activo`, `fechaCreacion`.
 
@@ -144,14 +146,16 @@ La lista es obligatoria y cada elemento es entero positivo no nulo. `[]` quita t
 
 | Método | Ruta | Descripción / alcance | Roles | Request | Response / éxito | Errores propios | Estado |
 |---|---|---|---|---|---|---|---|
-| GET | `/api/equipos` | Listar con filtros; A global, G/L según laboratorio actual autorizado | A/G/L | Filtros opcionales | 200 `Lista<EquipoResponse>` | 403 filtro laboratorio fuera de alcance; 404 laboratorio filtrado inexistente para A | IMPLEMENTADO |
+| GET | `/api/equipos` | Listar con filtros; A global, G/L según laboratorio actual autorizado | A/G/L | Filtros, q y page/size opcionales | 200 `Lista<EquipoResponse>` o `PaginaEquiposResponse` | 400 q/paginación inválidos; 403 filtro laboratorio fuera de alcance; 404 laboratorio filtrado inexistente para A | IMPLEMENTADO |
 | GET | `/api/equipos/{id}` | Detalle, incluido BAJA; mismo alcance | A/G/L | — | 200 `EquipoResponse` | 404 inexistente; 403 fuera de alcance | IMPLEMENTADO |
 | POST | `/api/equipos` | Crear en laboratorio activo; G debe tener alcance | A/G | `CreateEquipoRequest` | 201 `EquipoResponse` | 404 referencias inexistentes; 409 referencias inactivas, duplicados o BAJA; 403 alcance | IMPLEMENTADO |
 | PUT | `/api/equipos/{id}` | Editar sin cambiar código ni laboratorio | A/G | `UpdateEquipoRequest` | 200 `EquipoResponse` | 404 equipo/referencias inexistentes; 409 referencia inactiva, duplicados, BAJA o mantenimiento EN_PROCESO; 403 alcance | IMPLEMENTADO |
 | DELETE | `/api/equipos/{id}` | Establecer BAJA sin borrar; comprobar alcance actual | A/G | — | 204 — | 404 inexistente; 409 ya BAJA o mantenimiento EN_PROCESO; 403 alcance | IMPLEMENTADO |
-| GET | `/api/admin/equipos` | Alias de listado global con los mismos filtros | A | Filtros opcionales | 200 `Lista<EquipoResponse>` | 404 laboratorio filtrado inexistente | IMPLEMENTADO |
+| GET | `/api/admin/equipos` | Alias de listado global con los mismos filtros | A | Filtros, q y page/size opcionales | 200 `Lista<EquipoResponse>` o `PaginaEquiposResponse` | 400 q/paginación inválidos; 404 laboratorio filtrado inexistente | IMPLEMENTADO |
 
-Filtros combinables: `estado` (`OPERATIVO`, `MANTENIMIENTO`, `INOPERATIVO`, `BAJA`), `idLaboratorio` positivo, `idSubcategoria` positivo y `requiereMantenimiento` booleano. Un filtro válido sin coincidencias devuelve `[]`; `idSubcategoria` inexistente no se valida como referencia, devuelve una lista vacía. G/L sin alcance obtienen `[]` si no fuerzan un laboratorio. ADMIN mantiene la lectura histórica aun cuando el laboratorio esté inactivo.
+Filtros combinables: `estado` (`OPERATIVO`, `MANTENIMIENTO`, `INOPERATIVO`, `BAJA`), `idLaboratorio` positivo, `idSubcategoria` positivo, `requiereMantenimiento` booleano y `q` opcional de hasta 200 caracteres. `q` se recorta y busca coincidencia parcial sin distinguir mayúsculas en nombre, código interno, marca, modelo y nombre del laboratorio; `%`, `_` y `!` son literales. Búsqueda, filtros y alcance se aplican antes del conteo. Orden por ID ascendente.
+
+Sin `page` ni `size` se conserva el arreglo. Cualquiera activa `{content,number,size,totalElements,totalPages,first,last}`: base cero, valores omitidos 0/20, tamaño 1–100. Fuera de rango devuelve contenido vacío con totales reales; parámetros vacíos/no enteros/negativos o desplazamiento `page*size > 2147483647` producen 400. [Contrato y ejemplos](paginacion-login.md#consultas-con-paginación-opcional). `idSubcategoria` inexistente no se valida como referencia: produce cero resultados. G/L sin alcance obtienen cero resultados si no fuerzan laboratorio. ADMIN mantiene la lectura histórica de laboratorios inactivos.
 
 | Campo | Create | Update | Validación |
 |---|---|---|---|
@@ -353,10 +357,10 @@ conteos/listas vacíos según DTO, no información de otros laboratorios.
 
 | Método | Ruta | Roles / alcance | Request principal | Response y HTTP | Errores propios |
 |---|---|---|---|---|---|
-| GET | `/api/admin/auditoria` | A, global | FiltroAuditoriaRequest (query) | 200 Lista<AuditoriaResponse>, IMPLEMENTADO | 400 filtros/rango inválidos; 403 G/L |
+| GET | `/api/admin/auditoria` | A, global | FiltroAuditoriaRequest + PaginacionRequest (query) | 200 Lista<AuditoriaResponse> o PaginaAuditoriaResponse, IMPLEMENTADO | 400 filtros/rango/paginación inválidos; 403 G/L |
 
-Filtros: entidad, idEntidad, idUsuario (actor), accion, fechaDesde/fechaHasta.
-Respuesta: id, idUsuarioActor, userNameActor, accion, entidad, idEntidad,
+Filtros de negocio: entidad, idEntidad, idUsuario (actor), accion, fechaDesde/fechaHasta. Se aplican antes de contar. Orden fecha DESC e ID DESC. `page` o `size` activa la misma página base cero, default 0/20 y máximo 100; ambos omitidos conservan el arreglo. Fuera de rango conserva totales y devuelve `content: []`. [Contrato paginado](paginacion-login.md#consultas-con-paginación-opcional).
+Respuesta de cada elemento: id, idUsuarioActor, userNameActor, accion, entidad, idEntidad,
 cambios y fecha. Actor procede del servidor; no existe POST/PUT/DELETE libre.
 Los resúmenes no registran contraseñas, hashes, tokens o credenciales.
 

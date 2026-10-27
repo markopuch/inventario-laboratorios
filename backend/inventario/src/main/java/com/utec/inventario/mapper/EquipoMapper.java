@@ -11,11 +11,13 @@ import org.mapstruct.ReportingPolicy;
 
 import com.utec.inventario.domain.Equipo;
 import com.utec.inventario.domain.Laboratorio;
+import com.utec.inventario.domain.Pagina;
 import com.utec.inventario.domain.Subcategoria;
 import com.utec.inventario.domain.Usuario;
 import com.utec.inventario.dto.request.CreateEquipoRequest;
 import com.utec.inventario.dto.request.UpdateEquipoRequest;
 import com.utec.inventario.dto.response.EquipoResponse;
+import com.utec.inventario.dto.response.PaginaEquiposResponse;
 import com.utec.inventario.dto.response.LaboratorioEquipoResponse;
 import com.utec.inventario.dto.response.ResponsableEquipoResponse;
 import com.utec.inventario.dto.response.SubcategoriaEquipoResponse;
@@ -87,6 +89,11 @@ public interface EquipoMapper {
     EquipoResponse toResponse(Equipo equipo);
 
     List<EquipoResponse> toResponse(List<Equipo> equipos);
+
+    default PaginaEquiposResponse toResponse(Pagina<Equipo> pagina) {
+        return new PaginaEquiposResponse(this.toResponse(pagina.content()), pagina.number(), pagina.size(),
+                pagina.totalElements(), pagina.totalPages(), pagina.first(), pagina.last());
+    }
 
     SubcategoriaEquipoResponse toSubcategoriaResponse(Subcategoria subcategoria);
 

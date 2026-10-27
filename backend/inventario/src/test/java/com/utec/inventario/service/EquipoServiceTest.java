@@ -204,7 +204,7 @@ class EquipoServiceTest {
         assertThrows(ConflictException.class, () -> service.eliminarEquipo(1, 7));
         assertThrows(ConflictException.class, () -> service.actualizarEquipo(1, 7, input()));
         verify(equipos).saveAndFlush(entity);
-        verify(equipos, never()).delete(any());
+        verify(equipos, never()).delete(any(EquipoEntity.class));
         verifyNoInteractions(subcategorias, laboratorios);
     }
 

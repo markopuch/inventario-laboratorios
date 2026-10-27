@@ -4,6 +4,8 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
@@ -48,7 +50,23 @@ public class AuditoriaService {
     }
 
     public List<Auditoria> listar(FiltroAuditoria filtro) {
-        Specification<AuditoriaEntity> spec = (root, query, cb) -> {
+        return this.mapper.convert(this.repository.findAll(this.especificacion(filtro), this.orden()));
+    }
+
+    public Pagina<Auditoria> listarPaginado(FiltroAuditoria filtro, int page, int size) {
+        Page<AuditoriaEntity> result = this.repository.findAll(this.especificacion(filtro),
+                PageRequest.of(page, size, this.orden()));
+        return new Pagina<>(this.mapper.convert(result.getContent()), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages(), result.getNumber() == 0,
+                (long) result.getNumber() + 1 >= result.getTotalPages());
+    }
+
+    private Sort orden() {
+        return Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("idAuditoria"));
+    }
+
+    private Specification<AuditoriaEntity> especificacion(FiltroAuditoria filtro) {
+        return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (filtro.getEntidad() != null) predicates.add(cb.equal(root.get("entidad"), filtro.getEntidad()));
             if (filtro.getIdEntidad() != null) predicates.add(cb.equal(root.get("idEntidad"), filtro.getIdEntidad()));
@@ -60,8 +78,6 @@ public class AuditoriaService {
                     filtro.getFechaHasta().plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)));
             return cb.and(predicates.toArray(Predicate[]::new));
         };
-        return this.mapper.convert(this.repository.findAll(spec,
-                Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("idAuditoria"))));
     }
 }
 

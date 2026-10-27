@@ -30,6 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(LoginRateLimitException.class)
+    public ResponseEntity<Object> handleLoginRateLimit(LoginRateLimitException exception, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(exception.getRetryAfterSeconds()))
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(body(HttpStatus.TOO_MANY_REQUESTS, LoginRateLimitException.MESSAGE, request, Map.of()));
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Object> handleAuthentication(AuthenticationException exception, WebRequest request) {
         return error(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos.", request);

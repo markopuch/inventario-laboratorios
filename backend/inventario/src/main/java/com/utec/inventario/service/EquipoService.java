@@ -3,11 +3,15 @@ package com.utec.inventario.service;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +22,7 @@ import com.utec.inventario.domain.EstadoMantenimiento;
 import com.utec.inventario.domain.Equipo;
 import com.utec.inventario.domain.EstadoEquipo;
 import com.utec.inventario.domain.Laboratorio;
+import com.utec.inventario.domain.Pagina;
 import com.utec.inventario.domain.Usuario;
 import com.utec.inventario.entity.EquipoEntity;
 import com.utec.inventario.entity.LaboratorioEntity;
@@ -27,6 +32,7 @@ import com.utec.inventario.exception.ConflictException;
 import com.utec.inventario.exception.ResourceNotFoundException;
 import com.utec.inventario.mapper.EquipoMapper;
 import com.utec.inventario.repository.EquipoRepository;
+import com.utec.inventario.repository.EquipoEspecificaciones;
 import com.utec.inventario.repository.MantenimientoRepository;
 import com.utec.inventario.repository.LaboratorioRepository;
 import com.utec.inventario.repository.SubcategoriaRepository;
@@ -92,6 +98,51 @@ public class EquipoService {
                 .orElseThrow(() -> this.equipoInexistente(idEquipo));
         this.validarAlcance(usuario, equipo.getLaboratorio().getIdLaboratorio());
         return this.convertirEquipos(List.of(equipo)).getFirst();
+    }
+
+    public List<Equipo> listarEquipos(Integer idUsuario, EstadoEquipo estado, Integer idLaboratorio,
+            Integer idSubcategoria, Boolean requiereMantenimiento, String q) {
+        String patron = this.patronBusqueda(q);
+        if (patron == null) {
+            return this.listarEquipos(idUsuario, estado, idLaboratorio, idSubcategoria, requiereMantenimiento);
+        }
+        List<Integer> permitidos = this.alcanceListado(idUsuario, idLaboratorio);
+        if (permitidos != null && permitidos.isEmpty()) return List.of();
+        List<EquipoEntity> entities = this.equipoRepository.findAll(EquipoEspecificaciones.filtrar(
+                estado, idLaboratorio, idSubcategoria, requiereMantenimiento, permitidos, patron),
+                Sort.by(Sort.Order.asc("idEquipo")));
+        return this.convertirEquipos(entities);
+    }
+
+    public Pagina<Equipo> listarEquiposPaginados(Integer idUsuario, EstadoEquipo estado, Integer idLaboratorio,
+            Integer idSubcategoria, Boolean requiereMantenimiento, String q, int page, int size) {
+        List<Integer> permitidos = this.alcanceListado(idUsuario, idLaboratorio);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Order.asc("idEquipo")));
+        Page<EquipoEntity> result = permitidos != null && permitidos.isEmpty() ? Page.empty(pageable)
+                : this.equipoRepository.findAll(EquipoEspecificaciones.filtrar(estado, idLaboratorio,
+                        idSubcategoria, requiereMantenimiento, permitidos, this.patronBusqueda(q)), pageable);
+        return new Pagina<>(this.convertirEquipos(result.getContent()), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages(), result.getNumber() == 0,
+                (long) result.getNumber() + 1 >= result.getTotalPages());
+    }
+
+    private List<Integer> alcanceListado(Integer idUsuario, Integer idLaboratorio) {
+        Usuario usuario = this.buscarUsuarioVigente(idUsuario);
+        if (this.esAdmin(usuario)) {
+            if (idLaboratorio != null && !this.laboratorioRepository.existsById(idLaboratorio)) {
+                throw new ResourceNotFoundException("No existe un laboratorio con el ID " + idLaboratorio + ".");
+            }
+            return null; // Global: conserva equipos históricos bajo laboratorios inactivos.
+        }
+        if (idLaboratorio != null) this.alcanceService.validarAccesoLaboratorio(idUsuario, idLaboratorio);
+        return this.alcanceService.obtenerAlcanceEfectivo(idUsuario).getLaboratorios().stream()
+                .map(Laboratorio::getId).toList();
+    }
+
+    private String patronBusqueda(String q) {
+        if (q == null || q.isBlank()) return null;
+        return "%" + q.trim().toLowerCase(Locale.ROOT).replace("!", "!!")
+                .replace("%", "!%").replace("_", "!_") + "%";
     }
 
     @Transactional

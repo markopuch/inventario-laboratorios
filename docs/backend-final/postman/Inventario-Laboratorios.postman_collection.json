@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "c1b553e8-abcb-4839-865c-bcf6806e8225",
     "name": "Inventario de Laboratorios · API V13 (70 operaciones)",
-    "description": "Colección manual vigente al 27 de octubre de 2026: 70 combinaciones método/ruta de 19 Controllers. 75 solicitudes por tres logins y tres consultas negativas. Bearer ADMIN heredado; login No Auth. Importar no ejecuta solicitudes. Credenciales, tokens e IDs iniciales vacíos. Scripts sin peticiones adicionales: validan y conservan tokens/IDs localmente. Las escrituras requieren habilitarEscrituras=true; usar una base dedicada de verificación. No ejecutar el Runner completo: DELETE y cambios de estado alteran precondiciones. Filtros opcionales deshabilitados. Claves nuevas: ≥15 caracteres Unicode y ≤72 bytes UTF-8. Sin paginación ni refresh token inexistentes. La validación estática no acredita ejecución HTTP/Newman. Ver README.md de esta carpeta.",
+    "description": "Colección manual vigente al 27 de octubre de 2026: 70 combinaciones método/ruta de 19 Controllers. 75 solicitudes por tres logins y tres consultas negativas. Bearer ADMIN heredado; login No Auth. Importar no ejecuta solicitudes. Credenciales, tokens e IDs iniciales vacíos. Scripts sin peticiones adicionales: validan y conservan tokens/IDs localmente. Las escrituras requieren habilitarEscrituras=true; usar una base dedicada de verificación. No ejecutar el Runner completo: DELETE y cambios de estado alteran precondiciones. Filtros opcionales deshabilitados. Claves nuevas: ≥15 caracteres Unicode y ≤72 bytes UTF-8. Paginación opcional en Equipos, Equipos ADMIN y Auditoría; sin page/size conservan arrays. Búsqueda q de Equipos en servidor. Login puede responder 429 con Retry-After. Sin refresh token. La validación estática no acredita ejecución HTTP/Newman. Ver README.md de esta carpeta.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -41,7 +41,7 @@
           "pm.request.url.query.each(function (item) {",
           "  if (!item.disabled) {",
           "    const value = pm.variables.replaceIn(String(item.value || ''));",
-          "    if (!value || /\\{\\{/.test(value)) throw new Error('Completa el filtro habilitado: '+item.key);",
+          "    if ((!value && item.key !== 'q') || /\\{\\{/.test(value)) throw new Error('Completa el filtro habilitado: '+item.key);",
           "    if (/^id/.test(item.key) && (!/^[1-9][0-9]*$/.test(value) || Number(value) > 2147483647)) throw new Error('ID de filtro inválido: '+item.key);",
           "  }",
           "});"
@@ -79,7 +79,7 @@
                 "login"
               ]
             },
-            "description": "Público y No Auth. Usar la contraseña vigente; el mínimo de altas/restablecimientos no se aplica de nuevo al login. El test conserva token e ID del actor en el environment local.\n\nDTO de entrada: AuthRequest. Solo se admiten los campos de ese contrato.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.",
+            "description": "Público y No Auth. Usar la contraseña vigente; el mínimo de altas/restablecimientos no se aplica de nuevo al login. El test conserva token e ID del actor en el environment local.\n\nDTO de entrada: AuthRequest. Solo se admiten los campos de ese contrato.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.\n\nPuede responder 429 Too Many Requests con ApiError y Retry-After en segundos por límites de intentos/origen. El script verifica ese contrato y no conserva token/ID; respeta la espera sin reintentar automáticamente. Véase ../paginacion-login.md.",
             "auth": {
               "type": "noauth"
             },
@@ -111,7 +111,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP esperado 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('HTTP esperado 200 o límite 429', function () { pm.expect([200,429].includes(pm.response.code)).to.eql(true); });",
                   "function contieneCampoSensible(value) {",
                   "  if (!value || typeof value !== 'object') return false;",
                   "  return Object.keys(value).some(function (key) {",
@@ -142,6 +142,21 @@
                   "    pm.environment.set('tokenAdmin', data.accessToken);",
                   "    pm.environment.set('idUsuarioAdmin', String(data.usuario.id));",
                   "  }",
+                  "}",
+                  "if (pm.response.code === 429) {",
+                  "  pm.environment.unset('tokenAdmin');",
+                  "  pm.environment.unset('idUsuarioAdmin');",
+                  "  pm.test('Límite de login con ApiError y Retry-After', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/json/i);",
+                  "    const error = pm.response.json();",
+                  "    pm.expect(error).to.be.an('object');",
+                  "    pm.expect(error.status).to.eql(429);",
+                  "    ['timestamp','error','message','path'].forEach(function (key) { pm.expect(typeof error[key] === 'string' && error[key].length > 0).to.eql(true); });",
+                  "    pm.expect(Number.isFinite(Date.parse(error.timestamp))).to.eql(true);",
+                  "    pm.expect(error.path).to.eql('/api/auth/login');",
+                  "    const retry = pm.response.headers.get('Retry-After') || '';",
+                  "    pm.expect(/^[1-9][0-9]*$/.test(retry) && Number.isSafeInteger(Number(retry))).to.eql(true);",
+                  "  });",
                   "}"
                 ]
               }
@@ -174,7 +189,7 @@
                 "login"
               ]
             },
-            "description": "Público y No Auth. Usar la contraseña vigente; el mínimo de altas/restablecimientos no se aplica de nuevo al login. El test conserva token e ID del actor en el environment local.\n\nDTO de entrada: AuthRequest. Solo se admiten los campos de ese contrato.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.",
+            "description": "Público y No Auth. Usar la contraseña vigente; el mínimo de altas/restablecimientos no se aplica de nuevo al login. El test conserva token e ID del actor en el environment local.\n\nDTO de entrada: AuthRequest. Solo se admiten los campos de ese contrato.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.\n\nPuede responder 429 Too Many Requests con ApiError y Retry-After en segundos por límites de intentos/origen. El script verifica ese contrato y no conserva token/ID; respeta la espera sin reintentar automáticamente. Véase ../paginacion-login.md.",
             "auth": {
               "type": "noauth"
             },
@@ -206,7 +221,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP esperado 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('HTTP esperado 200 o límite 429', function () { pm.expect([200,429].includes(pm.response.code)).to.eql(true); });",
                   "function contieneCampoSensible(value) {",
                   "  if (!value || typeof value !== 'object') return false;",
                   "  return Object.keys(value).some(function (key) {",
@@ -237,6 +252,21 @@
                   "    pm.environment.set('tokenGestor', data.accessToken);",
                   "    pm.environment.set('idUsuarioGestor', String(data.usuario.id));",
                   "  }",
+                  "}",
+                  "if (pm.response.code === 429) {",
+                  "  pm.environment.unset('tokenGestor');",
+                  "  pm.environment.unset('idUsuarioGestor');",
+                  "  pm.test('Límite de login con ApiError y Retry-After', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/json/i);",
+                  "    const error = pm.response.json();",
+                  "    pm.expect(error).to.be.an('object');",
+                  "    pm.expect(error.status).to.eql(429);",
+                  "    ['timestamp','error','message','path'].forEach(function (key) { pm.expect(typeof error[key] === 'string' && error[key].length > 0).to.eql(true); });",
+                  "    pm.expect(Number.isFinite(Date.parse(error.timestamp))).to.eql(true);",
+                  "    pm.expect(error.path).to.eql('/api/auth/login');",
+                  "    const retry = pm.response.headers.get('Retry-After') || '';",
+                  "    pm.expect(/^[1-9][0-9]*$/.test(retry) && Number.isSafeInteger(Number(retry))).to.eql(true);",
+                  "  });",
                   "}"
                 ]
               }
@@ -269,7 +299,7 @@
                 "login"
               ]
             },
-            "description": "Público y No Auth. Usar la contraseña vigente; el mínimo de altas/restablecimientos no se aplica de nuevo al login. El test conserva token e ID del actor en el environment local.\n\nDTO de entrada: AuthRequest. Solo se admiten los campos de ese contrato.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.",
+            "description": "Público y No Auth. Usar la contraseña vigente; el mínimo de altas/restablecimientos no se aplica de nuevo al login. El test conserva token e ID del actor en el environment local.\n\nDTO de entrada: AuthRequest. Solo se admiten los campos de ese contrato.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.\n\nPuede responder 429 Too Many Requests con ApiError y Retry-After en segundos por límites de intentos/origen. El script verifica ese contrato y no conserva token/ID; respeta la espera sin reintentar automáticamente. Véase ../paginacion-login.md.",
             "auth": {
               "type": "noauth"
             },
@@ -301,7 +331,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP esperado 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('HTTP esperado 200 o límite 429', function () { pm.expect([200,429].includes(pm.response.code)).to.eql(true); });",
                   "function contieneCampoSensible(value) {",
                   "  if (!value || typeof value !== 'object') return false;",
                   "  return Object.keys(value).some(function (key) {",
@@ -332,6 +362,21 @@
                   "    pm.environment.set('tokenLector', data.accessToken);",
                   "    pm.environment.set('idUsuarioLector', String(data.usuario.id));",
                   "  }",
+                  "}",
+                  "if (pm.response.code === 429) {",
+                  "  pm.environment.unset('tokenLector');",
+                  "  pm.environment.unset('idUsuarioLector');",
+                  "  pm.test('Límite de login con ApiError y Retry-After', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/json/i);",
+                  "    const error = pm.response.json();",
+                  "    pm.expect(error).to.be.an('object');",
+                  "    pm.expect(error.status).to.eql(429);",
+                  "    ['timestamp','error','message','path'].forEach(function (key) { pm.expect(typeof error[key] === 'string' && error[key].length > 0).to.eql(true); });",
+                  "    pm.expect(Number.isFinite(Date.parse(error.timestamp))).to.eql(true);",
+                  "    pm.expect(error.path).to.eql('/api/auth/login');",
+                  "    const retry = pm.response.headers.get('Retry-After') || '';",
+                  "    pm.expect(/^[1-9][0-9]*$/.test(retry) && Number.isSafeInteger(Number(retry))).to.eql(true);",
+                  "  });",
                   "}"
                 ]
               }
@@ -4101,10 +4146,28 @@
                   "value": "{{filtroRequiereMantenimiento}}",
                   "description": "Boolean true/false; bandera independiente del ciclo.",
                   "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "{{filtroBusquedaEquipo}}",
+                  "description": "Búsqueda parcial sin distinguir mayúsculas en nombre, codigoInterno, marca, modelo o laboratorio.nombre; trim, máximo 200 caracteres y %/_/! literales. Filtros y alcance se aplican antes del conteo.",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "{{paginaListado}}",
+                  "description": "Página base 0, entero no negativo. Habilitar page o size activa el objeto paginado; page omitido vale 0.",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "{{tamanoPaginaListado}}",
+                  "description": "Tamaño entero 1–100; omitido vale 20 si se activó paginación. Ambos deshabilitados conservan el arreglo anterior.",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Filtro SQL y alcance actual. Incluye BAJA si no se filtra otro estado; [] es válido.\n\nFiltros opcionales DESHABILITADOS: completa y habilita solo los necesarios. Listados sin paginación.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos."
+            "description": "Filtro SQL y alcance actual. Incluye BAJA si no se filtra otro estado; [] es válido.\n\nFiltros opcionales DESHABILITADOS: completa y habilita solo los necesarios. Sin page ni size devuelve el array anterior; cualquiera activa {content,number,size,totalElements,totalPages,first,last}, page base 0, tamaño por defecto 20 y máximo 100. Página fuera de rango: content vacío con totales reales. Parámetros inválidos: 400.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.\n\nBúsqueda q opcional procesada en servidor junto con alcance y filtros antes del conteo. Orden estable por id ASC."
           },
           "event": [
             {
@@ -4136,8 +4199,33 @@
                   "  pm.test('Content-Type JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/json/i); });",
                   "  const data = pm.response.json();",
                   "  pm.test('Contrato público de respuesta', function () {",
-                  "    pm.expect(data).to.be.an('array');",
-                  "    data.forEach(function (item) {",
+                  "    const params = {};",
+                  "    pm.request.url.query.each(function (parameter) {",
+                  "      if (!parameter.disabled) params[parameter.key] = pm.variables.replaceIn(String(parameter.value || ''));",
+                  "    });",
+                  "    const paginada = Object.prototype.hasOwnProperty.call(params, 'page') || Object.prototype.hasOwnProperty.call(params, 'size');",
+                  "    let filas;",
+                  "    if (paginada) {",
+                  "      const pagina = data;",
+                  "      pm.expect(pagina).to.be.an('object');",
+                  "      pm.expect(Object.keys(pagina).sort()).to.eql(['content','number','size','totalElements','totalPages','first','last'].sort());",
+                  "      pm.expect(pagina.content).to.be.an('array');",
+                  "      pm.expect(Number.isSafeInteger(pagina.number) && pagina.number >= 0).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.size) && pagina.size >= 1 && pagina.size <= 100).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.totalElements) && pagina.totalElements >= 0).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.totalPages) && pagina.totalPages >= 0).to.eql(true);",
+                  "      pm.expect(pagina.number).to.eql(Object.prototype.hasOwnProperty.call(params, 'page') ? Number(params.page) : 0);",
+                  "      pm.expect(pagina.size).to.eql(Object.prototype.hasOwnProperty.call(params, 'size') ? Number(params.size) : 20);",
+                  "      pm.expect(pagina.totalPages).to.eql(Math.ceil(pagina.totalElements / pagina.size));",
+                  "      pm.expect(pagina.first).to.eql(pagina.number === 0);",
+                  "      pm.expect(pagina.last).to.eql(pagina.number >= pagina.totalPages - 1);",
+                  "      pm.expect(pagina.content.length).to.eql(Math.max(0, Math.min(pagina.size, pagina.totalElements - pagina.number * pagina.size)));",
+                  "      filas = pagina.content;",
+                  "    } else {",
+                  "      pm.expect(data).to.be.an('array');",
+                  "      filas = data;",
+                  "    }",
+                  "    filas.forEach(function (item) {",
                   "    pm.expect(item).to.be.an('object');",
                   "    pm.expect(item).to.have.property('id');",
                   "    pm.expect(item).to.have.property('codigoInterno');",
@@ -4150,6 +4238,7 @@
                   "    pm.expect(item).to.have.property('fechaActualizacion');",
                   "    pm.expect(item.id).to.be.a('number').and.above(0);",
                   "    });",
+                  "    pm.expect(filas.every(function (item, index) { return index === 0 || filas[index-1].id < item.id; })).to.eql(true);",
                   "  });",
                   "}"
                 ]
@@ -4493,7 +4582,7 @@
                 {
                   "key": "idLaboratorio",
                   "value": "{{idLaboratorio}}",
-                  "description": "ID positivo en alcance; fuera: 403.",
+                  "description": "ID positivo existente; consulta ADMIN global. Laboratorio inexistente: 404.",
                   "disabled": true
                 },
                 {
@@ -4507,10 +4596,28 @@
                   "value": "{{filtroRequiereMantenimiento}}",
                   "description": "Boolean true/false; bandera independiente del ciclo.",
                   "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "{{filtroBusquedaEquipo}}",
+                  "description": "Búsqueda parcial sin distinguir mayúsculas en nombre, codigoInterno, marca, modelo o laboratorio.nombre; trim, máximo 200 caracteres y %/_/! literales. Filtros y alcance se aplican antes del conteo.",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "{{paginaListado}}",
+                  "description": "Página base 0, entero no negativo. Habilitar page o size activa el objeto paginado; page omitido vale 0.",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "{{tamanoPaginaListado}}",
+                  "description": "Tamaño entero 1–100; omitido vale 20 si se activó paginación. Ambos deshabilitados conservan el arreglo anterior.",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Exclusivo ADMIN; mismos filtros de equipos.\n\nFiltros opcionales DESHABILITADOS: completa y habilita solo los necesarios. Listados sin paginación.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos."
+            "description": "Exclusivo ADMIN; mismos filtros de equipos.\n\nFiltros opcionales DESHABILITADOS: completa y habilita solo los necesarios. Sin page ni size devuelve el array anterior; cualquiera activa {content,number,size,totalElements,totalPages,first,last}, page base 0, tamaño por defecto 20 y máximo 100. Página fuera de rango: content vacío con totales reales. Parámetros inválidos: 400.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos.\n\nBúsqueda q opcional procesada en servidor junto con alcance y filtros antes del conteo. Orden estable por id ASC."
           },
           "event": [
             {
@@ -4542,8 +4649,33 @@
                   "  pm.test('Content-Type JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/json/i); });",
                   "  const data = pm.response.json();",
                   "  pm.test('Contrato público de respuesta', function () {",
-                  "    pm.expect(data).to.be.an('array');",
-                  "    data.forEach(function (item) {",
+                  "    const params = {};",
+                  "    pm.request.url.query.each(function (parameter) {",
+                  "      if (!parameter.disabled) params[parameter.key] = pm.variables.replaceIn(String(parameter.value || ''));",
+                  "    });",
+                  "    const paginada = Object.prototype.hasOwnProperty.call(params, 'page') || Object.prototype.hasOwnProperty.call(params, 'size');",
+                  "    let filas;",
+                  "    if (paginada) {",
+                  "      const pagina = data;",
+                  "      pm.expect(pagina).to.be.an('object');",
+                  "      pm.expect(Object.keys(pagina).sort()).to.eql(['content','number','size','totalElements','totalPages','first','last'].sort());",
+                  "      pm.expect(pagina.content).to.be.an('array');",
+                  "      pm.expect(Number.isSafeInteger(pagina.number) && pagina.number >= 0).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.size) && pagina.size >= 1 && pagina.size <= 100).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.totalElements) && pagina.totalElements >= 0).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.totalPages) && pagina.totalPages >= 0).to.eql(true);",
+                  "      pm.expect(pagina.number).to.eql(Object.prototype.hasOwnProperty.call(params, 'page') ? Number(params.page) : 0);",
+                  "      pm.expect(pagina.size).to.eql(Object.prototype.hasOwnProperty.call(params, 'size') ? Number(params.size) : 20);",
+                  "      pm.expect(pagina.totalPages).to.eql(Math.ceil(pagina.totalElements / pagina.size));",
+                  "      pm.expect(pagina.first).to.eql(pagina.number === 0);",
+                  "      pm.expect(pagina.last).to.eql(pagina.number >= pagina.totalPages - 1);",
+                  "      pm.expect(pagina.content.length).to.eql(Math.max(0, Math.min(pagina.size, pagina.totalElements - pagina.number * pagina.size)));",
+                  "      filas = pagina.content;",
+                  "    } else {",
+                  "      pm.expect(data).to.be.an('array');",
+                  "      filas = data;",
+                  "    }",
+                  "    filas.forEach(function (item) {",
                   "    pm.expect(item).to.be.an('object');",
                   "    pm.expect(item).to.have.property('id');",
                   "    pm.expect(item).to.have.property('codigoInterno');",
@@ -4556,6 +4688,7 @@
                   "    pm.expect(item).to.have.property('fechaActualizacion');",
                   "    pm.expect(item.id).to.be.a('number').and.above(0);",
                   "    });",
+                  "    pm.expect(filas.every(function (item, index) { return index === 0 || filas[index-1].id < item.id; })).to.eql(true);",
                   "  });",
                   "}"
                 ]
@@ -5945,10 +6078,22 @@
                   "value": "{{filtroFechaHasta}}",
                   "description": "ISO YYYY-MM-DD; igual o posterior a fechaDesde.",
                   "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "{{paginaListado}}",
+                  "description": "Página base 0, entero no negativo. Habilitar page o size activa el objeto paginado; page omitido vale 0.",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "{{tamanoPaginaListado}}",
+                  "description": "Tamaño entero 1–100; omitido vale 20 si se activó paginación. Ambos deshabilitados conservan el arreglo anterior.",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Actor nullable. Orden fecha DESC/id DESC. Rangos por días UTC. [] es válido; no devuelve contraseñas, hashes ni tokens.\n\nDTO de filtros: FiltroAuditoriaRequest.\n\nFiltros opcionales DESHABILITADOS: completa y habilita solo los necesarios. Listados sin paginación.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos."
+            "description": "Actor nullable. Orden fecha DESC/id DESC. Rangos por días UTC. [] es válido; no devuelve contraseñas, hashes ni tokens.\n\nDTO de filtros: FiltroAuditoriaRequest.\n\nFiltros opcionales DESHABILITADOS: completa y habilita solo los necesarios. Sin page ni size devuelve el array anterior; cualquiera activa {content,number,size,totalElements,totalPages,first,last}, page base 0, tamaño por defecto 20 y máximo 100. Página fuera de rango: content vacío con totales reales. Parámetros inválidos: 400.\n\nHTTP esperado: 200. Códigos generales del sistema, aplicables según la operación: 400 contrato/validación; 401 autenticación; 403 rol/alcance; 404 inexistencia; 409 duplicado, dependencia o transición inválida. No todas las rutas producen todos esos códigos."
           },
           "event": [
             {
@@ -5980,8 +6125,33 @@
                   "  pm.test('Content-Type JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/json/i); });",
                   "  const data = pm.response.json();",
                   "  pm.test('Contrato público de respuesta', function () {",
-                  "    pm.expect(data).to.be.an('array');",
-                  "    data.forEach(function (item) {",
+                  "    const params = {};",
+                  "    pm.request.url.query.each(function (parameter) {",
+                  "      if (!parameter.disabled) params[parameter.key] = pm.variables.replaceIn(String(parameter.value || ''));",
+                  "    });",
+                  "    const paginada = Object.prototype.hasOwnProperty.call(params, 'page') || Object.prototype.hasOwnProperty.call(params, 'size');",
+                  "    let filas;",
+                  "    if (paginada) {",
+                  "      const pagina = data;",
+                  "      pm.expect(pagina).to.be.an('object');",
+                  "      pm.expect(Object.keys(pagina).sort()).to.eql(['content','number','size','totalElements','totalPages','first','last'].sort());",
+                  "      pm.expect(pagina.content).to.be.an('array');",
+                  "      pm.expect(Number.isSafeInteger(pagina.number) && pagina.number >= 0).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.size) && pagina.size >= 1 && pagina.size <= 100).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.totalElements) && pagina.totalElements >= 0).to.eql(true);",
+                  "      pm.expect(Number.isSafeInteger(pagina.totalPages) && pagina.totalPages >= 0).to.eql(true);",
+                  "      pm.expect(pagina.number).to.eql(Object.prototype.hasOwnProperty.call(params, 'page') ? Number(params.page) : 0);",
+                  "      pm.expect(pagina.size).to.eql(Object.prototype.hasOwnProperty.call(params, 'size') ? Number(params.size) : 20);",
+                  "      pm.expect(pagina.totalPages).to.eql(Math.ceil(pagina.totalElements / pagina.size));",
+                  "      pm.expect(pagina.first).to.eql(pagina.number === 0);",
+                  "      pm.expect(pagina.last).to.eql(pagina.number >= pagina.totalPages - 1);",
+                  "      pm.expect(pagina.content.length).to.eql(Math.max(0, Math.min(pagina.size, pagina.totalElements - pagina.number * pagina.size)));",
+                  "      filas = pagina.content;",
+                  "    } else {",
+                  "      pm.expect(data).to.be.an('array');",
+                  "      filas = data;",
+                  "    }",
+                  "    filas.forEach(function (item) {",
                   "    pm.expect(item).to.be.an('object');",
                   "    pm.expect(item).to.have.property('id');",
                   "    pm.expect(item).to.have.property('idUsuarioActor');",
@@ -5993,6 +6163,7 @@
                   "    pm.expect(item).to.have.property('fecha');",
                   "    pm.expect(item.id).to.be.a('number').and.above(0);",
                   "    });",
+                  "    pm.expect(filas.every(function (item, index) { return index === 0 || Date.parse(filas[index-1].fecha) > Date.parse(item.fecha) || (Date.parse(filas[index-1].fecha) === Date.parse(item.fecha) && filas[index-1].id > item.id); })).to.eql(true);",
                   "  });",
                   "}"
                 ]

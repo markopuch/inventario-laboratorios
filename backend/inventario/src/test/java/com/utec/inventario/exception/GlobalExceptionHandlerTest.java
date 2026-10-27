@@ -31,6 +31,17 @@ class GlobalExceptionHandlerTest {
             new MockHttpServletRequest("POST", "/api/categorias"));
 
     @Test
+    void limiteLoginDevuelve429RetryAfterYErrorGenericoSinDatosDeCuenta() {
+        ResponseEntity<Object> response = handler.handleLoginRateLimit(new LoginRateLimitException(17), request);
+        ApiError error = assertInstanceOf(ApiError.class, response.getBody());
+        assertEquals(429, response.getStatusCode().value());
+        assertEquals("17", response.getHeaders().getFirst("Retry-After"));
+        assertEquals("no-store", response.getHeaders().getFirst("Cache-Control"));
+        assertEquals(LoginRateLimitException.MESSAGE, error.getMessage());
+        assertTrue(error.getErrors().isEmpty());
+    }
+
+    @Test
     void passwordInvalidaDevuelveSoloLaReglaPublicaSinDatosDelIntento() {
         ResponseEntity<Object> response = handler.handlePasswordInvalida(new PasswordUsuarioInvalidaException(), request);
         ApiError error = assertInstanceOf(ApiError.class, response.getBody());

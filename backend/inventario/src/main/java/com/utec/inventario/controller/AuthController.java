@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
@@ -15,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,11 +35,14 @@ import com.utec.inventario.dto.response.UsuarioResponse;
 import com.utec.inventario.mapper.UsuarioMapper;
 import com.utec.inventario.mapper.UsuarioLaboratorioMapper;
 import com.utec.inventario.security.JwtService;
+import com.utec.inventario.security.LoginRateLimiter;
+import com.utec.inventario.exception.ApiError;
 import com.utec.inventario.security.UserInfoDetails;
 import com.utec.inventario.service.UsuarioService;
 import com.utec.inventario.service.AlcanceLaboratorioService;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Tag(name = "Autenticación", description = "Acceso JWT, perfil propio y alcance efectivo de laboratorios.")
 @RestController
@@ -48,41 +55,58 @@ public class AuthController {
     private final UsuarioMapper mapper;
     private final AlcanceLaboratorioService alcanceLaboratorioService;
     private final UsuarioLaboratorioMapper asignacionMapper;
+    private final LoginRateLimiter loginRateLimiter;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
             UsuarioService usuarioService, UsuarioMapper mapper,
             AlcanceLaboratorioService alcanceLaboratorioService,
-            UsuarioLaboratorioMapper asignacionMapper) {
+            UsuarioLaboratorioMapper asignacionMapper, LoginRateLimiter loginRateLimiter) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.usuarioService = usuarioService;
         this.mapper = mapper;
         this.alcanceLaboratorioService = alcanceLaboratorioService;
         this.asignacionMapper = asignacionMapper;
+        this.loginRateLimiter = loginRateLimiter;
     }
 
     @Operation(summary = "Iniciar sesión y obtener JWT",
-            description = "Acceso público con userName y password. Normaliza el usuario; no recorta la contraseña. Devuelve Bearer, vigencia y perfil. No renueva ni revoca tokens previos.")
+            description = "Acceso público con userName y password. Normaliza el usuario; no recorta la contraseña. Cinco fallos por usuario/origen en 15 minutos y 60 solicitudes por origen/minuto por defecto. Un éxito reinicia los fallos de ese usuario/origen. HTTP 429 incluye Retry-After; no bloquea cuentas en BD. Devuelve Bearer, vigencia y perfil; no renueva ni revoca tokens previos.")
+    @ApiResponse(responseCode = "200", description = "Autenticación correcta", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "429", description = "Límite temporal de intentos de login",
+            headers = @Header(name = "Retry-After", description = "Segundos antes de volver a intentar",
+                    schema = @Schema(type = "integer", minimum = "1")),
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     @SecurityRequirements
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public AuthResponse login(@Valid @RequestBody AuthRequest request) {
-        // BCrypt compara como máximo 72 bytes; evita aceptar sufijos truncados.
-        if (request.getPassword().getBytes(StandardCharsets.UTF_8).length > 72) {
-            throw new BadCredentialsException("Credenciales inválidas.");
-        }
+    public AuthResponse login(@Valid @RequestBody AuthRequest request,
+            @Parameter(hidden = true) HttpServletRequest servletRequest) {
         String userName = request.getUserName().trim().toLowerCase(Locale.ROOT);
-        Authentication authentication = this.authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userName, request.getPassword()));
-        UserInfoDetails principal = (UserInfoDetails) authentication.getPrincipal();
-        Usuario usuario = this.usuarioService.obtenerUsuario(principal.getId());
-        return AuthResponse.builder()
-                .accessToken(this.jwtService.generateToken(principal))
-                .tokenType("Bearer")
-                .expiresIn(this.jwtService.getExpirationSeconds())
-                .usuario(this.mapper.toResponse(usuario))
-                .build();
+        try (LoginRateLimiter.Attempt attempt = loginRateLimiter.beginUser(userName, servletRequest.getRemoteAddr())) {
+            try {
+                // BCrypt compara como máximo 72 bytes; evita aceptar sufijos truncados.
+                if (request.getPassword().getBytes(StandardCharsets.UTF_8).length > 72) {
+                    throw new BadCredentialsException("Credenciales inválidas.");
+                }
+                Authentication authentication = this.authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(userName, request.getPassword()));
+                UserInfoDetails principal = (UserInfoDetails) authentication.getPrincipal();
+                Usuario usuario = this.usuarioService.obtenerUsuario(principal.getId());
+                AuthResponse response = AuthResponse.builder()
+                        .accessToken(this.jwtService.generateToken(principal))
+                        .tokenType("Bearer")
+                        .expiresIn(this.jwtService.getExpirationSeconds())
+                        .usuario(this.mapper.toResponse(usuario))
+                        .build();
+                attempt.succeeded();
+                return response;
+            } catch (AuthenticationException exception) {
+                attempt.failed();
+                throw exception;
+            }
+        }
     }
 
     @Operation(summary = "Consultar el perfil autenticado",

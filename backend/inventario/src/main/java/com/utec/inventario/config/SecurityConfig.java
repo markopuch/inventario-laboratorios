@@ -13,6 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.utec.inventario.security.JwtAuthFilter;
+import com.utec.inventario.security.LoginRateLimitFilter;
 import com.utec.inventario.security.SecurityErrorHandler;
 
 import jakarta.servlet.DispatcherType;
@@ -21,15 +22,17 @@ import jakarta.servlet.DispatcherType;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final LoginRateLimitFilter loginRateLimitFilter;
     private final SecurityErrorHandler securityErrorHandler;
     private final DaoAuthenticationProvider authenticationProvider;
 
     @Autowired
     public SecurityConfig(JwtAuthFilter jwtAuthFilter, SecurityErrorHandler securityErrorHandler,
-            DaoAuthenticationProvider authenticationProvider) {
+            DaoAuthenticationProvider authenticationProvider, LoginRateLimitFilter loginRateLimitFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.securityErrorHandler = securityErrorHandler;
         this.authenticationProvider = authenticationProvider;
+        this.loginRateLimitFilter = loginRateLimitFilter;
     }
 
     @Bean
@@ -101,6 +104,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(this.securityErrorHandler))
                 .authenticationProvider(this.authenticationProvider)
                 .addFilterBefore(this.jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(this.loginRateLimitFilter, JwtAuthFilter.class)
                 .build();
     }
 
@@ -108,6 +112,13 @@ public class SecurityConfig {
     public FilterRegistrationBean<JwtAuthFilter> jwtFilterRegistration() {
         FilterRegistrationBean<JwtAuthFilter> registration = new FilterRegistrationBean<>(this.jwtAuthFilter);
         // El filtro se ejecuta únicamente dentro de Spring Security.
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<LoginRateLimitFilter> loginRateLimitRegistration() {
+        FilterRegistrationBean<LoginRateLimitFilter> registration = new FilterRegistrationBean<>(loginRateLimitFilter);
         registration.setEnabled(false);
         return registration;
     }
