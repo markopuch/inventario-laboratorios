@@ -1,10 +1,28 @@
 # Auditoría de integración — Frontend Jason
 
-Actualización: **3 de octubre de 2026**, después de desplegar el commit e1ce75a.
+Actualización funcional: **26 de octubre de 2026**. Evidencia Docker histórica:
+3 de octubre, commit `e1ce75a`.
 
-**Estado vigente: integración con el backend V1–V13 operativa y Docker local actualizado. Usuarios administrativos, Mantenimientos y Reportes ya están integrados; Configuración conserva su placeholder. No se declara fidelidad visual 1:1 ni accesibilidad exhaustiva.**
+**Estado vigente en fuente: integración con V1–V13; CSV de agregados en Reportes,
+Auditoría de solo lectura ADMIN y acceso propio a Asignaciones. Configuración
+retirada del menú y de las rutas. No se declara fidelidad visual 1:1 ni
+accesibilidad exhaustiva.**
 
 ## Estado vigente y fuente de evidencia
+
+El cierre del 26 de octubre reutiliza los contratos existentes y no cambia
+backend, migraciones ni datos. Los CSV conservan filtros aplicados y alcance;
+Auditoría agrega filtros de entidad, registro, actor, acción y fechas UTC, con
+fecha mostrada en Lima. Ver [guía de uso](../frontend/guia-reportes-auditoria.md)
+y [matriz de roles](../matriz-permisos.md).
+
+**Verificación del 26 de octubre:** 90/90 tests frontend, build de 1679 módulos
+aprobado y diez comprobaciones en navegador local con API simulada, sin errores
+de página. Incluyen navegación por rol, Auditoría, cinco CSV y móvil de 390 px.
+Ver [detalle y límites](../frontend/guia-reportes-auditoria.md#verificación-local-del-26-de-octubre).
+Sin pruebas nuevas contra backend/BD reales ni publicación remota. Los párrafos
+de evidencia siguientes describen el despliegue del 3 de octubre y no acreditan
+el estado operativo actual de Docker/nube.
 
 La [adaptación al backend ampliado](../../frontend/version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json) registra 67/67 pruebas frontend y build aprobado con 1677 módulos. Conservó las 27 anteriores y añadió 40; no es una nueva ejecución durante el despliegue ni esta edición documental.
 
@@ -14,25 +32,26 @@ El habitual quedó con V1–V13 exitosas, checksums V1–V9 conservados y nueve 
 
 ## Matriz vigente FE-01 a FE-11
 
-| Sprint | Estado actual comprobado | Límites |
+| Sprint | Estado en fuente y antecedentes de comprobación | Límites |
 |---|---|---|
 | [FE-01](fe-01-login-sesion.md) | Tres roles, JWT en memoria, alcance y 401; refresco de perfil ante autocambios. | Sin Recordarme/recuperación; recarga vuelve a Login. |
 | [FE-02](fe-02-dashboard.md) | Equipos, alcance, movimientos y mantenimiento con respuestas reales. | Sin mockup independiente ni certificación de todos los datos. |
 | [FE-03](fe-03-equipos.md) | Alta/edición/traslado por UI; baja por HTTP; BAJA sin acciones para GESTOR. | Confirmación nativa impidió automatizar clic final de baja; tarjetas/modal difieren del mockup. |
 | [FE-04](fe-04-categorias-subcategorias.md) | Catálogos administrativos, actividad/reativación; conflictos de dependencias. | Sin maestro/detalle idéntico al mockup. |
 | [FE-05](fe-05-laboratorios-sedes-areas.md) | Jerarquía, actividad y estadoOperativo real desde V10. | Estado de ubicación distinto de Mantenimiento de Equipo; diferencias visuales. |
-| [FE-06](fe-06-usuarios-roles-asignacion.md) | Directorio, creación, edición, rol, actividad, contraseña y asignaciones ADMIN. | Password por HTTP, sin automatizar envío del diálogo de navegador. |
+| [FE-06](fe-06-usuarios-roles-asignacion.md) | Directorio, creación, edición, rol, actividad, contraseña y asignaciones ADMIN; nuevo menú ADMIN comprobado con API simulada. | Password histórico por HTTP; no se repitieron escrituras contra BD real en el cierre del 26. |
 | [FE-07](fe-07-movimientos.md) | Actor/origen del servidor e historia LECTOR por origen tras BAJA. | Sin estados de proceso ni filtros de fechas/tipo/exportación en esa pantalla. |
 | [FE-08](fe-08-mantenimientos.md) | Programar/editar/iniciar/completar/cancelar, filtros/alcance y bloqueo de Equipo. | Sin calendario. |
-| [FE-09](fe-09-reportes.md) | Cinco agregados, filtros y errores/reintento; totales contrastados. | Sin exportación ni gráficos completos del mockup. |
-| [FE-10](fe-10-configuracion.md) | Ruta/menú ADMIN Próximamente. | Preferencias y seguridad configurable futuras. |
+| [FE-09](fe-09-reportes.md) | Cinco agregados, filtros y errores/reintento; CSV por bloque con filtros aplicados y alcance, comprobado con API simulada. | Otros formatos y gráficos completos pendientes; sin nueva prueba contra backend real. |
+| [FE-10](fe-10-configuracion.md) | Ruta/menú retirados; la dirección antigua vuelve al inicio. | Preferencias y seguridad configurable futuras. |
 | [FE-11](fe-11-arquitectura-frontend.md) | React/Vite/Axios, sesión, rutas por rol, Nginx/proxy/fallback SPA. | Fidelidad visual y accesibilidad exhaustivas no certificadas. |
+| [Auditoría ADMIN](../frontend/guia-reportes-auditoria.md) | Tabla, filtros, errores/vacío y rutas/menú ADMIN comprobados con API simulada. | No es versionado completo de entidades ni nueva prueba contra backend real. |
 
-## Smoke de las imágenes actuales
+## Smoke histórico de las imágenes: 3 de octubre
 
 - **94/94 HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**. Incluye 400/401/403/409 esperados; no son endpoints diferentes ni pruebas JUnit nuevas.
 - UI: crear/editar Equipo, ciclo completo de mantenimiento y traslado. GESTOR vio BAJA sin mutaciones y Reportes con 1 Equipo/1 Movimiento/2 Mantenimientos; LECTOR vio historia después del traslado/baja.
-- HTTP: catálogos/usuarios ampliados, último ADMIN, contraseña, transiciones, baja, reportes filtrados, auditoría administrativa y denegaciones. El frontend no añade pantalla de Auditoría.
+- HTTP: catálogos/usuarios ampliados, último ADMIN, contraseña, transiciones, baja, reportes filtrados, auditoría administrativa y denegaciones. En aquel despliegue el frontend aún no tenía pantalla de Auditoría.
 - Base inventario_verificacion_docker_actual_5149b3ad; Flyway 13/13. Fixtures finales: 4 usuarios, 1 Equipo BAJA, 1 Movimiento, 2 Mantenimientos y 36 registros de auditoría. Base/contenedores/volumen/red eliminados; cero conexiones antes de borrar y puertos temporales libres.
 - Última sesión: cero errores/advertencias. [Reportes Docker](../../frontend/version-jason/frontend/evidencias/docker-actual-reportes-2026-10-03.png) e [historial LECTOR](../../frontend/version-jason/frontend/evidencias/docker-actual-historial-2026-10-03.png).
 - Límite: confirmación nativa de baja bloqueó automatización; se canceló y se verificó por HTTP. Montaje temporal corrigió Base64 del JWT y harness el nombre actor, sin cambios de aplicación.

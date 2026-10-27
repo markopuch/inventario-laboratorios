@@ -64,8 +64,17 @@ Write-Host 'Para detener el backend, presiona Ctrl+C.'
 
 Push-Location -LiteralPath $backendPath
 try {
-    & .\gradlew.bat bootRun --no-daemon --console=plain
-    if ($LASTEXITCODE -ne 0) {
+    # Los avisos de javac en stderr no deben abortar Windows PowerShell 5.
+    # Se conserva la comprobacion real del codigo de salida de Gradle.
+    $startupNativePreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & .\gradlew.bat bootRun --no-daemon --console=plain
+        $startupGradleExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $startupNativePreference
+    }
+    if ($startupGradleExitCode -ne 0) {
         throw 'El backend no pudo iniciarse. Revisa el error mostrado arriba.'
     }
 } finally {

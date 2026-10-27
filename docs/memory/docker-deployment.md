@@ -1,11 +1,31 @@
 # Memoria de Docker, CI/CD y deployment
 
+**Cierre actualizado el 27 de octubre de 2026:** la importación y el recorrido
+se comprobaron con backend y PostgreSQL nativos reales; 257 equipos cargados,
+31 pendientes y 258 equipos totales. El workflow integra verificaciones
+backend/JUnit en PostgreSQL aislado, frontend e importador como requisito para
+publicar las dos imágenes en GHCR. Regresión local: importador **28/28**,
+frontend **93/93** y backend **365/365**, con build frontend y JAR correctos.
+JUnit utilizó PostgreSQL 18 temporal en 55432 y locale builtin `C.UTF-8`;
+ese clúster propio se detuvo y eliminó. El
+[anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md)
+registra los resultados finales de las suites, commit y Actions. El motor Docker
+local sigue inaccesible: no se acredita ejecución local de las imágenes nuevas.
+No hubo despliegue manual Render/Vercel y sus datos siguen siendo independientes.
+
 **Actualización de organización, 26 de octubre de 2026:** la variante Marko y sus
 sprints quedan solo locales, ignorados por Git. Un clon nuevo no contiene
 `frontend/version-marko/` ni `docs/sprints_realizados-frontend-Marko/`.
 La retirada del seguimiento no modifica Compose, Dockerfiles, CI ni Vercel:
 todos seleccionan Jason. Los resultados operativos que siguen pertenecen a la
 auditoría inicial; esta reorganización no vuelve a acreditar servicios o login.
+
+**Actualización funcional local del mismo día:** Jason incorpora CSV de Reportes
+y Auditoría ADMIN; Configuración se retiró y Asignaciones tiene acceso de menú.
+La suite frontend pasó 90/90, el build transformó 1679 módulos y se verificaron
+10 escenarios en navegador con API simulada. No se reconstruyeron imágenes Docker,
+en esa primera fase no se inició backend/PostgreSQL ni se publicaron cambios en Render/Vercel.
+Las observaciones operativas de la auditoría inicial siguen con su fecha y límites.
 
 Fecha de corte: **26 de octubre de 2026, America/Lima (UTC-05:00)**. Inspección local y consultas remotas de lectura realizadas alrededor de las **10:17–10:26**. El reloj consultado devolvió `2026-10-26 15:25:56 UTC` (10:25:56 Lima).
 
@@ -44,6 +64,11 @@ Jason usa Vite en `localhost:5173`, puerto estricto. Su proxy `/api` apunta a `A
 
 El script [iniciar-backend.ps1](../../iniciar-backend.ps1) inicia Gradle `bootRun` y utiliza por defecto PostgreSQL nativo en `localhost:5432/inventario_laboratorios`. Solicita credenciales ausentes y genera una clave JWT aleatoria para el proceso si no existe. `-CrearUsuariosDemo` activa `dev` y solicita `DEMO_USER_PASSWORD`; es una operación de escritura y no se ejecutó en esta auditoría.
 
+El ajuste del 27 de octubre en ese script y en `verificar-backend.ps1` evita que
+Windows PowerShell interrumpa Gradle por avisos de `javac` en stderr: conserva
+el código de salida real y restaura `ErrorActionPreference` al terminar la
+invocación. Un fallo real de Gradle continúa deteniendo el proceso.
+
 ### Publicación en internet
 
 ```text
@@ -60,7 +85,7 @@ La conexión a PostgreSQL gestionado se conoce por el historial del proyecto con
 
 [vercel.json](../../frontend/version-jason/frontend/vercel.json), agregado en `b164c441ec5e923b94899c32c3b7932c7fcba867`, define dos rewrites en este orden: `/api/:path*` al backend Render y cualquier otra ruta a `/index.html`. El root directory de Vercel comunicado en el historial es `frontend/version-jason/frontend`; no se inspeccionaron los ajustes remotos. El proxy mantiene frontend/API bajo el mismo origen visto por el navegador. La configuración de Render (tipo exacto de despliegue, build/start commands, release actual y variables efectivas) no está exportada en un `render.yaml` ni se verificó desde el panel. La existencia de un Dockerfile no demuestra que Render lo esté usando.
 
-## 2. Estado comprobado frente a antecedentes
+## 2. Estado de la auditoría inicial del 26 de octubre frente a antecedentes
 
 | Componente | Observación del 26 de octubre | Qué puede afirmarse |
 |---|---|---|
@@ -156,16 +181,41 @@ Spring Boot no carga automáticamente el archivo `.env` de Compose al ejecutar `
 
 ## 6. CI y publicación GHCR
 
-[.github/workflows/imagen.yml](../../.github/workflows/imagen.yml) se activa por push a `main` cuando cambia backend, Jason o el propio workflow; también admite `workflow_dispatch` sobre `main`. Matriz de dos jobs (`backend`, `frontend-jason`), Ubuntu `latest`, `fail-fast: false`. Permisos `contents: read`, `packages: write`.
+[.github/workflows/imagen.yml](../../.github/workflows/imagen.yml), actualizado
+el 27 de octubre, se activa por push/pull request a `main` cuando cambian backend,
+Jason, scripts de carga/ejecución o el propio workflow; también admite ejecución
+manual. Contiene tres verificaciones en Ubuntu:
 
-Acciones declaradas: `actions/checkout@v7` con `persist-credentials: false`, `actions/setup-node@v7`, `docker/setup-buildx-action@v4`, `docker/login-action@v4`, `docker/build-push-action@v7`. Publica:
+- Backend: Java 21 Temurin, PostgreSQL 18 temporal exclusivo del runner y
+  `compileJava test bootJar --rerun-tasks`; exige XML JUnit sin fallos, errores u omitidas.
+- Jason: Node 22, `npm ci`, `npm test` y `npm run build` desde el monorepo completo.
+- Importador: Python 3.14 y openpyxl 3.1.5; preparación/reanudación con datos
+  sintéticos y API simulada, sin Excel ni credenciales locales.
+
+La matriz de publicación (`backend`, `frontend-jason`) requiere las tres
+verificaciones mediante `needs`. Publica únicamente por push o ejecución manual
+en `main`; en pull requests solo se verifican cambios. El permiso `packages: write`
+queda limitado al job de publicación; el resto usa `contents: read`.
+
+Acciones declaradas: `actions/checkout@v7` con `persist-credentials: false`,
+`actions/setup-java@v5`, `actions/setup-node@v7`, `actions/setup-python@v6`,
+`docker/setup-buildx-action@v4`, `docker/login-action@v4`,
+`docker/build-push-action@v7`. Publica:
 
 - `ghcr.io/markopuch/inventario-laboratorios-backend:latest` y `:sha-<7 caracteres>`.
 - `ghcr.io/markopuch/inventario-laboratorios-frontend-jason:latest` y `:sha-<7 caracteres>`.
 
-El frontend ejecuta `npm ci` y `npm test` desde el checkout completo antes del Docker build, porque sus pruebas de contratos leen DTO Java fuera del contexto Docker del frontend. El backend construye el JAR con `-x test`: **el workflow actual no ejecuta JUnit**. Publicar una imagen en GHCR no actualiza por sí solo Docker local ni demuestra deploy a Render/Vercel.
+En el workflow auditado inicialmente, el frontend ejecutaba `npm ci` y `npm test`
+desde el checkout completo antes del Docker build, porque sus pruebas de contratos
+leen DTO Java fuera del contexto del frontend. El backend construía el JAR con
+`-x test` y aquel workflow no ejecutaba JUnit. El cierre autorizado del 27 de
+octubre integra tres verificaciones (backend/PostgreSQL, frontend e importador)
+y exige su aprobación antes de publicar imágenes; consultar su resultado en el
+anexo del cierre. El Dockerfile backend conserva `bootJar -x test`, porque la
+regresión se ejecuta antes de la construcción. Publicar una imagen en GHCR no
+actualiza por sí solo Docker local ni demuestra deploy a Render/Vercel.
 
-### Última ejecución visible consultada hoy
+### Última ejecución visible consultada en la auditoría inicial del 26 de octubre
 
 Fuente de lectura: API GitHub del repositorio mediante el conector GitHub, [lista de runs](https://api.github.com/repos/markopuch/inventario-laboratorios/actions/runs?per_page=4), [run 38183985364](https://github.com/markopuch/inventario-laboratorios/actions/runs/38183985364) y jobs de esa ejecución.
 
@@ -243,7 +293,7 @@ Para reproducir exactamente el Docker local histórico, usar tags `sha-e1ce75a` 
 - Cuentas/login de Render y datos gestionados pendientes de comprobación; no asumir importación de la base local.
 - No se verificaron commit desplegado, plan, región, versiones de runtime, backups ni expiración de servicios Render/Vercel.
 - El PostgreSQL nativo escucha en todas las interfaces; no se inspeccionaron firewall, `listen_addresses` ni `pg_hba.conf`, por lo que no se afirma acceso remoto efectivo. El Compose limita backend/frontend a loopback y no publica PostgreSQL.
-- Backend CI omite JUnit; las pruebas locales históricas no prueban automáticamente cada nueva imagen.
+- El cierre del 27 integra JUnit en CI antes de publicar; acreditar su resultado remoto en el anexo, sin sustituirlo por las pruebas históricas locales ni por un build Docker que omite tests.
 - Versiones base Docker y tags de acciones son mutables; no están fijados a digest/SHA. No se modificó esta decisión durante la auditoría.
 - La documentación de octubre 3 es valiosa para evidencia reproducible, pero su apartado de nube quedó superado por octubre 11; consultar esta memoria junto con el historial y la configuración actual.
 

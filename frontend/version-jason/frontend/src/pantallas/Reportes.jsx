@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BarChart3, Download } from 'lucide-react';
 import Boton from '../componentes/Boton';
 import ResumenSeleccion from '../componentes/ResumenSeleccion';
 import { useAuth } from '../contextos/AuthContext';
 import { catalogoApi, mensajeError, reportesApi } from '../servicios/api';
 import { ESTADOS_MANTENIMIENTO, TIPOS_MANTENIMIENTO, etiquetaMantenimiento } from '../utilidades/mantenimientos.js';
 import { filtrosReportes, validarConteos, validarEquiposPorLaboratorio, validarReporteMantenimientos, validarReporteMovimientos, validarResumenReporte } from '../utilidades/reportes.js';
+import { crearReporteCsv, descargarReporteCsv, filtrosCsvCoinciden, puedeExportarReporte } from '../utilidades/reportesCsv.js';
 
 const inicial = { idSede: '', idArea: '', idLaboratorio: '', estado: '', estadoMantenimiento: '', tipoMantenimiento: '', fechaDesde: '', fechaHasta: '' };
 const cargando = () => ({ estado: 'cargando', datos: null, error: '' });
@@ -17,43 +18,61 @@ function Conteos({ filas, encabezado }) {
   return filas.length ? <div className="tabla-wrap"><table className="tabla-reporte"><thead><tr><th>{encabezado}</th><th>Total</th></tr></thead><tbody>{filas.map(fila => <tr key={fila.valor}><td>{etiqueta(fila.valor)}</td><td>{fila.total}</td></tr>)}</tbody></table></div> : <div className="vacio">No hay registros para los filtros aplicados.</div>;
 }
 
-function PanelReporte({ titulo, consulta, reintentar, children }) {
+function ExportarCsv({ habilitado, exportar }) {
+  return <Boton variante="secundario" disabled={!habilitado} onClick={exportar}><Download size={16} aria-hidden="true"/> Exportar CSV</Boton>;
+}
+
+function PanelReporte({ titulo, consulta, reintentar, children, exportar, habilitado, errorDescarga }) {
   return <section className="panel" aria-busy={consulta.estado === 'cargando'}>
-    <div className="panel-titulo"><h2>{titulo}</h2></div>
+    <div className="panel-titulo"><h2>{titulo}</h2><ExportarCsv habilitado={habilitado} exportar={exportar}/></div>
+    {errorDescarga && <p className="mensaje-error" role="alert">{errorDescarga}</p>}
     {consulta.estado === 'cargando' ? <div className="vacio" role="status">Cargando reporte...</div> : consulta.estado === 'error' ? <div className="vacio"><p className="mensaje-error" role="alert">{consulta.error}</p><Boton variante="secundario" onClick={reintentar}>Reintentar reportes</Boton></div> : children(consulta.datos)}
   </section>;
 }
 
 export default function Reportes() {
-  const { token, esAdmin, alcance } = useAuth();
+  const { token, usuario, esAdmin, alcance } = useAuth();
   const [filtros, setFiltros] = useState(inicial);
   const [aplicados, setAplicados] = useState({});
   const [reportes, setReportes] = useState(inicialReportes);
   const [catalogos, setCatalogos] = useState({ sedes: [], areas: [], laboratorios: [] });
   const [errorFiltro, setErrorFiltro] = useState('');
   const [errorCatalogos, setErrorCatalogos] = useState('');
+  const [erroresDescarga, setErroresDescarga] = useState({});
   const [intento, setIntento] = useState(0);
   const reintentar = () => setIntento(valor => valor + 1);
+  const sesionValida = Boolean(token && usuario?.activo && ['ADMIN', 'GESTOR', 'LECTOR'].includes(usuario?.rol) && alcance);
+  const identidadConsulta = useMemo(() => ({ aplicados, intento, token, alcance, usuarioId: usuario?.id, rol: usuario?.rol, activo: usuario?.activo }),
+    [aplicados, intento, token, alcance, usuario?.id, usuario?.rol, usuario?.activo]);
+  // No se muestran ni exportan resultados de otra sesión/alcance/filtro, incluso
+  // en el render previo a que React limpie y reinicie el efecto de consulta.
+  const actuales = Object.fromEntries(Object.entries(reportes).map(([nombre, consulta]) =>
+    [nombre, sesionValida && consulta.identidad === identidadConsulta ? consulta : cargando()]));
+  const filtrosPendientes = !filtrosCsvCoinciden(aplicados, filtros);
 
   useEffect(() => {
     let vigente = true;
     const solicitud = new AbortController();
     setReportes(inicialReportes());
+    setErroresDescarga({});
+    if (!sesionValida) return () => solicitud.abort();
     const validadores = { resumen: validarResumenReporte, equiposPorEstado: validarConteos, equiposPorLaboratorio: validarEquiposPorLaboratorio, movimientos: validarReporteMovimientos, mantenimientos: validarReporteMantenimientos };
     for (const [nombre, validar] of Object.entries(validadores)) {
-      reportesApi[nombre](aplicados, { signal: solicitud.signal }).then(({ data }) => {
+      reportesApi[nombre](identidadConsulta.aplicados, { signal: solicitud.signal }).then(({ data }) => {
         const datos = validar(data);
-        if (vigente) setReportes(actual => ({ ...actual, [nombre]: { estado: 'listo', datos, error: '' } }));
+        if (vigente) setReportes(actual => ({ ...actual, [nombre]: { estado: 'listo', datos, error: '', identidad: identidadConsulta } }));
       }).catch(err => {
-        if (vigente) setReportes(actual => ({ ...actual, [nombre]: { estado: 'error', datos: null, error: mensajeError(err, 'No se pudo cargar este reporte.') } }));
+        if (vigente) setReportes(actual => ({ ...actual, [nombre]: { estado: 'error', datos: null, error: mensajeError(err, 'No se pudo cargar este reporte.'), identidad: identidadConsulta } }));
       });
     }
     return () => { vigente = false; solicitud.abort(); };
-  }, [aplicados, intento, token]);
+  }, [identidadConsulta, sesionValida]);
 
   useEffect(() => {
     let vigente = true;
     setErrorCatalogos('');
+    setCatalogos({ sedes: [], areas: [], laboratorios: [] });
+    if (!sesionValida) return () => { vigente = false; };
     Promise.all(esAdmin
       ? [catalogoApi.listarSedesAdmin(), catalogoApi.listarAreasAdmin(), catalogoApi.listarLaboratoriosAdmin()]
       : [catalogoApi.sedes(), catalogoApi.areas(), catalogoApi.laboratorios()]).then(([s, a, l]) => {
@@ -61,7 +80,7 @@ export default function Reportes() {
       if (vigente) setCatalogos({ sedes: s.data, areas: a.data, laboratorios: l.data });
     }).catch(err => { if (vigente) setErrorCatalogos(mensajeError(err, 'No se pudieron cargar las ubicaciones para los filtros.')); });
     return () => { vigente = false; };
-  }, [intento, token, esAdmin]);
+  }, [intento, token, esAdmin, sesionValida]);
 
   const areas = catalogos.areas.filter(area => !filtros.idSede || area.sede?.id === Number(filtros.idSede));
   const labs = catalogos.laboratorios.filter(lab => (esAdmin || alcance?.laboratorios?.some(permitido => permitido.id === lab.id)) &&
@@ -69,14 +88,27 @@ export default function Reportes() {
     (!filtros.idSede || catalogos.areas.some(area => area.id === lab.area?.id && area.sede?.id === Number(filtros.idSede))));
   function cambiar(event) {
     const { name, value } = event.target;
+    setErroresDescarga({});
     setFiltros(actual => ({ ...actual, [name]: value, ...(name === 'idSede' ? { idArea: '', idLaboratorio: '' } : name === 'idArea' ? { idLaboratorio: '' } : {}) }));
   }
   function aplicar(event) {
     event.preventDefault();
-    try { setAplicados(filtrosReportes(filtros)); setErrorFiltro(''); }
+    try { setAplicados(filtrosReportes(filtros)); setErrorFiltro(''); setErroresDescarga({}); }
     catch (err) { setErrorFiltro(err.message); }
   }
-  const resumen = reportes.resumen;
+  const habilitado = nombre => sesionValida && puedeExportarReporte(nombre, actuales[nombre], identidadConsulta, aplicados, filtros);
+  function exportar(nombre) {
+    if (!habilitado(nombre)) return;
+    try {
+      const archivo = crearReporteCsv(nombre, actuales[nombre].datos, { filtrosAplicados: identidadConsulta.aplicados, alcanceGlobal: Boolean(alcance.alcanceGlobal) });
+      descargarReporteCsv(archivo);
+      setErroresDescarga(actual => ({ ...actual, [nombre]: '' }));
+    } catch {
+      setErroresDescarga(actual => ({ ...actual, [nombre]: 'No se pudo descargar el CSV. Inténtalo de nuevo.' }));
+    }
+  }
+  const opcionesCsv = nombre => ({ exportar: () => exportar(nombre), habilitado: habilitado(nombre), errorDescarga: erroresDescarga[nombre] });
+  const resumen = actuales.resumen;
   const detalle = resumen.estado === 'cargando' ? 'Cargando...' : resumen.estado === 'error' ? 'No disponible' : 'Según filtros y alcance';
 
   return <div className="pagina">
@@ -90,22 +122,27 @@ export default function Reportes() {
       <label>Tipo de mantenimiento<select name="tipoMantenimiento" value={filtros.tipoMantenimiento} onChange={cambiar}><option value="">Todos</option>{TIPOS_MANTENIMIENTO.map(valor => <option key={valor} value={valor}>{etiqueta(valor)}</option>)}</select></label>
       <label>Fecha desde<input type="date" name="fechaDesde" value={filtros.fechaDesde} onChange={cambiar}/></label>
       <label>Fecha hasta<input type="date" name="fechaHasta" value={filtros.fechaHasta} onChange={cambiar}/></label>
-      <Boton tipo="submit">Aplicar filtros</Boton><Boton variante="secundario" onClick={() => { setFiltros({ ...inicial }); setAplicados({}); setErrorFiltro(''); }}>Limpiar</Boton>
+      <Boton tipo="submit">Aplicar filtros</Boton><Boton variante="secundario" onClick={() => { setFiltros({ ...inicial }); setAplicados({}); setErrorFiltro(''); setErroresDescarga({}); }}>Limpiar</Boton>
     </form>
     <p className="nota-reporte">El rango filtra la fecha de registro de equipos, la fecha del movimiento (días UTC) y la fecha programada de mantenimiento. El estado y tipo de mantenimiento solo afectan sus indicadores.</p>
+    <p className="nota-reporte">Cada CSV contiene los agregados de su bloque, los filtros aplicados y la fecha de generación. {filtrosPendientes ? 'Tienes cambios sin aplicar: aplica los filtros para habilitar la exportación.' : 'La exportación está disponible cuando el bloque termina de cargar y tiene datos.'}</p>
     {errorFiltro && <div className="mensaje-error" role="alert">{errorFiltro}</div>}
     {errorCatalogos && <div className="mensaje-error" role="alert"><span>{errorCatalogos}</span><Boton variante="secundario" onClick={reintentar}>Reintentar ubicaciones</Boton></div>}
-    {resumen.estado === 'error' && <div className="mensaje-error" role="alert"><span>{resumen.error}</span><Boton variante="secundario" onClick={reintentar}>Reintentar resumen</Boton></div>}
-    <div className="contadores-grid tres" aria-busy={resumen.estado === 'cargando'}>
-      <ResumenSeleccion titulo="Total equipos" valor={resumen.datos?.totalEquipos ?? '—'} detalle={detalle}/>
-      <ResumenSeleccion titulo="Total movimientos" valor={resumen.datos?.totalMovimientos ?? '—'} detalle={detalle}/>
-      <ResumenSeleccion titulo="Total mantenimientos" valor={resumen.datos?.totalMantenimientos ?? '—'} detalle={detalle}/>
-    </div>
+    <section className="panel" aria-busy={resumen.estado === 'cargando'}>
+      <div className="panel-titulo"><h2>Resumen general</h2><ExportarCsv habilitado={habilitado('resumen')} exportar={() => exportar('resumen')}/></div>
+      {erroresDescarga.resumen && <p className="mensaje-error" role="alert">{erroresDescarga.resumen}</p>}
+      {resumen.estado === 'error' && <div className="mensaje-error" role="alert"><span>{resumen.error}</span><Boton variante="secundario" onClick={reintentar}>Reintentar resumen</Boton></div>}
+      <div className="contadores-grid tres">
+        <ResumenSeleccion titulo="Total equipos" valor={resumen.datos?.totalEquipos ?? '—'} detalle={detalle}/>
+        <ResumenSeleccion titulo="Total movimientos" valor={resumen.datos?.totalMovimientos ?? '—'} detalle={detalle}/>
+        <ResumenSeleccion titulo="Total mantenimientos" valor={resumen.datos?.totalMantenimientos ?? '—'} detalle={detalle}/>
+      </div>
+    </section>
     <div className="reportes-grid">
-      <PanelReporte titulo="Equipos por estado" consulta={reportes.equiposPorEstado} reintentar={reintentar}>{datos => <Conteos filas={datos} encabezado="Estado de equipo"/>}</PanelReporte>
-      <PanelReporte titulo="Equipos por laboratorio" consulta={reportes.equiposPorLaboratorio} reintentar={reintentar}>{datos => datos.length ? <div className="tabla-wrap"><table className="tabla-reporte"><thead><tr><th>Laboratorio</th><th>Total equipos</th></tr></thead><tbody>{datos.map(fila => <tr key={fila.idLaboratorio}><td><strong>{fila.codigo}</strong><small>{fila.nombre}</small></td><td>{fila.total}</td></tr>)}</tbody></table></div> : <div className="vacio">No hay equipos para los filtros aplicados.</div>}</PanelReporte>
-      <PanelReporte titulo="Movimientos por tipo" consulta={reportes.movimientos} reintentar={reintentar}>{datos => <><p className="total-reporte">Total de movimientos: <strong>{datos.total}</strong></p><Conteos filas={datos.porTipo} encabezado="Tipo de movimiento"/></>}</PanelReporte>
-      <PanelReporte titulo="Mantenimientos" consulta={reportes.mantenimientos} reintentar={reintentar}>{datos => <><p className="total-reporte">Total de mantenimientos: <strong>{datos.total}</strong></p><Conteos filas={datos.porEstado} encabezado="Estado de mantenimiento"/><Conteos filas={datos.porTipo} encabezado="Tipo de mantenimiento"/></>}</PanelReporte>
+      <PanelReporte titulo="Equipos por estado" consulta={actuales.equiposPorEstado} reintentar={reintentar} {...opcionesCsv('equiposPorEstado')}>{datos => <Conteos filas={datos} encabezado="Estado de equipo"/>}</PanelReporte>
+      <PanelReporte titulo="Equipos por laboratorio" consulta={actuales.equiposPorLaboratorio} reintentar={reintentar} {...opcionesCsv('equiposPorLaboratorio')}>{datos => datos.length ? <div className="tabla-wrap"><table className="tabla-reporte"><thead><tr><th>Laboratorio</th><th>Total equipos</th></tr></thead><tbody>{datos.map(fila => <tr key={fila.idLaboratorio}><td><strong>{fila.codigo}</strong><small>{fila.nombre}</small></td><td>{fila.total}</td></tr>)}</tbody></table></div> : <div className="vacio">No hay equipos para los filtros aplicados.</div>}</PanelReporte>
+      <PanelReporte titulo="Movimientos por tipo" consulta={actuales.movimientos} reintentar={reintentar} {...opcionesCsv('movimientos')}>{datos => <><p className="total-reporte">Total de movimientos: <strong>{datos.total}</strong></p><Conteos filas={datos.porTipo} encabezado="Tipo de movimiento"/></>}</PanelReporte>
+      <PanelReporte titulo="Mantenimientos" consulta={actuales.mantenimientos} reintentar={reintentar} {...opcionesCsv('mantenimientos')}>{datos => <><p className="total-reporte">Total de mantenimientos: <strong>{datos.total}</strong></p><Conteos filas={datos.porEstado} encabezado="Estado de mantenimiento"/><Conteos filas={datos.porTipo} encabezado="Tipo de mantenimiento"/></>}</PanelReporte>
     </div>
   </div>;
 }

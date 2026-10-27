@@ -46,6 +46,7 @@ class AdminUsuarioIntegrationTests {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(20);
     private static final String BASE = "/api/admin/usuarios";
+    private static final String VALID_PASSWORD = "clave valida de prueba";
     @Autowired private JdbcTemplate jdbc;
     @Autowired private DataSource dataSource;
     @Autowired private ObjectMapper mapper;
@@ -84,7 +85,7 @@ class AdminUsuarioIntegrationTests {
         assertError(401, enviar("PUT", BASE + "/" + id, null, Map.of()));
         assertError(401, enviar("PATCH", BASE + "/" + id + "/estado", null, Map.of("activo", false)));
         assertError(401, enviar("PATCH", BASE + "/" + id + "/rol", null, Map.of("rol", "LECTOR")));
-        assertError(401, enviar("PUT", BASE + "/" + id + "/password", null, Map.of("password", "1234")));
+        assertError(401, enviar("PUT", BASE + "/" + id + "/password", null, Map.of("password", VALID_PASSWORD)));
     }
 
     @ParameterizedTest
@@ -98,7 +99,7 @@ class AdminUsuarioIntegrationTests {
         assertError(403, enviar("PUT", BASE + "/" + id, token, Map.of()));
         assertError(403, enviar("PATCH", BASE + "/" + id + "/estado", token, Map.of("activo", false)));
         assertError(403, enviar("PATCH", BASE + "/" + id + "/rol", token, Map.of("rol", "LECTOR")));
-        assertError(403, enviar("PUT", BASE + "/" + id + "/password", token, Map.of("password", "1234")));
+        assertError(403, enviar("PUT", BASE + "/" + id + "/password", token, Map.of("password", VALID_PASSWORD)));
     }
 
     @Test
@@ -141,13 +142,13 @@ class AdminUsuarioIntegrationTests {
     void duplicadosUsernameYEmailIgnoranMayusculasInclusoEnUsuariosInactivos() throws Exception {
         String run = identificador();
         String userName = "duplicado_" + run;
-        JsonNode creado = crear(userName, "LECTOR", "1234", false);
+        JsonNode creado = crear(userName, "LECTOR", VALID_PASSWORD, false);
         String email = creado.path("email").asString();
         assertError(409, enviar("POST", BASE, tokenAdmin,
-                bodyCrear(userName.toUpperCase(Locale.ROOT), "otro_" + run + "@inventario.test", "LECTOR", "1234", true)));
+                bodyCrear(userName.toUpperCase(Locale.ROOT), "otro_" + run + "@inventario.test", "LECTOR", VALID_PASSWORD, true)));
         assertError(409, enviar("POST", BASE, tokenAdmin,
-                bodyCrear("otro_" + run, email.toUpperCase(Locale.ROOT), "LECTOR", "1234", true)));
-        JsonNode otro = crear("distinto_" + run, "GESTOR", "1234", true);
+                bodyCrear("otro_" + run, email.toUpperCase(Locale.ROOT), "LECTOR", VALID_PASSWORD, true)));
+        JsonNode otro = crear("distinto_" + run, "GESTOR", VALID_PASSWORD, true);
         assertError(409, enviar("PUT", BASE + "/" + otro.path("id").asInt(), tokenAdmin,
                 Map.of("nombre", "Prueba", "apellido", "Prueba", "email", email.toUpperCase(Locale.ROOT))));
     }
@@ -155,7 +156,7 @@ class AdminUsuarioIntegrationTests {
     @ParameterizedTest
     @ValueSource(strings = {"passwordHash", "userName", "activo", "rol", "id"})
     void elPutRechazaCamposNoEditables(String campo) throws Exception {
-        JsonNode creado = crear("protegido_" + identificador(), "LECTOR", "1234", true);
+        JsonNode creado = crear("protegido_" + identificador(), "LECTOR", VALID_PASSWORD, true);
         var body = new java.util.HashMap<String, Object>();
         body.put("nombre", "Prueba");
         body.put("apellido", "Prueba");
@@ -169,7 +170,7 @@ class AdminUsuarioIntegrationTests {
         assertError(400, enviar("POST", BASE, tokenAdmin, Map.of()));
         String run = identificador();
         var body = new java.util.HashMap<>(bodyCrear("validacion_" + run,
-                run + "@inventario.test", "LECTOR", "1234", true));
+                run + "@inventario.test", "LECTOR", VALID_PASSWORD, true));
         body.put("passwordHash", "hash-cliente");
         assertError(400, enviar("POST", BASE, tokenAdmin, body));
         body.remove("passwordHash");
@@ -178,10 +179,29 @@ class AdminUsuarioIntegrationTests {
         body.put("rol", "LECTOR");
         body.put("password", "ñ".repeat(37));
         assertError(400, enviar("POST", BASE, tokenAdmin, body));
-        body.put("password", "abc");
+        body.put("password", "a".repeat(14));
+        assertError(400, enviar("POST", BASE, tokenAdmin, body));
+        body.put("password", "😀".repeat(14));
         assertError(400, enviar("POST", BASE, tokenAdmin, body));
         assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM usuario WHERE username = ?",
                 Integer.class, "validacion_" + run));
+    }
+
+    @ParameterizedTest(name = "Alta Unicode válida {index}")
+    @ValueSource(strings = {"aaaaaaaaaaaaaaa", "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"})
+    void crearAcepta15CaracteresUnicodeYRestablecerRechazaClavesCortasSinAuditar(String password) throws Exception {
+        JsonNode created = crear("limite_" + identificador(), "LECTOR", password, true);
+        Integer id = created.path("id").asInt();
+        assertEquals(200, login(created.path("userName").asString(), password).statusCode());
+        Integer previousEvents = jdbc.queryForObject(
+                "SELECT count(*) FROM auditoria WHERE entidad='usuario' AND id_entidad=?", Integer.class, id);
+        HttpResponse<String> response = enviar("PUT", BASE + "/" + id + "/password", tokenAdmin,
+                Map.of("password", "a".repeat(14)));
+        assertError(400, response);
+        assertFalse(response.body().contains("a".repeat(14)));
+        assertEquals(previousEvents, jdbc.queryForObject(
+                "SELECT count(*) FROM auditoria WHERE entidad='usuario' AND id_entidad=?", Integer.class, id));
+        assertEquals(200, login(created.path("userName").asString(), password).statusCode());
     }
 
     @Test
@@ -199,14 +219,14 @@ class AdminUsuarioIntegrationTests {
 
     @Test
     void rechazaRolesInactivosSinCambiarElUsuario() throws Exception {
-        JsonNode creado = crear("rol_" + identificador(), "GESTOR", "1234", true);
+        JsonNode creado = crear("rol_" + identificador(), "GESTOR", VALID_PASSWORD, true);
         Integer id = creado.path("id").asInt();
         try {
             jdbc.update("UPDATE rol SET activo = FALSE WHERE nombre = 'LECTOR'");
             assertError(409, enviar("PATCH", BASE + "/" + id + "/rol", tokenAdmin, Map.of("rol", "LECTOR")));
             String run = identificador();
             assertError(409, enviar("POST", BASE, tokenAdmin,
-                    bodyCrear("sin_rol_" + run, run + "@inventario.test", "LECTOR", "1234", true)));
+                    bodyCrear("sin_rol_" + run, run + "@inventario.test", "LECTOR", VALID_PASSWORD, true)));
             assertEquals("GESTOR", mapper.readTree(enviar("GET", BASE + "/" + id, tokenAdmin, null).body())
                     .path("rol").asString());
         } finally {
@@ -217,9 +237,9 @@ class AdminUsuarioIntegrationTests {
     @Test
     void rolYEstadoModificanJwtExistenteYConservanAsignaciones() throws Exception {
         String userName = "alcance_" + identificador();
-        JsonNode creado = crear(userName, "GESTOR", "1234", true);
+        JsonNode creado = crear(userName, "GESTOR", VALID_PASSWORD, true);
         Integer id = creado.path("id").asInt();
-        String token = mapper.readTree(login(userName, "1234").body()).path("accessToken").asString();
+        String token = mapper.readTree(login(userName, VALID_PASSWORD).body()).path("accessToken").asString();
         Integer laboratorio = jdbc.queryForObject("SELECT MIN(id_laboratorio) FROM laboratorio WHERE activo",
                 Integer.class);
         assertNotNull(laboratorio);
@@ -232,7 +252,7 @@ class AdminUsuarioIntegrationTests {
         assertEquals(200, enviar("PATCH", BASE + "/" + id + "/estado", tokenAdmin,
                 Map.of("activo", false)).statusCode());
         assertError(401, enviar("GET", "/api/auth/me", token, null));
-        assertError(401, login(userName, "1234"));
+        assertError(401, login(userName, VALID_PASSWORD));
         assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM usuario_laboratorio WHERE id_usuario = ? "
                 + "AND activo", Integer.class, id));
         assertEquals(200, enviar("PATCH", BASE + "/" + id + "/estado", tokenAdmin,
@@ -274,15 +294,15 @@ class AdminUsuarioIntegrationTests {
         assertError(404, enviar("GET", BASE + "/2147483647", tokenAdmin, null));
         assertError(404, enviar("PATCH", BASE + "/2147483647/estado", tokenAdmin, Map.of("activo", true)));
         assertError(404, enviar("PATCH", BASE + "/2147483647/rol", tokenAdmin, Map.of("rol", "LECTOR")));
-        assertError(404, enviar("PUT", BASE + "/2147483647/password", tokenAdmin, Map.of("password", "1234")));
+        assertError(404, enviar("PUT", BASE + "/2147483647/password", tokenAdmin, Map.of("password", VALID_PASSWORD)));
         assertError(401, enviar("POST", "/api/auth/register", null, Map.of()));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"estado", "rol"})
     void dosAdministradoresConcurrentesNuncaEliminanAlUltimo(String accion) throws Exception {
-        JsonNode uno = crear("admin_uno_" + identificador(), "ADMIN", "1234", true);
-        JsonNode dos = crear("admin_dos_" + identificador(), "ADMIN", "1234", true);
+        JsonNode uno = crear("admin_uno_" + identificador(), "ADMIN", VALID_PASSWORD, true);
+        JsonNode dos = crear("admin_dos_" + identificador(), "ADMIN", VALID_PASSWORD, true);
         Integer idUno = uno.path("id").asInt();
         Integer idDos = dos.path("id").asInt();
         String tokenUno = tokenDe(uno.path("userName").asString());
@@ -319,7 +339,7 @@ class AdminUsuarioIntegrationTests {
     @ParameterizedTest
     @ValueSource(strings = {"inactivo", "degradado"})
     void permisoRevocadoMientrasEsperaNoPermiteCrearNiAuditar(String cambio) throws Exception {
-        JsonNode creado = crear("admin_revocar_" + identificador(), "ADMIN", "1234", true);
+        JsonNode creado = crear("admin_revocar_" + identificador(), "ADMIN", VALID_PASSWORD, true);
         Integer actor = creado.path("id").asInt();
         String token = tokenDe(creado.path("userName").asString());
         String run = identificador();
@@ -332,7 +352,7 @@ class AdminUsuarioIntegrationTests {
                 }
             }
             var pendiente = client.sendAsync(solicitud("POST", BASE, token,
-                    bodyCrear(userName, run + "@inventario.test", "LECTOR", "1234", true)),
+                    bodyCrear(userName, run + "@inventario.test", "LECTOR", VALID_PASSWORD, true)),
                     HttpResponse.BodyHandlers.ofString());
             esperarBloqueos(1);
             String sql = cambio.equals("inactivo")

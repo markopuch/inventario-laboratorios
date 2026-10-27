@@ -27,6 +27,12 @@ registros `docs/sprints_realizados-frontend-Marko/` quedan solo en el equipo loc
 excluidos de Git y de nuevos clones. Este documento no requiere esas carpetas
 para consultar la planificación ni define los sprints vigentes de Jason.
 
+**Cierre autorizado del 26 de octubre:** Jason incorpora CSV de agregados en
+Reportes y pantalla de Auditoría ADMIN; Asignaciones tiene entrada propia ADMIN
+y Configuración se retira del menú y de las rutas. Ver [plan vigente](../plan-cierre-web.md)
+y [guía de uso](guia-reportes-auditoria.md). Las propuestas que siguen son
+históricas; su estado no sustituye el cierre ni acredita pruebas de sus cambios.
+
 ## 1. Objetivo y límites
 
 Construir una primera versión funcional que conserve el diseño de los mockups y consuma el backend existente. No ampliar automáticamente el backend para reproducir controles que todavía no tienen soporte.

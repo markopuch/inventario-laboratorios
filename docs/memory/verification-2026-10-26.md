@@ -1,7 +1,7 @@
 # Registro de verificación — 26 de octubre de 2026
 
 Zona horaria de referencia: **America/Lima, UTC-05:00**. Revisión de estado y
-creación de documentación local; no hubo cambios a código de aplicación,
+creación de documentación local; en esa auditoría inicial no hubo cambios a código de aplicación,
 dependencias declaradas, migraciones, configuración operativa ni datos.
 
 La tabla siguiente corresponde a la auditoría inicial. La retirada del seguimiento
@@ -52,6 +52,11 @@ equivalente a 10:25:56 Lima; comprobaciones finales de documentación posteriore
 | Cierre Sprint7 | V1–V9, 10 tablas, 42 operaciones, 233 tests | Corte anterior a usuarios administrativos/mantenimiento/reportes/auditoría. |
 | Chat Etapa final11oct | Vercel200, RenderUP, proxy401 sin token | Hubo conectividad en esa fecha; no certifica estado actual ni login autenticado. |
 | Chat de deployment11oct | Usuario confirmó publicar Jason y crear BD nueva Render sin importar datos | Falta confirmar cuentas y login; no trasladar automáticamente datos/contraseñas locales a esa BD. |
+
+El [cierre posterior del 27 de octubre](../despliegue/verificacion-cierre-2026-10-27.md)
+registra la importación aplicada, ocho recorridos con API/BD reales y refuerzo de
+contraseñas, además de los resultados de JUnit/GitHub Actions al completarse.
+Las secciones siguientes conservan el momento de sus comprobaciones anteriores.
 
 Las cifras de pruebas pertenecen a ejecuciones y alcances distintos. No sumar
 JUnit, tests frontend, smoke HTTP y aserciones como una sola suite.
@@ -104,3 +109,99 @@ carpetas en esta computadora, y actualizar todos los Markdown afectados.
 Esta reorganización no modifica fuentes activas, dependencias, migraciones,
 datos ni configuración de servicios. No se ejecutaron nuevas pruebas de aplicación,
 builds o despliegues para comprobar una retirada de seguimiento y cambios Markdown.
+
+## Cierre funcional posterior: Reportes CSV, navegación y Auditoría ADMIN
+
+El usuario autorizó implementar la retirada de Configuración, el acceso de menú
+a Asignaciones, exportación CSV y la pantalla de Auditoría exclusiva para ADMIN.
+
+| Comprobación nueva | Resultado y alcance |
+|---|---|
+| Código | Retirada de `/configuracion` y `ModuloVisual`, `/auditoria` protegida con `roles={['ADMIN']}`, menú administrativo y cliente GET de auditoría con seis filtros permitidos. |
+| Permiso servidor | Lectura de SecurityConfig: `GET /api/admin/auditoria` ya exige ADMIN. No se cambió backend, contrato ni migraciones. |
+| Suite frontend | `npm test`: **90/90 aprobadas**, cero fallos/canceladas/omitidas/pendientes, salida 0. Son 23 casos adicionales: 12 Auditoría, 10 CSV, 1 contrato HTTP. |
+| Build frontend | `npm run build`: salida 0, **1679 módulos**. Se repitió el build tras el ajuste visual final de CSS; los artefactos `dist` continúan ignorados. |
+| Navegador | **10 comprobaciones aprobadas**, cero errores de página; Chrome headless con Playwright sobre Vite local `127.0.0.1:5173` y API simulada. |
+| Navegación | ADMIN ve Asignaciones/Auditoría; Configuración no aparece y su ruta antigua vuelve al inicio. Menú móvil cierra al navegar. |
+| Auditoría | Campos y hora de Lima, actor histórico, detalle de texto largo, seis filtros, rango inválido sin solicitud, 403, reintento y vacío. GESTOR/LECTOR no tienen enlace, no pueden abrir la ruta y no lanzan consultas de auditoría. |
+| CSV | Se descargaron los cinco archivos desde la UI; BOM UTF-8 y sin token. Filtros aplicados presentes y borradores bloqueados; carga/error/vacío deshabilitan el bloque correspondiente. GESTOR/LECTOR exportan con alcance descriptivo de laboratorios asignados. |
+| Presentación | Capturas inspeccionadas en escritorio y 390 px. Se corrigió el ancho del resumen de Auditoría; sin desborde horizontal de página, la tabla se desplaza dentro de su contenedor. |
+| Documentación | Guía CSV/Auditoría, matriz de roles con Mermaid, README, backlog, plan y sprints distinguen este cierre de las pruebas históricas. **20 Markdown** revisados, **322 enlaces locales válidos**, sin enlaces rotos ni errores de whitespace. |
+
+El smoke utiliza respuestas y credenciales ficticias interceptadas en el navegador.
+Comprueba interfaz, rutas, descargas y tratamiento de respuestas, pero **no es E2E
+contra backend/BD reales ni certifica el funcionamiento de la nube**. No se repitió
+JUnit, no se escribieron datos de aplicación ni se actualizaron dependencias,
+Docker, Render o Vercel. El JWT permanece en memoria. La guía de uso es
+[Reportes CSV y Auditoría](../frontend/guia-reportes-auditoria.md).
+
+Los artefactos de comprobación de navegador son temporales locales, con datos
+simulados; no se incluyen como evidencia de información real del inventario.
+El servidor Vite de comprobación se detuvo al finalizar. Las carpetas locales de
+Marko siguen excluidas de Git y sus 21 archivos originales conservan sus hashes.
+Los cambios de este cierre permanecen locales, sin commit/push ni publicación.
+
+## Preparación posterior de importación Excel y cuentas demo
+
+El usuario autorizó cuentas de demostración Jason ADMIN, Jorge GESTOR y Gabriela
+ADMIN; confirmó Marko ADMIN y Aldo GESTOR, reparto de un laboratorio por los
+cuatro primeros, Gabriela sin asignación nueva y participación de todos mediante
+altas reales que produzcan auditoría. Seleccionó L201 hasta la fila 128 incluida,
+L409, L413 y L414; la fila 126 de L201 debe tratarse como L201 aunque diga L209.
+
+| Comprobación | Resultado y límites |
+|---|---|
+| Archivo fuente | Lectura con Python/openpyxl en modo solo lectura. **288 candidatos**: L201 127, L409 60, L413 61, L414 40. Original sin cambios. |
+| Preparación | **257 listos**: 230 OPERATIVO, 24 INOPERATIVO, 3 MANTENIMIENTO; **31 pendientes** con estado nulo en el plan. No se cambió el contrato/NOT NULL para enviarlos a la API. |
+| Identificadores | Códigos deterministas con laboratorio/fila, originales en comentario, series duplicadas vacías con valor original conservado y caracteres invisibles normalizados. |
+| Reparto | Permutación reproducible: Marko L414, Aldo L413, Jason L201, Jorge L409. Gabriela participa mediante operaciones ADMIN, sin asignación nueva. |
+| PowerShell | `importar-inventario-demo.ps1` pasó análisis sintáctico; el modo predeterminado se ejecutó con Windows PowerShell y preparó el plan privado sin HTTP/BD. |
+| Pruebas nuevas | Ejecución conjunta `python -B -m unittest discover -s scripts -p 'test_*.py' -v`: **25/25 aprobadas**, 16,420 s, salida 0. Son 12 de preparación y 13 de API simulada. |
+| Casos del ejecutor | Cinco actores con CREAR de recursos relacionados, HTTP 403, rol incorrecto, conflictos de código/serie, cuentas preexistentes sin reset, asignación exacta y recuperación de timeout tras commit en servidor simulado. |
+| Privacidad | Carpeta privada fuera de Git, restringida al usuario Windows; en la ejecución real de preparación solo existe `plan.json`, sin claves, tokens ni respaldos. |
+| Entorno de esta etapa | PostgreSQL escucha en 5432; no había backend en 8080 ni frontend en 5173. No hay credenciales en la sesión del agente. El usuario había confirmado anteriormente que el arranque manual funcionó; son momentos distintos. |
+
+**En esa fase de preparación no se aplicó la importación:** no se crearon usuarios, equipos ni auditorías
+reales, no hubo conexión SQL autenticada ni respaldo real. La aplicación requiere
+backend local y entrada oculta de credenciales en una terminal interactiva. El
+wrapper exige respaldo custom listado con `pg_restore`, verifica su hash y lo
+conserva al reanudar. Las escrituras se realizan mediante los contratos existentes,
+sin editar backend/migraciones, restablecer claves existentes o inventar historial.
+Guía: [carga local del inventario demo](../importacion-inventario-demo.md).
+
+La suite frontend de 90 casos y sus diez recorridos anteriores no se repitieron:
+esta etapa añadió herramientas de carga y documentación, sin cambiar la aplicación
+React/Spring. Los cambios permanecen locales, sin commit/push ni despliegue.
+
+## Carga aplicada y cierre posterior del 27 de octubre
+
+La preparación anterior quedó seguida por una carga local real mediante API:
+**257 equipos importados**, 31 estados vacíos pendientes y 258 equipos totales
+al conservar un equipo previo BAJA. El conflicto de serie `1` de L201, fila 57,
+se resolvió con serie `null` y referencia original en comentario, sin editar el
+registro anterior. El manifiesto privado acredita 337 altas de recursos y eventos
+reales de creación de Marko, Aldo, Jason, Jorge y Gabriela.
+
+El recorrido del **26 de octubre, 23:55 Lima**, aprobó **8/8 comprobaciones con
+API/BD reales**, cero errores de página: ADMIN/GESTOR/LECTOR, alcance, Auditoría,
+CSV y móvil de 390 px. Tres CSV con datos se compararon con la API; Movimientos
+y Mantenimientos vacíos mantuvieron descarga deshabilitada. Jorge se usó como
+LECTOR temporalmente y se restauró a GESTOR al finalizar.
+
+El **27 de octubre** se reforzaron altas/restablecimientos/demo nuevas a mínimo
+15 caracteres Unicode y máximo 72 bytes UTF-8, sin modificar login ni hashes
+anteriores. Frontend **93/93** y build **1679 módulos** aprobados; la API real
+verificó **11 casos** válidos/inválidos, incluido el rechazo de 14 caracteres con
+400, sin modificar cuentas ni auditoría. La UI real comprobó mínimo 15 y cinco
+casos Unicode/espacios sin errores ni escrituras. Importador: **28/28** aprobadas,
+12 de preparación y 16 de aplicación con datos/API simulados. La regresión
+backend aislada aprobó **365/365 pruebas**, cero fallos/errores/omitidas, con
+`compileJava test bootJar --rerun-tasks`, salida 0 y build correcto en 2 min 23 s.
+El PostgreSQL 18 temporal en 55432 usó builtin `C.UTF-8`, tras resolver un fallo
+del primer intento con locale `C`; el clúster propio se detuvo y eliminó al
+terminar. El backend habitual conservó su base y salud UP. GitHub/Actions se incorpora en el
+[anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md).
+
+El daemon Docker local continúa inaccesible; no se validó ejecución de nuevas
+imágenes localmente ni hubo despliegue manual en Render/Vercel. Esas limitaciones
+no invalidan la comprobación del modo nativo ni trasladan sus datos a otros entornos.

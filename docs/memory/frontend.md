@@ -79,11 +79,12 @@ Los componentes compartidos incluyen `Boton`, `TarjetaEquipo`, `FiltroEquipo`, `
 | `/categorias`, `/catalogo` | Sesión válida | Mismo componente: categorías/subcategorías. ADMIN crea/edita, consulta inactivos y cambia actividad; otros roles consultan catálogos comunes. |
 | `/laboratorios` | Sesión válida | Gestión/consulta de sedes, áreas y laboratorios. Administración restringida a ADMIN. Separa `activo` de `estadoOperativo`. |
 | `/usuarios` | ADMIN | Directorio, creación, edición de datos públicos, cambio de rol, actividad, contraseña y asignaciones. |
-| `/asignaciones` | ADMIN | Pantalla alternativa de asignaciones a usuarios existentes; no aparece como enlace independiente en la barra lateral actual. |
+| `/asignaciones` | ADMIN | Pantalla independiente con enlace en el menú; también se conservan las asignaciones desde Usuarios. |
 | `/movimientos` | Sesión válida | Historial real, búsqueda, filtro de laboratorio, origen/destino y actor. El traslado se inicia desde Equipos. |
 | `/mantenimientos` | Sesión válida | Listado, seis filtros, creación, edición y transiciones de estado; lectura según alcance, escritura ADMIN/GESTOR. |
-| `/reportes` | Sesión válida | Cinco consultas agregadas del servidor y ocho filtros; presenta conteos/tablas con estados de carga, error y vacío. |
-| `/configuracion` | ADMIN | **Placeholder**, sin persistencia ni operaciones. La barra lateral lo muestra deshabilitado como «Próximamente»; la ruta directa existe. |
+| `/reportes` | Sesión válida | Cinco consultas agregadas, ocho filtros y cinco botones Exportar CSV. Descargas con filtros aplicados, identidad de consulta y alcance vigentes; bloqueadas en carga/error/sin filas o con cambios sin aplicar. |
+| `/auditoria` | ADMIN | Tabla de eventos con seis filtros, hora de Lima, detalle de resúmenes, actualizar/reintentar y estados de carga/error/vacío. Acceso protegido en ruta, menú y API backend existente. |
+| `/configuracion` | Retirada | Sin entrada de menú ni ruta propia; alcanza la redirección general a inicio. El módulo quedó fuera del alcance por decisión del usuario. |
 | Cualquier otra | — | Redirección a `/`. Sin sesión, el guard redirige a `/login`. |
 
 Fuentes principales: [rutas][j-app], [barra lateral][j-sidebar], [pantallas][j-screens], [utilidades][j-utils], [API][j-api].
@@ -95,6 +96,8 @@ Detalles útiles para continuidad:
 - **Usuarios:** username, rol, actividad y contraseña tienen contratos separados; editar datos públicos no envía esos campos protegidos. Los autocambios administrativos refrescan perfil y alcance o cierran la sesión cuando corresponde. Las asignaciones se reemplazan mediante `{ idsLaboratorio: [...] }`, incluida la lista vacía; no son adiciones incrementales.
 - **Mantenimientos:** tipos `PREVENTIVO`, `CORRECTIVO`, `CALIBRACION`, `OTRO`; estados `PROGRAMADO`, `EN_PROCESO`, `COMPLETADO`, `CANCELADO`. La interfaz permite PROGRAMADO → EN_PROCESO/CANCELADO y EN_PROCESO → COMPLETADO/CANCELADO; no reabre terminales. Fechas programadas se tratan como fecha de calendario y no como instante convertido de zona horaria.
 - **Reportes:** resumen, equipos por estado, equipos por laboratorio, movimientos y mantenimientos. Filtros `idSede`, `idArea`, `idLaboratorio`, `estado`, `fechaDesde`, `fechaHasta`, `estadoMantenimiento`, `tipoMantenimiento`. Los conteos proceden del servidor y las respuestas parciales o inválidas no se sustituyen por ceros. La UI documenta fechas de movimientos por días UTC; no confundirlo con la presentación local de instantes.
+- **CSV:** un archivo por bloque, 17 columnas rectangulares con reporte, generación UTC, alcance descriptivo, ocho filtros aplicados, agrupación/indicador, laboratorio y total. UTF-8 con BOM, `;`, CRLF, escape de comillas y neutralización de fórmulas. El resumen cero sigue siendo exportable; listas agrupadas sin filas no. Los CSV no incluyen tokens ni exportan el detalle de cada equipo. Los borradores sin aplicar bloquean los botones; una identidad de consulta impide reutilizar resultados de otra sesión/alcance.
+- **Auditoría:** `auditoriaApi.listar` usa los seis filtros del backend y admite cancelación. La pantalla valida los ocho campos de respuesta y las acciones/entidades V13. Solo ADMIN consulta; no se añaden comandos para editar, borrar o revertir eventos. Los resúmenes largos usan `details/summary`, sin interpretar HTML. Fechas visibles en America/Lima; los filtros conservan días UTC. Ver [guía de uso](../frontend/guia-reportes-auditoria.md).
 
 ## Sesión, autenticación y autorización
 
@@ -134,7 +137,7 @@ El [registro histórico de tutoría][m-sprints] conserva FE-00 con cliente y pro
 
 ## Verificación de esta auditoría y evidencia histórica
 
-**Ejecutado el 2026-10-26:** `npm test -- --test-reporter=spec` en Jason: **67 tests, 67 aprobados, 0 fallos, 0 cancelados, 0 omitidos, 0 pendientes**, salida 0; duración reportada por Node **6740.0941 ms**. Se utilizaron Node/npm y dependencias locales existentes. Los tests usan adaptadores Axios/objetos simulados y lectura de fuentes Java; no iniciaron la aplicación ni escribieron en una base de datos.
+**Auditoría inicial del 2026-10-26:** `npm test -- --test-reporter=spec` en Jason: **67 tests, 67 aprobados, 0 fallos, 0 cancelados, 0 omitidos, 0 pendientes**, salida 0; duración reportada por Node **6740.0941 ms**. Se utilizaron Node/npm y dependencias locales existentes. Los tests usan adaptadores Axios/objetos simulados y lectura de fuentes Java; no iniciaron la aplicación ni escribieron en una base de datos.
 
 Para reproducir, usar `npm test` o `node --test --test-reporter=spec src/servicios/*.test.js src/utilidades/*.test.js`. En el comando ejecutado, el sufijo colocado después de los patrones no configuró el reporter: Node lo interpretó como patrón adicional; la suite sí encontró y ejecutó los nueve archivos reales y reportó 67/67 con salida 0. El formato spec observado era el predeterminado.
 
@@ -144,20 +147,38 @@ Para reproducir, usar `npm test` o `node --test --test-reporter=spec src/servici
 
 Cobertura presente: control asíncrono de sesión, 401/403, almacenamiento legacy, mensajes de error, contratos HTTP, asignaciones y respuestas obsoletas, payloads protegidos, catálogos y actividad, alcance de laboratorios, mantenimiento/fechas/transiciones, movimientos y validación de los cinco reportes, usuarios y contraseña UTF-8. Son pruebas de lógica/contratos; **no una suite de interacción JSX, accesibilidad, navegador completo ni backend en ejecución**.
 
-No se volvió a compilar `dist` ni se arrancó navegador/servidor durante esta auditoría frontend. Por tanto, el build y la experiencia visual actual no se certifican con esta nueva ejecución de tests.
+Durante la auditoría inicial no se compiló `dist` ni se arrancó navegador/servidor. El cierre funcional posterior sí produjo las comprobaciones siguientes; no deben confundirse ambas etapas.
+
+**Cierre funcional posterior del 2026-10-26:** `npm test` aprobó **90/90** pruebas, cero fallos/cancelaciones/omitidas/pendientes, salida 0. Incluye 12 casos nuevos de Auditoría, 10 de CSV y 1 contrato HTTP nuevo. `npm run build` pasó con **1679 módulos**. Se ejecutaron **10 comprobaciones en Chrome headless con Playwright** sobre Vite local y API simulada: menús/rutas, Auditoría ADMIN, filtros/rango/403/vacío, cinco descargas CSV, bloqueo por carga/error/filtros, vista de 390 px y rechazo de Auditoría para GESTOR/LECTOR. Cero errores de página. Se inspeccionaron capturas de escritorio/móvil y se corrigió el ancho de los resúmenes. No se utilizaron credenciales reales, ni se inició backend/BD, ni se verificó un despliegue en nube. No hubo cambios de dependencias, API backend o migraciones.
 
 **Histórico, 2026-10-03:** [sprints Jason][j-sprints] y [evidencia de adaptación][j-adaptacion] documentan 67/67 tests y build con 1677 módulos. [Evidencia Docker][j-evidencia-docker] registra el despliegue local de imágenes SHA `e1ce75a`, smoke aislado 94/94 HTTP, 30 aserciones y siete controles SQL sin inconsistencias. Son ejecuciones diferentes y no se suman a los 67 tests ni a los tests JUnit del backend. La baja del equipo se comprobó por API en ese smoke porque la confirmación nativa bloqueó la automatización del navegador. Las capturas son evidencia histórica, no una inspección visual nueva.
 
 La documentación histórica dice «nube pendiente»; la presencia actual de `vercel.json` es evidencia de configuración posterior o adicional y requiere comprobar deployment antes de afirmar el estado de la nube. Algunas secciones antiguas de [FE-11][j-fe11] aún mencionan localStorage: su propia introducción las marca históricas; el código vigente usa memoria.
 
+## Cierre posterior con API y BD reales
+
+**Actualización del 27 de octubre:** el recorrido del 26 de octubre
+con API y BD locales reales aprobó **8/8 comprobaciones**, cero errores de página:
+ADMIN/GESTOR/LECTOR, alcance de laboratorios, Auditoría de cinco actores, filtro
+L201 y vista móvil de 390 px. Se descargaron tres CSV con datos y se contrastaron
+con la API; Movimientos/Mantenimientos estaban vacíos y sus descargas deshabilitadas.
+Jorge se usó temporalmente como LECTOR y se restauró a GESTOR. Tras reforzar
+contraseñas, `npm test` aprobó **93/93** y build **1679 módulos**. Altas y
+restablecimientos exigen 15 caracteres Unicode y máximo 72 bytes UTF-8, sin
+recortar ni transformar claves; el login con claves anteriores se conserva.
+La UI real confirmó mínimo 15 en alta/restablecimiento y cinco casos de
+Unicode/espacios sin errores de página ni escrituras; la API real verificó
+11 casos válidos/inválidos sin cambiar cuentas o auditorías.
+Ver [detalle del cierre y publicación](../despliegue/verificacion-cierre-2026-10-27.md).
+
 ## Pendientes y recomendaciones para la siguiente IA
 
-- Configuración persistida y seguridad configurable: no implementadas. La pantalla actual es placeholder.
-- Pantalla de auditoría administrativa: no existe en rutas ni cliente Axios, aunque el backend tenga su API.
-- Reportes: exportación y gráficos completos de mockup pendientes; actualmente tablas/conteos reales.
+- Configuración y preferencias persistidas quedaron fuera del alcance: menú, ruta y placeholder retirados. Retomarlas requiere nueva petición.
+- Auditoría administrativa y exportación CSV ya están implementadas. La pantalla usa la consulta existente; no hay edición o reversión de auditoría.
+- Reportes: gráficos completos, Excel/PDF e inventario detallado siguen pendientes; tablas/conteos y CSV agregados están disponibles.
 - Mantenimientos: calendario fuera del alcance actual.
 - Refresh tokens, recuperación de contraseña y revocación de sesión no implementados en frontend.
-- No hay evidencia nueva de build, E2E, revisión visual completa, accesibilidad exhaustiva o comportamiento bajo carga. La prueba de lógica aprobada no elimina esos límites.
+- Build, pruebas de lógica/contratos y recorridos UI simulado y con API/BD reales aprobados. La cobertura real descrita no acredita accesibilidad exhaustiva, comportamiento bajo carga ni flujos autenticados de nube.
 - Marko: continuar la tutoría local desde composición visual de login/FE-01 solo si el usuario retoma esa variante. Sus carpetas permanecen ignoradas y no forman parte de nuevos clones; no volver a añadirlas al seguimiento sin una petición que cambie esta decisión. No portar automáticamente paquetes/código de Jason ni afirmar completados los sprints de Marko.
 - Confirmar variante y modo de ejecución antes de cualquier cambio; no ejecutar ambos Vite en 5173. Usar lockfile y `npm ci` al preparar un entorno nuevo y no actualizar versiones para documentar.
 - Mantener secretos fuera del bundle. `VITE_*` es configuración pública de compilación. No incluir contraseñas, JWT ni archivos `.env` privados en memorias o commits.

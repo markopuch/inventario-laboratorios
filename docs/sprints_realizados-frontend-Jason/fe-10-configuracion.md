@@ -1,13 +1,29 @@
 # FE-10 — Configuración general y seguridad
 
 Fecha de inicio: 1 de octubre de 2026.
-Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
+Decisión de alcance: **26 de octubre de 2026**. Evidencia Docker histórica:
+3 de octubre, despliegue `e1ce75a`.
 
-**Estado vigente: Configuración continúa como Próximamente para ADMIN; preferencias persistentes y seguridad configurable son trabajo futuro.**
+**Estado vigente: Configuración se retira del menú y de las rutas. Preferencias
+persistentes y seguridad configurable continúan como ampliaciones futuras.**
 
 ## Implementación y verificación actuales
 
-`App.jsx` mantiene `/configuracion` protegido por ADMIN y renderiza `ModuloVisual`. No hay contrato API consumido para preferencias ni pantalla nueva de Auditoría. Docker y Actions no implementan esas opciones. Autenticación, roles, alcance y administración de cuentas ya funcionan en sus módulos; no deben clasificarse como pendientes de Configuración.
+La decisión del 26 de octubre retira el placeholder de `App.jsx` y la entrada de
+`BarraLateral.jsx`. `/configuracion` ya no declara una ruta propia y sigue el
+fallback general al inicio; sin sesión, se exige login. No hay opciones de
+preferencias o seguridad persistidas ni un contrato backend nuevo.
+
+Auditoría tiene ahora un módulo independiente ADMIN de solo lectura; no pertenece
+a Configuración. Asignaciones también tiene acceso propio ADMIN. Autenticación,
+roles, alcance y administración de cuentas siguen en sus módulos funcionales.
+Consulta la [guía de uso](../frontend/guia-reportes-auditoria.md).
+
+**Verificación del 26 de octubre:** menú y fallback de la ruta retirada
+comprobados en navegador local con API simulada, dentro de diez comprobaciones
+sin errores de página. El cierre aprobó 90/90 tests frontend y build. No se
+publicó este cambio ni se probó contra BD/backend reales. Las métricas siguientes
+son históricas del 3 de octubre, anteriores a retirar Configuración.
 
 La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
 

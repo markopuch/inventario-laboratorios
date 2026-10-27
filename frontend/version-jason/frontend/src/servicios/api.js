@@ -283,4 +283,12 @@ export const reportesApi = {
   mantenimientos: (params = {}, config = {}) => api.get('/reportes/mantenimientos', { ...config, params: parametrosPermitidos(params, filtrosReporte) })
 };
 
+const filtrosAuditoria = ['entidad', 'idEntidad', 'idUsuario', 'accion', 'fechaDesde', 'fechaHasta'];
+
+export const auditoriaApi = {
+  listar: (params = {}, config = {}) => api.get('/admin/auditoria', {
+    ...config, params: parametrosPermitidos(params, filtrosAuditoria)
+  })
+};
+
 export default api;

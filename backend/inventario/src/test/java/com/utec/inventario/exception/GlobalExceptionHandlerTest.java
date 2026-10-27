@@ -22,11 +22,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import com.utec.inventario.security.PasswordPolicy;
+
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
     private final ServletWebRequest request = new ServletWebRequest(
             new MockHttpServletRequest("POST", "/api/categorias"));
+
+    @Test
+    void passwordInvalidaDevuelveSoloLaReglaPublicaSinDatosDelIntento() {
+        ResponseEntity<Object> response = handler.handlePasswordInvalida(new PasswordUsuarioInvalidaException(), request);
+        ApiError error = assertInstanceOf(ApiError.class, response.getBody());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(PasswordPolicy.MESSAGE, error.getMessage());
+        assertTrue(error.getErrors().isEmpty());
+    }
 
     @ParameterizedTest
     @ValueSource(strings = { "uq_categoria_nombre", "uq_categoria_nombre_ignore_case" })

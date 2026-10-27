@@ -13,7 +13,32 @@ ambos trabajos de GitHub Actions en verde y ambas imágenes publicadas en GHCR p
 el commit `e1ce75a`. Las imágenes publicadas se descargaron y ejecutaron localmente:
 PostgreSQL, backend y frontend quedaron saludables. El [reporte de Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md)
 incluye resultados, manifiestos, capturas y preservación de la base habitual.
-El despliegue de PostgreSQL/backend/frontend en la nube queda pendiente.
+Ese registro corresponde al 3 de octubre. Posteriormente se documentó la
+publicación de Jason en Vercel y del backend/base de datos en Render. La
+[verificación del 26 de octubre](docs/memory/verification-2026-10-26.md)
+no acredita aún el recorrido autenticado actual; distingue publicación y
+funcionamiento comprobado.
+
+**Cierre funcional del 26 de octubre de 2026:** la navegación incorpora
+Asignaciones y Auditoría para ADMIN; Configuración se retira del menú y de las
+rutas. Reportes permite descargar cinco CSV de agregados con los filtros
+aplicados y el alcance de la sesión. La [guía de uso](docs/frontend/guia-reportes-auditoria.md)
+explica las descargas y la consulta de Auditoría; la [matriz de roles](docs/matriz-permisos.md)
+separa acciones y laboratorios autorizados. Comprobación local del cierre:
+**90/90 tests**, build aprobado y diez comprobaciones de navegador con API
+simulada, sin errores de página.
+
+**Cierre local del 27 de octubre:** la carga se aplicó: **257 equipos importados**,
+31 pendientes por estado vacío y 258 equipos totales al conservar uno previo en
+BAJA. Se comprobó auditoría de los cinco actores y **8/8 recorridos con API/BD
+reales** el 26 de octubre. La política vigente exige al menos 15 caracteres Unicode
+y máximo 72 bytes UTF-8 para altas/restablecimientos y cuentas demo nuevas;
+las claves existentes mantienen su acceso. Backend **365/365**, frontend
+**93/93** e importador **28/28** aprobados; JAR y build frontend de **1679 módulos**
+correctos. JUnit utilizó PostgreSQL temporal independiente del inventario habitual.
+La [guía de importación](docs/importacion-inventario-demo.md)
+y el [anexo del cierre](docs/despliegue/verificacion-cierre-2026-10-27.md) detallan
+la resolución de la serie repetida, JUnit, GitHub Actions y los límites de Docker/nube.
 
 
 ## 1. Descripción
@@ -48,7 +73,7 @@ registra la preservación de la base habitual y las pruebas sobre una base tempo
 | Validación y pruebas | Jakarta Validation, JUnit 5, Spring Boot Test |
 | Frontend activo | React 18.3.1, Vite 6.4.3, React Router y Axios; versión Jason |
 | Docker local | PostgreSQL 18 Alpine, backend Java 21 y frontend servido por Nginx |
-| Automatización | GitHub Actions: matriz backend/frontend Jason; imágenes en GHCR |
+| Automatización | GitHub Actions: JUnit/PostgreSQL, Jason e importador antes de publicar las dos imágenes en GHCR |
 
 Se usa el wrapper incluido; no hace falta instalar Gradle por separado.
 Las versiones se mantienen respecto al código existente. PostgreSQL debe estar
@@ -159,7 +184,7 @@ Los catálogos permanecen globales.
 - Mantenimiento preventivo/correctivo/calibración/otro con ciclo de estados y
   protección del Equipo durante EN_PROCESO.
 - Cinco reportes agregados calculados por el servidor según filtros y alcance.
-- Auditoría administrativa de cambios, consultable por ADMIN desde la API.
+- Auditoría administrativa de cambios, consultable por ADMIN desde la API y la pantalla Auditoría.
 - Errores seguros, DTOs públicos y bloqueos para proteger operaciones concurrentes.
 
 PUT de Equipo rechaza código interno, laboratorio y otros campos inmutables.
@@ -363,6 +388,21 @@ Get-NetTCPConnection -LocalPort 8080 -State Listen |
 Detén desde su terminal únicamente la instancia que hayas iniciado; no arranques
 dos copias del backend en el mismo puerto.
 
+### 11.3. Carga local del inventario de demostración
+
+La [guía de importación](docs/importacion-inventario-demo.md) documenta la selección
+del Excel, cuentas demo, reparto por laboratorio, auditoría real y registros
+pendientes. La preparación está comprobada; no equivale a una carga realizada.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\importar-inventario-demo.ps1
+```
+
+Con el backend conectado a la misma base PostgreSQL local, `-Aplicar` realiza
+primero un respaldo verificado y solicita las credenciales mediante entrada oculta.
+No almacena secretos en Git ni cambia contratos o migraciones para admitir estados
+de equipo vacíos.
+
 ## 12. Tests
 
 ### Evidencia histórica de Sprint 7
@@ -460,9 +500,13 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 | [Estado de sprints backend](docs/sprints_realizados-backend/README.md) | Cierres históricos, ampliación posterior y evidencia vigente |
 | [Ampliación del backend](backend/inventario/ACTUALIZACION-BACKEND.md) | Contratos V10–V13 para integrar Jason |
 | [Docker y Actions](docs/despliegue/verificacion-docker-actions-2026-10-03.md) | Flujo completo, ambos trabajos verdes, imágenes y evidencias persistentes |
+| [Cierre local y GitHub](docs/despliegue/verificacion-cierre-2026-10-27.md) | Carga aplicada, recorrido real, contraseñas y resultados de la publicación del cierre |
+| [Importación demo](docs/importacion-inventario-demo.md) | Selección Excel, reparto, auditoría real, pendientes y reanudación |
 | [Sprints Jason](docs/sprints_realizados-frontend-Jason/README.md) | Estado actual de la implementación frontend y sus límites |
 | [Frontend](frontend/readme.md) | Jason, modos de ejecución y ubicación del material local de Marko |
+| [Uso de Reportes y Auditoría](docs/frontend/guia-reportes-auditoria.md) | CSV de agregados, filtros aplicados, alcance y consulta administrativa de eventos |
 | [Memoria técnica](memory.md) | Arquitectura, estado, decisiones y conservación local de Marko; anexos con comprobaciones fechadas |
+| [Plan de cierre web](docs/plan-cierre-web.md) | Prioridades para terminar la web y sus Markdown; decisiones de alcance y criterios de aceptación |
 | [Modelo vigente V13](docs/Erd_actual/modelo-vigente-v13.md) | Contraste de migraciones y Entities; 12 entidades y 16 FK |
 | [ERD lógico v3](docs/Erd_actual/erd-logico-v3.md) / [físico v3](docs/Erd_actual/erd-fisico-v3.md) | Modelo completo V1–V13; Mermaid, SVG, PNG y fuentes DOT |
 | [ERD lógico v2](docs/Erd_actual/erd-logico-v2.md) / [físico v2](docs/Erd_actual/erd-fisico-v2.md) | Mermaid y SVG históricos V1–V9 |
@@ -480,11 +524,15 @@ describe V1–V9; los diagramas v3 representan el modelo actual V1–V13 complet
 Usuarios administrativos, Mantenimiento como Entity, Reportes, Auditoría
 administrativa, frontend Jason, Docker local y publicación GHCR están
 implementados después del cierre histórico de Sprint 7.
-Siguen pendientes el despliegue en la nube, Configuración persistida,
-una pantalla frontend de Auditoría, exportación de reportes, refresh tokens,
+El cierre del 26 de octubre incorpora la pantalla frontend de Auditoría y la
+exportación CSV de agregados; Configuración se retira de la navegación y las rutas.
+Siguen pendientes acreditar el flujo autenticado actual en la nube,
+Configuración persistida si se prioriza, PDF/XLSX, refresh tokens,
 permisos dinámicos y paginación para escala futura. La auditoría administrativa
 existente no equivale a una plataforma general de auditoría/observabilidad.
 
 El [backlog](docs/backend-final/backlog.md) separa esas ampliaciones de mejoras
 opcionales y no las presenta como defectos del alcance entregado.
-La actualización de evidencia/documentación no agregó nuevas funcionalidades.
+Las verificaciones históricas conservan su fecha. El anexo del 27 de octubre
+registra el recorrido local real y los resultados de publicación; la nube y
+Docker local requieren su propia comprobación operativa.

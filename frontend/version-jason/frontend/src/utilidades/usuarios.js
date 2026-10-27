@@ -19,9 +19,9 @@ export function puedeAdministrarUsuarios(rol) {
 }
 
 export function validarPasswordUsuario(password, confirmacion) {
-  if (typeof password !== 'string' || !password.trim()) invalido('La contraseña es obligatoria.');
-  // String.length coincide con las unidades UTF-16 de String.length en Java.
-  if (password.length < 4 || password.length > 72) invalido('La contraseña debe tener entre 4 y 72 caracteres.');
+  // Incluye los blancos de Java y ECMAScript sin recortar ni transformar la clave.
+  if (typeof password !== 'string' || /^[\s\u001c-\u001f]*$/u.test(password)) invalido('La contraseña es obligatoria.');
+  if (Array.from(password).length < 15) invalido('La contraseña debe tener al menos 15 caracteres.');
   if (new TextEncoder().encode(password).length > 72) invalido('La contraseña no puede superar los 72 bytes UTF-8.');
   if (confirmacion !== undefined && password !== confirmacion) invalido('Las contraseñas no coinciden.');
   return password;

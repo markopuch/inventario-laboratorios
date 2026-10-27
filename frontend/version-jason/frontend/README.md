@@ -15,13 +15,36 @@ backend/frontend sin cambios de código, Compose ni migraciones.
 
 La [evidencia actual](evidencias/docker-actual-2026-10-03.json) y el
 [informe Docker/Actions](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
-separan pruebas, publicación y preservación. Para el estado por módulo consulta
+separan pruebas históricas, publicación y preservación. El
+[cierre del 27 de octubre](../../../docs/despliegue/verificacion-cierre-2026-10-27.md)
+registra la carga local aplicada, ocho recorridos con API/BD reales, 93 tests
+frontend y la política vigente de contraseñas. Para el estado por módulo consulta
 [los sprints Jason](../../../docs/sprints_realizados-frontend-Jason/README.md).
 
 ## Ejecución local en Windows
 
-Se necesitan Node.js con npm y Docker Desktop en ejecución. Los comandos siguientes
-parten de la raíz del repositorio `inventario-laboratorios` y usan PowerShell.
+Se necesitan Node.js con npm, JDK 21 y PostgreSQL local iniciado con la base
+`inventario_laboratorios` existente. Los comandos siguientes parten de la raíz
+del repositorio `inventario-laboratorios` y usan PowerShell.
+
+En una terminal inicia el backend nativo y conserva abierta esa terminal:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\iniciar-backend.ps1
+```
+
+El script solicita las credenciales PostgreSQL ausentes mediante entrada local.
+Espera `Started InventarioApplication`. El permiso de ejecución se limita a ese
+proceso de PowerShell, sin cambiar permanentemente la política de Windows.
+Después inicia Vite en la segunda terminal con los comandos de abajo.
+
+El script actualizado permite que los avisos de compilación de `javac` se
+muestren sin interrumpir Gradle antes de terminar. Continúa verificando su
+código de salida: un fallo real del backend mantiene el error de arranque.
+
+Si prefieres usar la base y el backend de Docker, necesitas Docker Desktop en
+ejecución y su configuración privada existente. Esta es una base diferente de
+PostgreSQL Windows; publicar código no copia sus datos.
 
 En una terminal, usa el entorno Docker habitual del backend y su configuración local
 existente:
@@ -167,7 +190,7 @@ de actividad que desactive la cuenta cierra la sesión. El backend revalida siem
 los permisos de cada solicitud, aunque una sesión ajena conserve datos visuales antiguos.
 
 El backend autoriza cada operación. La lectura de catálogos y organización es global para los tres roles; el alcance por laboratorio restringe equipos, movimientos, mantenimientos y reportes. Los movimientos pueden seguir siendo visibles por su origen aunque el equipo haya salido de ese laboratorio. Las rutas `/asignaciones` y `/usuarios`
-y `/configuracion` además están protegidas por rol en el frontend.
+y `/auditoria` además están protegidas por rol ADMIN en el frontend.
 
 En el despliegue actual del 3 de octubre de 2026 se conservaron las tres cuentas
 habituales, **cuatro asignaciones** y cero equipos. Antes/después se compararon
@@ -189,9 +212,20 @@ Asignaciones permite consultar por ID y seleccionar laboratorios activos, tambi�
 desde la acción Laboratorios de cada usuario;
 guardar una lista vacía retira las asignaciones del usuario consultado.
 
-Configuración permanece como Próximamente: no tiene contrato API para preferencias
-ni seguridad configurable. No se inventa una pantalla de Auditoría. Los reportes
-consumen agregados reales; no se implementa exportación sin contrato acordado.
+**Cierre del 26 de octubre de 2026:** Configuración se retira del menú y de las
+rutas; una visita a `/configuracion` sigue el fallback general al inicio.
+Usuarios, Asignaciones y Auditoría aparecen en la navegación ADMIN.
+Auditoría consulta la API existente, con filtros y tabla de solo lectura.
+Reportes descarga cinco CSV de agregados con filtros aplicados y alcance;
+no crea un endpoint de exportación ni descarga registros detallados de equipos.
+Consulta la [guía de uso](../../../docs/frontend/guia-reportes-auditoria.md) y la
+[matriz de roles](../../../docs/matriz-permisos.md).
+Verificación del cierre: **90/90 tests frontend**, build aprobado con **1679
+módulos** y diez comprobaciones de navegador local con API simulada, sin errores
+de página. Se verificaron navegación por rol, Auditoría, cinco descargas CSV,
+filtros y estados de carga/error/vacío, y móvil de 390 px. No se ejecutaron pruebas
+nuevas contra backend/BD reales ni se publicaron estos cambios. Ver el
+[detalle de la comprobación](../../../docs/frontend/guia-reportes-auditoria.md#verificación-local-del-26-de-octubre).
 El mantenimiento de Laboratorio es un estado operativo independiente del ciclo
 de Mantenimiento de Equipo. Los Movimientos siguen siendo traslados confirmados,
 sin estados pendientes/en proceso inventados.
@@ -300,7 +334,8 @@ final tiene sus tres contenedores saludables y utiliza frontend **3000** y backe
 separa esta evidencia de la auditoría Vite anterior y de la publicación en GHCR.
 En aquella comprobación FE-08–FE-10 y los límites visuales y de accesibilidad
 conservaban su estado pendiente. Mantenimientos y Reportes ahora consumen sus APIs;
-Configuración y las revisiones visuales adicionales conservan sus límites indicados.
+Configuración fue retirada de las rutas y del menú en el cierre del 26 de octubre;
+las revisiones visuales adicionales conservan sus límites indicados.
 
 ### Verificación Docker actual con V1–V13
 
@@ -405,7 +440,7 @@ esperados, no una indicación de que React haya cambiado el dato localmente.
    cuenta debe conservar su rol/actividad. Un autocambio permitido refresca sesión
    y navegación; desactivar la cuenta propia cierra su sesión.
 6. Abre Restablecer contraseña: escribe y confirma una contraseña de prueba de
-   4–72 caracteres y máximo 72 bytes UTF-8. El campo queda vacío al cerrar/guardar;
+   al menos 15 caracteres Unicode y máximo 72 bytes UTF-8. El campo queda vacío al cerrar/guardar;
    la contraseña solo se envía a su endpoint. Comprueba un nuevo login. El backend
    no revoca automáticamente todos los JWT existentes al restablecer password.
 7. En Laboratorios de un usuario, selecciona los disponibles, guarda y vuelve a
@@ -423,8 +458,14 @@ esperados, no una indicación de que React haya cambiado el dato localmente.
 11. Repite con GESTOR: solo gestiona Equipos/Mantenimientos autorizados. Con LECTOR
     no deben aparecer acciones de escritura ni Usuarios. Intenta una ruta ADMIN
     directa y comprueba su redirección; la API también conserva 403.
-12. Configuración sigue como Próximamente. No se presentan éxitos ni preferencias
-    guardadas sin un endpoint que las persista.
+12. En Reportes, aplica filtros y descarga cada CSV. Comprueba acentos, columnas,
+    totales, filtros y alcance; editar filtros sin aplicarlos impide descargar.
+    Repite con GESTOR/LECTOR para verificar sus agregados autorizados.
+13. Con ADMIN abre Auditoría, filtra entidad, registro, actor, acción y fechas
+    UTC. Contrasta las filas y su fecha presentada en Lima; no hay acciones de
+    edición o eliminación. GESTOR/LECTOR no deben acceder al módulo.
+14. Comprueba el acceso ADMIN a Asignaciones desde el menú. Configuración no
+    debe aparecer; la ruta retirada `/configuracion` vuelve al inicio.
 
 La auditoría Vite inicial utilizó 5173/8080. El despliegue actual `e1ce75a` dejó
 Docker en 3000/8080 con sus tres contenedores saludables y Flyway V1–V13.

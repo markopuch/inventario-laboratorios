@@ -84,8 +84,10 @@ class AdminUsuarioServiceTest {
     @Test
     void rechazaPasswordsQueBcryptTruncariaAntesDeTocarPersistencia() {
         Usuario input = Usuario.builder().build();
-        for (String password : new String[] {"", "abc", "a".repeat(73), "ñ".repeat(37)}) {
+        for (String password : new String[] {null, "", "a".repeat(14), "😀".repeat(14),
+                " ".repeat(15), "\u00A0".repeat(15), "a".repeat(73), "ñ".repeat(37), "😀".repeat(19)}) {
             assertThrows(PasswordUsuarioInvalidaException.class, () -> service.crearUsuario(input, password));
+            assertThrows(PasswordUsuarioInvalidaException.class, () -> service.cambiarPassword(2, password));
         }
         assertThrows(PasswordUsuarioInvalidaException.class, () -> service.cambiarPassword(2, null));
         verifyNoInteractions(usuarios, roles, encoder, auditoria);
@@ -96,7 +98,7 @@ class AdminUsuarioServiceTest {
         Usuario input = Usuario.builder().userName("Existente").email("otro@inventario.test").build();
         when(roles.findActiveForUpdateByNombre("ADMIN")).thenReturn(Optional.of(rol("ADMIN")));
         when(usuarios.existsByUserNameIgnoreCase("existente")).thenReturn(true);
-        assertThrows(ConflictException.class, () -> service.crearUsuario(input, "1234"));
+        assertThrows(ConflictException.class, () -> service.crearUsuario(input, "clave valida de prueba"));
         verify(usuarios, never()).saveAndFlush(any());
         verifyNoInteractions(encoder, auditoria);
     }
@@ -149,8 +151,10 @@ class AdminUsuarioServiceTest {
         UsuarioEntity lector = usuario(2, "LECTOR", false);
         when(roles.findActiveForUpdateByNombre("ADMIN")).thenReturn(Optional.of(rol("ADMIN")));
         configurarUsuario(lector);
-        when(encoder.encode("nueva clave")).thenReturn("nuevo-hash");
-        service.cambiarPassword(2, "nueva clave");
+        String password = "  nueva clave de prueba  ";
+        when(encoder.encode(password)).thenReturn("nuevo-hash");
+        service.cambiarPassword(2, password);
+        verify(encoder).encode(password);
         assertEquals("nuevo-hash", lector.getPasswordHash());
         verify(auditoria).registrar(AccionAuditoria.RESTABLECER_CONTRASENA, "usuario", 2,
                 "Contraseña restablecida");
@@ -169,9 +173,9 @@ class AdminUsuarioServiceTest {
                         : Optional.empty());
 
         if (degradado) {
-            assertThrows(AccessDeniedException.class, () -> service.cambiarPassword(2, "1234"));
+            assertThrows(AccessDeniedException.class, () -> service.cambiarPassword(2, "clave valida de prueba"));
         } else {
-            assertThrows(BadCredentialsException.class, () -> service.cambiarPassword(2, "1234"));
+            assertThrows(BadCredentialsException.class, () -> service.cambiarPassword(2, "clave valida de prueba"));
         }
         var orden = inOrder(roles, usuarios);
         orden.verify(roles).findActiveForUpdateByNombre("ADMIN");

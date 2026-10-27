@@ -209,7 +209,7 @@ La API valida los campos obligatorios, tamaños, tipos, relaciones y valores del
 dominio definidos por cada Request. Los módulos con `@Positive` rechazan IDs no
 positivos con 400; Categoría conserva su contrato histórico de 404 para un ID
 entero inexistente, incluso no positivo. La validación de formato de correo está
-**IMPLEMENTADA** en los contratos actuales de alta/edición administrativa de Usuario mediante @Email, además de obligatoriedad y longitud. La contraseña respeta 4–72 caracteres y máximo 72 bytes UTF-8 en alta/restablecimiento.
+**IMPLEMENTADA** en los contratos actuales de alta/edición administrativa de Usuario mediante @Email, además de obligatoriedad y longitud. Desde el 27 de octubre de 2026, alta y restablecimiento requieren al menos **15 caracteres Unicode** y máximo **72 bytes UTF-8**. Se conserva la clave sin recortarla ni transformarla y se rechazan claves compuestas solo por blancos. La misma política se aplica a cuentas demo ausentes; no modifica el login ni los hashes de cuentas existentes. BCrypt continúa como almacenamiento.
 
 ### RN-27. Códigos HTTP consistentes
 

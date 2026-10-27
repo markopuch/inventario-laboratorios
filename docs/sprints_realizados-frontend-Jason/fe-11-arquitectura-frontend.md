@@ -1,13 +1,29 @@
 # FE-11 — Arquitectura, navegación y componentes comunes
 
 Fecha de inicio: 1 de octubre de 2026.
-Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
+Actualización funcional: **26 de octubre de 2026**. Evidencia Docker histórica:
+3 de octubre, despliegue `e1ce75a`.
 
-**Estado vigente: Arquitectura React/Vite/Axios vigente, build y 67 pruebas aprobados en la adaptación; publicación y Docker actual comprobados.**
+**Estado vigente: React/Vite/Axios con navegación ADMIN para Usuarios,
+Asignaciones y Auditoría; Configuración retirada del menú y de las rutas.**
 
 ## Implementación y verificación actuales
 
-Rutas públicas/protegidas, `AuthContext`, servicios HTTP y utilidades mantienen sus responsabilidades. `/usuarios`, `/asignaciones` y `/configuracion` tienen guardia ADMIN; permisos visuales no sustituyen autorización del backend. Cliente usa `/api`, Bearer en memoria y protección frente a respuestas de sesión obsoletas; no recupera JWT desde localStorage.
+Rutas públicas/protegidas, `AuthContext`, servicios HTTP y utilidades mantienen sus responsabilidades. `/usuarios`, `/asignaciones` y `/auditoria` tienen guardia ADMIN; permisos visuales no sustituyen autorización del backend. Cliente usa `/api`, Bearer en memoria y protección frente a respuestas de sesión obsoletas; no recupera JWT desde localStorage.
+
+La ruta retirada `/configuracion` sigue el fallback al inicio. Auditoría consulta
+la API ADMIN existente con filtros y tabla de solo lectura; no crea endpoints.
+Los CSV de Reportes se generan en el navegador desde agregados autorizados y
+conservan filtros aplicados y alcance. Ver [guía de uso](../frontend/guia-reportes-auditoria.md)
+y [matriz de roles](../matriz-permisos.md).
+
+**Verificación del 26 de octubre:** 90/90 tests frontend, build aprobado con
+1679 módulos y diez comprobaciones de navegador local con API simulada, sin
+errores de página. Incluyen los tres roles, rutas/menú, Auditoría y cinco CSV;
+en móvil de 390 px la página no desborda y el menú cierra al navegar. Ver
+[detalle y límites](../frontend/guia-reportes-auditoria.md#verificación-local-del-26-de-octubre).
+Sin nueva prueba contra backend/BD reales ni publicación remota. Las métricas,
+la publicación y Docker descritos a continuación corresponden al 3 de octubre.
 
 Actions [37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428) publicó ambos trabajos del commit `e1ce75a`. Docker sirve Nginx en 3000, `/api` hacia backend:8080 y fallback SPA; Vite conserva 5173 para desarrollo. PostgreSQL habitual conserva contenedor y volumen con V1–V13. Consola de la última sesión: cero errores y advertencias; no certifica todos los recorridos. Fidelidad visual al píxel y accesibilidad exhaustivas no están certificadas.
 

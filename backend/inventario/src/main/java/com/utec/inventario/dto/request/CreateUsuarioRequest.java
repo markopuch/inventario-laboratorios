@@ -1,11 +1,10 @@
 package com.utec.inventario.dto.request;
 
-import java.nio.charset.StandardCharsets;
-
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.utec.inventario.domain.RolUsuario;
+import com.utec.inventario.security.PasswordPolicy;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
@@ -45,7 +44,6 @@ public class CreateUsuarioRequest {
     private String cargo;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 4, max = 72, message = "La contraseña debe tener entre 4 y 72 caracteres")
     @ToString.Exclude
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
@@ -57,10 +55,10 @@ public class CreateUsuarioRequest {
     @Builder.Default
     private Boolean activo = true;
 
-    @AssertTrue(message = "La contraseña no puede superar los 72 bytes UTF-8")
+    @AssertTrue(message = PasswordPolicy.MESSAGE)
     @JsonIgnore
-    public boolean isPasswordDentroDelLimite() {
-        return this.password == null || this.password.getBytes(StandardCharsets.UTF_8).length <= 72;
+    public boolean isPasswordSegura() {
+        return this.password == null || PasswordPolicy.isValid(this.password);
     }
 
     @JsonAnySetter

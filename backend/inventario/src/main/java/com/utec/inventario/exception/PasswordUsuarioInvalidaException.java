@@ -1,8 +1,10 @@
 package com.utec.inventario.exception;
 
+import com.utec.inventario.security.PasswordPolicy;
+
 public class PasswordUsuarioInvalidaException extends RuntimeException {
 
     public PasswordUsuarioInvalidaException() {
-        super("La contraseña debe tener entre 4 y 72 caracteres y no superar los 72 bytes UTF-8.");
+        super(PasswordPolicy.MESSAGE);
     }
 }

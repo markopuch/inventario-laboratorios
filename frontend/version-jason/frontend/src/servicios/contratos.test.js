@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import api, { catalogoApi, usuariosApi, mantenimientosApi, reportesApi } from './api.js';
+import api, { catalogoApi, usuariosApi, mantenimientosApi, reportesApi, auditoriaApi } from './api.js';
 
 const controller = nombre => readFileSync(new URL(`../../../../../backend/inventario/src/main/java/com/utec/inventario/controller/${nombre}.java`, import.meta.url), 'utf8');
 const contrato = (nombre, base, metodo, ruta = '') => {
@@ -67,4 +67,22 @@ test('los cinco reportes utilizan sus rutas reales y omiten filtros ajenos al co
     assert.deepEqual(llamadas.at(-1).params, { idLaboratorio: 2, estadoMantenimiento: 'EN_PROCESO', tipoMantenimiento: 'CORRECTIVO' });
     assert.equal(llamadas.at(-1).ruta, `/reportes${ruta}`);
   }
+});
+
+test('auditoría consulta la API de administración y limita parámetros al contrato del backend', async t => {
+  const llamadas = capturar(t);
+  contrato('AuditoriaController', '/api/admin/auditoria', 'GET');
+  const solicitud = new AbortController();
+  const original = api.defaults.adapter;
+  api.defaults.adapter = async config => {
+    assert.equal(config.signal, solicitud.signal);
+    return original(config);
+  };
+  await auditoriaApi.listar({ entidad: 'equipo', idEntidad: 4, idUsuario: 2,
+    accion: 'EDITAR', fechaDesde: '2026-10-01', fechaHasta: '2026-10-26',
+    rol: 'ADMIN', idLaboratorio: 99, password: 'dato-no-permitido' }, { signal: solicitud.signal });
+  assert.deepEqual(llamadas.at(-1), { metodo: 'get', ruta: '/admin/auditoria',
+    params: { entidad: 'equipo', idEntidad: 4, idUsuario: 2, accion: 'EDITAR',
+      fechaDesde: '2026-10-01', fechaHasta: '2026-10-26' }, payload: null });
+  assert.deepEqual(Object.keys(auditoriaApi), ['listar']);
 });

@@ -1,5 +1,13 @@
 # Ampliación del backend — 3 de octubre de 2026
 
+**Actualización de seguridad del 27 de octubre de 2026:** crear usuarios,
+restablecer claves y crear cuentas demo ausentes exige al menos 15 caracteres
+Unicode y máximo 72 bytes UTF-8. No se recortan/transforman claves y se rechazan
+las compuestas solo por blancos. BCrypt y el login de cuentas anteriores se
+conservan; no hubo migración ni cambio forzado de contraseñas. Los resultados
+de verificación nuevos se registran en el [cierre del 27 de octubre](../../docs/despliegue/verificacion-cierre-2026-10-27.md).
+Las pruebas Docker y la ampliación funcional que siguen conservan su fecha histórica.
+
 **Estado de integración posterior:** esta ampliación ya está conectada al frontend
 Jason y desplegada en Docker local con las imágenes `sha-e1ce75a`.
 Flyway V1–V13 tiene `success=true`; los checksums V1–V9 y los registros habituales
@@ -94,7 +102,9 @@ en SQL/Entity, por lo que no se añade de nuevo a la tabla.
 - Rol admite ADMIN/GESTOR/LECTOR y debe existir y estar activo.
 - Cargo es opcional, máximo 100. Nombre/apellido: obligatorios, máximo 100;
   username: máximo 50; email: obligatorio, válido y máximo 150.
-- Password: obligatoria, entre 4 y 72 caracteres y máximo 72 bytes UTF-8.
+- Password: obligatoria, al menos 15 caracteres Unicode y máximo 72 bytes UTF-8;
+  sin recortar ni transformar y sin admitir claves compuestas solo por blancos
+  (política actualizada el 27 de octubre).
   No se recorta. Se utiliza el PasswordEncoder existente (BCrypt).
 - Los DTO rechazan hashes, IDs, username en edición y campos ajenos al contrato.
 - La fila estable `rol.ADMIN` serializa las escrituras y la comprobación del

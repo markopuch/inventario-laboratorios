@@ -21,8 +21,8 @@ anterior sigue disponible en el historial de Git.
 - La [adaptación del 3 de octubre](version-jason/frontend/evidencias/adaptacion-backend-2026-10-03.json)
   aprobó **67/67 pruebas frontend** y build. Conserva las 27 pruebas iniciales y
   añade 40; no se volvió a ejecutar esa suite al actualizar Markdown.
-- Docker local ejecuta las imágenes publicadas del commit `e1ce75a`, con sus tres
-  contenedores saludables. La [última verificación](version-jason/frontend/evidencias/docker-actual-2026-10-03.json)
+- En la comprobación del **3 de octubre**, Docker local ejecutó las imágenes del
+  commit `e1ce75a`, con sus tres contenedores saludables. Esa [verificación histórica](version-jason/frontend/evidencias/docker-actual-2026-10-03.json)
   aprobó **94/94 comprobaciones HTTP**, 30 aserciones funcionales y siete
   controles SQL sin inconsistencias. No son tests JUnit ni endpoints distintos.
 - GitHub Actions: backend y frontend Jason en verde en la
@@ -41,16 +41,34 @@ Los resultados iniciales de 27 pruebas/42 HTTP, Docker 33 HTTP/24 aserciones y
 Actions `9956939` se conservan como evidencia histórica; no sustituyen estas cifras.
 
 Publicar imágenes en GHCR no despliega la aplicación en la nube ni actualiza
-automáticamente los contenedores locales. Ese despliegue sigue pendiente.
+automáticamente los contenedores locales. Posteriormente se documentó la
+publicación de Jason en Vercel y del backend/base de datos en Render. La
+[auditoría del 26 de octubre](../docs/memory/verification-2026-10-26.md)
+registró Docker inaccesible y no acreditó el flujo autenticado en nube; los
+resultados del 3 de octubre no certifican el estado operativo actual.
 
 ## Documentación
 
 - [Guía de ejecución Jason](version-jason/frontend/README.md).
+- [Reportes CSV y Auditoría ADMIN](../docs/frontend/guia-reportes-auditoria.md).
+- [Roles, acciones y alcance por laboratorio](../docs/matriz-permisos.md).
+- [Plan de cierre de la web y documentación](../docs/plan-cierre-web.md).
 - [Sprints Jason y alcance funcional](../docs/sprints_realizados-frontend-Jason/README.md).
 - [Auditoría de integración y diferencias con mockups](../docs/sprints_realizados-frontend-Jason/auditoria-integracion.md).
 - [Evidencia Docker, preservación de la base y Actions](../docs/despliegue/verificacion-docker-actions-2026-10-03.md).
 
-Mantenimientos (FE-08) y Reportes (FE-09) están integrados. Configuración (FE-10),
-pantalla de Auditoría y exportación de reportes permanecen fuera del alcance
-funcional actual. Esta validación no certifica fidelidad visual 1:1 o
+El cierre del **26 de octubre** incorpora CSV de agregados en Reportes y una
+pantalla de Auditoría de solo lectura para ADMIN. Asignaciones tiene acceso
+directo en el menú ADMIN. Configuración se retira del menú y de las rutas;
+las preferencias persistidas siguen como ampliación futura. Verificación local
+del cierre: **90/90 tests**, build aprobado y diez comprobaciones de navegador
+con API simulada, sin errores de página. Posteriormente se aprobaron **8/8
+comprobaciones con API/BD locales reales**, roles y auditoría de cinco actores;
+tres CSV con datos contrastados con la API y los otros dos bloques vacíos con
+descarga deshabilitada. El 27 de octubre, tras reforzar contraseñas, Jason aprobó
+**93/93 tests** y build de **1679 módulos**. El
+[anexo del cierre](../docs/despliegue/verificacion-cierre-2026-10-27.md) separa
+estos resultados de JUnit, Actions y despliegue cloud. Las cifras anteriores
+mantienen su fecha histórica.
+Esta documentación no certifica fidelidad visual 1:1 o
 accesibilidad exhaustiva. No se exponen contraseñas, JWT ni secretos en esta guía.

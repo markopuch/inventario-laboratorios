@@ -138,6 +138,24 @@ class AuthIntegrationTests {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"1234", " clave "})
+    void loginConservaClavesLegacyYLosEspaciosDeLasCuentasExistentes(String password) throws Exception {
+        // Solo la base de verificación admitida por la condición de esta clase.
+        String hashOriginal = this.jdbc.queryForObject(
+                "SELECT password_hash FROM usuario WHERE username = 'marko'", String.class);
+        try {
+            this.jdbc.update("UPDATE usuario SET password_hash = ? WHERE username = 'marko'",
+                    this.passwordEncoder.encode(password));
+            assertEquals(200, login("marko", password).statusCode());
+            if (!password.equals(password.trim())) {
+                assertErrorSeguro(401, login("marko", password.trim()));
+            }
+        } finally {
+            this.jdbc.update("UPDATE usuario SET password_hash = ? WHERE username = 'marko'", hashOriginal);
+        }
+    }
+
     @Test
     void exigeTokenParaConsultarCategoriasYUsuarioActual() throws Exception {
         assertErrorSeguro(401, enviar("GET", "/api/categorias", null, null));

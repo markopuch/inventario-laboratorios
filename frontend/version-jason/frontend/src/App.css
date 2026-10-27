@@ -1,7 +1,7 @@
 /* Los estilos globales del frontend viven en index.css. */
 .encabezado-contexto { display: flex; align-items: center; gap: 10px; color: var(--navy); font-weight: 600; }
-.nav-pendiente { opacity: .65; cursor: default; }
-.nav-pendiente small { display: block; margin-top: 3px; font-size: 10px; font-weight: 400; }
+.barra-lateral nav { min-height: 0; overflow-y: auto; }
+.marca, .barra-pie { flex-shrink: 0; }
 .menu-fondo { display: none; }
 button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid #1299df; outline-offset: 3px; }
 button:disabled { cursor: not-allowed; opacity: .6; }
@@ -26,6 +26,20 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .estado-completado { background: var(--green-soft); color: #12945e; }
 .estado-cancelado { background: #eef2f6; color: #66788e; }
 .form-grid .campo-ancho { grid-column: 1 / -1; }
+.auditoria-total { margin: 0; color: var(--text); font-size: 12px; }
+.auditoria-tabla { min-width: 850px; table-layout: fixed; }
+.auditoria-tabla th, .auditoria-tabla td { vertical-align: top; overflow-wrap: anywhere; }
+.auditoria-tabla th:nth-child(1) { width: 165px; }
+.auditoria-tabla th:nth-child(2) { width: 145px; }
+.auditoria-tabla th:nth-child(3) { width: 170px; }
+.auditoria-tabla th:nth-child(4) { width: 150px; }
+.auditoria-col-fecha { width: 165px; }
+.auditoria-actor { width: 145px; }
+.auditoria-registro { width: 145px; }
+.auditoria-resumen { white-space: pre-wrap; }
+.auditoria-detalle summary { cursor: pointer; color: #0877ab; font-weight: 650; }
+.auditoria-detalle p { margin: 8px 0 0; white-space: pre-wrap; }
+.auditoria-caption { text-align: left; padding: 0 20px 14px; color: var(--text); font-size: 12px; }
 @media (max-width: 800px) {
   .reportes-grid { grid-template-columns: 1fr; }
   .filtros-modulo label, .filtros-modulo input, .filtros-modulo select { width: 100%; max-width: none; }

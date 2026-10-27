@@ -98,3 +98,7 @@ gradle-app.setting
 # Variante educativa y sprints de Marko: conservar solo en la computadora local.
 /frontend/version-marko/
 /docs/sprints_realizados-frontend-Marko/
+
+# Cache de las herramientas locales de importacion.
+__pycache__/
+*.py[cod]

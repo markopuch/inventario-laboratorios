@@ -2,6 +2,22 @@
 
 Fecha de auditoría: **2026-10-26, America/Lima**. Documento local para continuidad de trabajo. Ruta del módulo: `backend/inventario`; paquete raíz `com.utec.inventario`. Se revisaron fuentes, DDL, configuración y artefactos existentes sin iniciar la aplicación, ejecutar migraciones ni repetir pruebas que escriben en PostgreSQL. No se incluyen valores de secretos ni registros personales.
 
+**Actualización del 27 de octubre:** la importación se aplicó en la base nativa
+y se verificó el recorrido con API/BD reales. Se reforzó la política de contraseñas
+sin cambiar esquema/migraciones ni hashes existentes. Las observaciones de la
+auditoría inicial que siguen conservan su alcance temporal; el
+[anexo de cierre](../despliegue/verificacion-cierre-2026-10-27.md) registra la
+regresión nueva en una base de verificación y los resultados de publicación.
+
+La política se comprobó en la API local con 11 casos válidos/inválidos sin
+cambiar cuentas ni auditoría, además de cinco casos Unicode/espacios desde la
+UI real. La regresión backend completa aprobó **365/365 pruebas**, 0 fallos,
+errores u omitidas, con XML JUnit comprobados: `compileJava test bootJar
+--rerun-tasks`, salida 0 y `BUILD SUCCESSFUL` en 2 min 23 s. Se utilizó PostgreSQL
+18 temporal en puerto 55432, proveedor builtin y locale `C.UTF-8`, después de
+resolver un fallo del primer intento con locale `C`. El clúster de pruebas
+propio se detuvo y eliminó; el backend habitual en 8080 respondió salud UP.
+
 ## Arquitectura y estado comprobado
 
 El backend es un **monolito REST por capas**, compilado como JAR ejecutable de Spring Boot con servidor Tomcat embebido. Spring Security autentica JWT y consulta usuarios/roles en PostgreSQL. Los controladores transforman DTO de entrada/salida mediante MapStruct; los servicios concentran transacciones y reglas; los repositorios JPA persisten entidades. Los reportes usan SQL parametrizado con `NamedParameterJdbcTemplate` para agregar datos en PostgreSQL. Flyway mantiene el esquema y Hibernate lo valida, sin generarlo.
@@ -71,7 +87,7 @@ En [SecurityConfig](../../backend/inventario/src/main/java/com/utec/inventario/c
 
 [JwtService](../../backend/inventario/src/main/java/com/utec/inventario/security/JwtService.java) firma **HS256**, valida issuer `inventario-laboratorios`, sujeto, ID, emisión y expiración; exige secreto Base64 con al menos 32 bytes. El JWT contiene ID y nombre de usuario, no constituye fuente de verdad del rol. [JwtAuthFilter](../../backend/inventario/src/main/java/com/utec/inventario/security/JwtAuthFilter.java) rechaza encabezados Authorization duplicados, esquema inválido y tokens con espacios; carga rol/estado desde PostgreSQL en cada solicitud y borra las credenciales del principal.
 
-[UsuarioService](../../backend/inventario/src/main/java/com/utec/inventario/service/UsuarioService.java) normaliza el acceso y exige usuario y rol activos. [AppConfig](../../backend/inventario/src/main/java/com/utec/inventario/config/AppConfig.java) usa BCrypt y `DaoAuthenticationProvider`. El login devuelve `accessToken`, `tokenType=Bearer`, `expiresIn` y `usuario`; contraseñas de más de 72 bytes UTF-8 se rechazan. La administración de contraseñas acepta 4–72 caracteres y como máximo 72 bytes UTF-8. No se observan endpoints de refresh token, recuperación de contraseña o revocación por lista de tokens.
+[UsuarioService](../../backend/inventario/src/main/java/com/utec/inventario/service/UsuarioService.java) normaliza el acceso y exige usuario y rol activos. [AppConfig](../../backend/inventario/src/main/java/com/utec/inventario/config/AppConfig.java) usa BCrypt y `DaoAuthenticationProvider`. El login devuelve `accessToken`, `tokenType=Bearer`, `expiresIn` y `usuario`; contraseñas de más de 72 bytes UTF-8 se rechazan. Desde el 27 de octubre, [PasswordPolicy](../../backend/inventario/src/main/java/com/utec/inventario/security/PasswordPolicy.java) exige al menos **15 caracteres Unicode** y máximo **72 bytes UTF-8** en altas, restablecimientos y cuentas demo ausentes. No recorta/transforma claves y rechaza las compuestas solo por blancos. El login de claves previas conserva su contrato: sin migrar hashes ni restablecer cuentas existentes. No se observan endpoints de refresh token, recuperación de contraseña o revocación por lista de tokens.
 
 Cambiar el rol o desactivar usuario/rol afecta solicitudes posteriores por la recarga de BD. **Restablecer la contraseña no invalida por sí mismo un JWT ya emitido**, porque el validador no incluye versión de contraseña/token; sigue sujeto a expiración, identidad y estado. Esto describe la implementación, no una decisión de producto nueva.
 
@@ -176,7 +192,7 @@ No reescribir migraciones aplicadas. V7–V9 y V11 detienen la migración ante d
 
 ## Pruebas y evidencia disponible
 
-Los **40 XML locales** de `backend/inventario/build/test-results/test/` suman exactamente **319 pruebas, 0 fallos, 0 errores y 0 omitidas**. Esa ruta contiene artefactos locales ignorados por Git, ausentes en un clon nuevo. Las marcas internas de las suites son del **2026-10-03**, aproximadamente 18:04–18:05 UTC; no constituyen una ejecución nueva el 2026-10-26. No se observó en esos reportes una identificación que vincule automáticamente toda la ejecución al commit actual.
+En la auditoría inicial se leyeron **40 XML locales** de `backend/inventario/build/test-results/test/`, con **319 pruebas, 0 fallos, 0 errores y 0 omitidas**. Esa ruta contiene artefactos locales ignorados por Git, ausentes en un clon nuevo; la regresión posterior del 27 generó reportes nuevos con 365 aprobadas. Las marcas internas de los reportes iniciales eran del **2026-10-03**, aproximadamente 18:04–18:05 UTC; ese resultado histórico no constituye una ejecución nueva el 2026-10-26. No se observó en esos reportes iniciales una identificación que vinculara automáticamente toda la ejecución al commit actual.
 
 [Fuentes de pruebas](../../backend/inventario/src/test/java/com/utec/inventario/): integración de auth, administración de usuarios, estado de catálogos, organización, equipos, movimientos, mantenimientos, reportes/auditoría y asignaciones; concurrencia de categorías/subcategorías, organización, equipos, movimientos y usuario-laboratorio; unitarias de servicios, mappers, JWT, handler de errores e ID compuesto. [ReporteAuditoriaIntegrationTests](../../backend/inventario/src/test/java/com/utec/inventario/ReporteAuditoriaIntegrationTests.java) cubre agregación real, alcance, filtros, auditoría transaccional y ausencia de secretos en respuestas/eventos.
 
@@ -186,14 +202,31 @@ La documentación [modelo V13](../Erd_actual/modelo-vigente-v13.md) conserva com
 
 ## Base de datos viva: comprobación del 2026-10-26 y pendientes
 
+**Carga demo aplicada, actualización del 27 de octubre:** el usuario autorizó usuarios demo y
+datos Excel con auditorías reales. Se añadieron herramientas externas a la
+aplicación que consumen la API existente: [guía de carga](../importacion-inventario-demo.md).
+La preparación leyó el Excel real (288 candidatos, 257 listos, 31 pendientes).
+La aplicación posterior creó **257 equipos**; la API real acredita **258 equipos
+totales** al conservar uno previo en BAJA. El conflicto de serie `1` de L201,
+fila 57, se resolvió con serie `null` y referencia original en comentario,
+sin modificar el equipo previo. El manifiesto acredita **337 altas de recursos**
+y eventos reales de los cinco actores. Los estados ambiguos
+permanecen vacíos en el plan y pendientes de carga, porque `CreateEquipoRequest`
+y V3 exigen un estado. La carga mediante API no cambió DTO, esquema o migraciones.
+No se insertaron auditorías directamente. El anexo del cierre conserva las
+ocho comprobaciones de navegador con backend/BD reales, separadas de JUnit.
+
+Las observaciones siguientes corresponden a la **auditoría inicial del 26 de
+octubre**, anterior a esa carga y al acceso autenticado posterior:
+
 Se verificó servicio Windows **`postgresql-x64-18` en ejecución**, procesos `postgres` y escucha nativa en **5432**. El ejecutable `C:\Program Files\PostgreSQL\18\bin\psql.exe` informa cliente **18.6**. El nombre del servicio sugiere una instalación principal 18, pero no se presenta como `SELECT version()` exitoso.
 
 Las variables `DB_URL`, `DB_USER`, `DB_PASSWORD` y `PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD` no estaban definidas en el entorno de la sesión auditora. El `.env` del backend contiene claves orientadas a Docker; se revisaron nombres de claves, sin volcar sus valores. Un intento único de conexión local sin prompt/contraseña disponible falló con código 2, antes de poder ejecutar la consulta de versión en transacción READ ONLY. No se insistió ni se probaron contraseñas.
 
-Pendientes de comprobación, sin tratarlos como fallos confirmados del producto:
+Pendientes de comprobación actualizados, sin tratarlos como fallos confirmados del producto:
 
-1. Identificar la base nativa realmente utilizada por desarrollo y consultar de forma autenticada y solo lectura versión de servidor, `flyway_schema_history`, esquema e indicadores agregados. Hoy no se certifican aplicación V13, checksums ni cantidad de registros vivos.
-2. Vincular una próxima ejecución de pruebas y un JAR a un commit concreto; el JAR y los XML existentes son evidencia histórica del 3 de octubre.
+1. La carga y los conteos están comprobados mediante API sobre la base nativa. Consultar versión de servidor y `flyway_schema_history` en la instancia concreta si se requiere acreditación SQL del esquema/checksums; no extrapolar los resultados de otra base.
+2. Registrar la regresión y el JAR nuevos del cierre en su anexo, vinculados al commit publicado; los 319 casos y el JAR descritos arriba siguen siendo evidencia histórica del 3 de octubre.
 3. Validar despliegue efectivo, variables de entorno y salud del backend en su plataforma; revisar la [memoria de infraestructura](./docker-deployment.md).
 4. Revisar políticas de producto si se requieren invalidación inmediata de JWT al restablecer contraseña, refresh token o recuperaciones: no están implementadas en los endpoints revisados.
 5. Si crecen datos, evaluar paginación: los listados revisados, incluidos movimientos/auditoría, devuelven listas completas. No atribuir paginación o exportación de reportes a la API actual.

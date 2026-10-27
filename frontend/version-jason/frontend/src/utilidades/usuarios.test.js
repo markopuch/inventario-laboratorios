@@ -6,12 +6,12 @@ import {
 } from './usuarios.js';
 
 const formulario = { userName: ' nuevo ', nombre: ' Ana ', apellido: ' Pérez ', email: ' ana@example.test ',
-  cargo: ' Técnica ', password: 'abcd', confirmacion: 'abcd', rol: 'GESTOR', activo: true };
+  cargo: ' Técnica ', password: 'frase demo de usuario', confirmacion: 'frase demo de usuario', rol: 'GESTOR', activo: true };
 
 test('crear usuario envía solo los campos reales del DTO y activo explícito', () => {
   assert.deepEqual(payloadCrearUsuario({ ...formulario, passwordHash: 'no-enviar', id: 999 }), {
     userName: 'nuevo', nombre: 'Ana', apellido: 'Pérez', email: 'ana@example.test', cargo: 'Técnica',
-    password: 'abcd', rol: 'GESTOR', activo: true
+    password: 'frase demo de usuario', rol: 'GESTOR', activo: true
   });
   assert.equal(payloadCrearUsuario({ ...formulario, activo: false }).activo, false);
 });
@@ -26,21 +26,39 @@ test('PUT usuario no envía username, rol, activo, contraseña ni IDs', () => {
 test('rol, estado y restablecimiento tienen payloads independientes', () => {
   assert.deepEqual(payloadRolUsuario('LECTOR'), { rol: 'LECTOR' });
   assert.deepEqual(payloadEstadoUsuario(false), { activo: false });
-  assert.deepEqual(payloadPasswordUsuario(' nueva ', ' nueva '), { password: ' nueva ' });
+  assert.deepEqual(payloadPasswordUsuario(' nueva clave de usuario ', ' nueva clave de usuario '), { password: ' nueva clave de usuario ' });
   assert.throws(() => payloadRolUsuario('SUPERADMIN'), /rol válido/);
   assert.throws(() => payloadEstadoUsuario('false'), /estado válido/);
   assert.throws(() => payloadPasswordUsuario('abcd'), /Confirma/);
   assert.throws(() => payloadCrearUsuario({ ...formulario, confirmacion: undefined }), /Confirma/);
 });
 
-test('contraseña valida longitud Java, bytes UTF-8 y confirmación sin recortarla', () => {
-  assert.equal(validarPasswordUsuario(' abcd ', ' abcd '), ' abcd ');
+test('contraseña conserva espacios y exige confirmación exacta', () => {
+  assert.equal(validarPasswordUsuario(' frase con espacios ', ' frase con espacios '), ' frase con espacios ');
+  assert.throws(() => validarPasswordUsuario('frase demo de usuario', 'otra frase de usuario'), /no coinciden/);
+});
+
+test('contraseña exige 15 caracteres Unicode y cuenta cada emoji una vez', () => {
+  assert.throws(() => validarPasswordUsuario('a'.repeat(14)), /15 caracteres/);
+  assert.throws(() => validarPasswordUsuario('😀'.repeat(14)), /15 caracteres/);
+  assert.doesNotThrow(() => validarPasswordUsuario('a'.repeat(15)));
+  assert.doesNotThrow(() => validarPasswordUsuario('😀'.repeat(15)));
+});
+
+test('contraseña respeta 72 bytes UTF-8, incluidos límites multibyte', () => {
   assert.doesNotThrow(() => validarPasswordUsuario('x'.repeat(72)));
   assert.doesNotThrow(() => validarPasswordUsuario('á'.repeat(36)));
-  for (const password of ['', '    ', 'abc', 'x'.repeat(73), 'á'.repeat(37), '😀'.repeat(19)]) {
-    assert.throws(() => validarPasswordUsuario(password));
+  assert.doesNotThrow(() => validarPasswordUsuario('😀'.repeat(18)));
+  assert.doesNotThrow(() => validarPasswordUsuario('x'.repeat(68) + 'áá'));
+  for (const password of ['x'.repeat(73), 'á'.repeat(37), '😀'.repeat(19), 'x'.repeat(69) + 'áá']) {
+    assert.throws(() => validarPasswordUsuario(password), /72 bytes UTF-8/);
   }
-  assert.throws(() => validarPasswordUsuario('abcd', 'abce'), /no coinciden/);
+});
+
+test('contraseña rechaza blancos Java y ECMAScript sin convertir el valor', () => {
+  for (const password of [null, undefined, '', ' '.repeat(15), '\u00a0'.repeat(15), '\ufeff'.repeat(15), '\u001c \t'.repeat(15)]) {
+    assert.throws(() => validarPasswordUsuario(password), /obligatoria/);
+  }
 });
 
 test('campos públicos respetan tamaños y obligatorios del backend', () => {

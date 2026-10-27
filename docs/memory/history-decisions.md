@@ -1,6 +1,6 @@
 # Memoria de conversaciones, decisiones y evolución
 
-Corte: **26 de octubre de 2026, America/Lima**. Este archivo conserva contexto
+Corte: **27 de octubre de 2026, America/Lima**. Este archivo conserva contexto
 útil para continuar el proyecto. Es una síntesis técnica contrastada con fuentes;
 no es una transcripción literal ni un respaldo de las bases de datos.
 
@@ -58,6 +58,9 @@ añade documentación; no confirma nuevos cambios de producto o un nuevo desplie
 | Etapa final, 11 de octubre | Revisión de solo lectura: frontend público 200, backend `UP` y proxy Vercel `/api/auth/me` 401. No se acreditó login autenticado en nube. |
 | Memoria, 26 de octubre | Revisión nueva de código/entorno/historial. Jason 67/67 y lint Marko correctos; Docker daemon inaccesible; PostgreSQL Windows activo sin consulta de datos; Vercel HTML 200. Resultados remotos parciales en el anexo de deployment. |
 | Conservación local de Marko, 26 de octubre | El usuario autorizó retirar del seguimiento Git `frontend/version-marko/` y `docs/sprints_realizados-frontend-Marko/`, ignorándolos y conservando íntegra su copia local. Los clones nuevos del árbol posterior a este cambio no incluyen esa variante ni sus sprints. El historial anterior permanece; Jason continúa como frontend integrado independiente. |
+| Cierre web autorizado, 26 de octubre | El usuario descartó Configuración y autorizó quitar su ruta/menú, mejorar acceso Asignaciones, exportar cinco CSV agregados y consultar Auditoría solo ADMIN. Implementación local: 90 pruebas frontend y build de 1679 módulos correctos; 10 comprobaciones UI con API simulada, sin nuevas verificaciones de backend o nube. PPT aplazada. |
+| Carga y comprobación real, 26–27 de octubre | 257 equipos Excel importados y 31 estados vacíos pendientes; 258 equipos totales al conservar uno previo en BAJA. Cinco actores acreditados en auditoría real; 337 altas de recursos de la carga. Recorrido real del 26: 8/8 comprobaciones con API/BD, tres CSV con datos y vista móvil. |
+| Cierre de seguridad y GitHub, 27 de octubre | Usuario autorizó resolver el conflicto, verificar roles/reportes, reforzar contraseñas y publicar hasta GitHub considerando Actions/Docker. Política de 15 caracteres Unicode y máximo 72 bytes UTF-8 para altas/restablecimientos/demo ausentes; login previo intacto. Backend 365/365, frontend 93/93, importador 28/28 y JAR/build correctos. CI actualizado; resultados remotos en el anexo nuevo. Sin despliegue manual Render/Vercel. |
 
 Fuentes: [índice backend](../sprints_realizados-backend/README.md),
 [índice Jason](../sprints_realizados-frontend-Jason/README.md),
@@ -113,8 +116,19 @@ por sí sola el esquema o los reportes que existen hoy.
 
 ## Reanudación sugerida
 
+**Decisión posterior del 26 de octubre:** el usuario autorizó una carga local del
+Excel (L201 hasta fila 128, L409, L413 y L414), usuarios demo Jason ADMIN, Jorge
+GESTOR y Gabriela ADMIN, y un laboratorio por Marko/Aldo/Jason/Jorge. Confirmó
+Marko ADMIN y Aldo GESTOR, ambiente L209 de la fila 126 tratado como L201, códigos
+normalizados y estados ambiguos vacíos. Las auditorías deben proceder de altas
+reales con cada cuenta, sin modificar el historial. La carga local se aplicó:
+257 equipos, 31 pendientes y participación de los cinco actores. El conflicto
+de serie de L201, fila 57, se resolvió conservando referencia y registro previo.
+Ver [guía](../importacion-inventario-demo.md) y
+[cierre del 27 de octubre](../despliegue/verificacion-cierre-2026-10-27.md).
+
 1. Leer [memory.md](../../memory.md), el anexo del componente y `git status`.
 2. Identificar entorno: nativo, Compose o nube, y no transferir credenciales entre ellos por suposición.
 3. Para cierre cloud, confirmar el primer ADMIN y ejecutar login/permisos/flujos con una cuenta autorizada, sin publicar credenciales ni usar la BD habitual como fixture.
-4. Revisar pendientes de producto con el usuario; Configuración, auditoría visual y exportación son ampliaciones, no funciones completadas por los sprints antiguos.
+4. Configuración está fuera del alcance y retirada. Auditoría ADMIN y CSV se incorporaron en el cierre del 26 de octubre; mantener separada esa evidencia de los sprints antiguos y del despliegue efectivo.
 5. Actualizar fecha y evidencia de la memoria cuando cambie el estado.

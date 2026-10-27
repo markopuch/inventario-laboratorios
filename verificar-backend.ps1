@@ -72,8 +72,17 @@ try {
     Push-Location -LiteralPath $backendPath
     try {
         # Reejecuta la suite para no confundir resultados en cache con evidencia nueva.
-        & .\gradlew.bat compileJava test bootJar --rerun-tasks --no-daemon --console=plain
-        if ($LASTEXITCODE -ne 0) {
+        # Windows PowerShell 5 trata stderr nativo como ErrorRecord, incluso
+        # para avisos de javac. El resultado del proceso determina el fallo.
+        $verificationNativePreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            & .\gradlew.bat compileJava test bootJar --rerun-tasks --no-daemon --console=plain
+            $verificationGradleExitCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $verificationNativePreference
+        }
+        if ($verificationGradleExitCode -ne 0) {
             throw 'La compilacion o la suite fallo. Revisa build/reports/tests/test/index.html.'
         }
         $reports = @(Get-ChildItem -LiteralPath 'build/test-results/test' -Filter 'TEST-*.xml')

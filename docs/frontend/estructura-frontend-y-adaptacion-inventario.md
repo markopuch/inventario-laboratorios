@@ -27,6 +27,14 @@ quedan excluidos del seguimiento de Git y se conservan solo en el equipo local.
 No están presentes en nuevos clones ni son necesarios para la aplicación Jason;
 sus antecedentes siguen disponibles en el historial de Git.
 
+**Cierre autorizado del 26 de octubre:** la navegación Jason incluye Asignaciones
+y Auditoría solo para ADMIN; Reportes ofrece CSV de agregados, con filtros
+aplicados y alcance. Configuración se retira del menú y de las rutas. La
+[guía de uso](guia-reportes-auditoria.md) describe estos módulos y el
+[plan de cierre](../plan-cierre-web.md) conserva sus criterios. Las propuestas de
+esta guía permanecen como historia del diseño inicial, sin acreditar pruebas
+de las incorporaciones nuevas ni su publicación remota.
+
 ## 1. Contexto y alcance
 
 Tech Store es una aplicación de práctica construida con React y Vite. Reutiliza la apariencia del proyecto original en HTML/CSS, llamado v0, y organiza las vistas como componentes de React. La carpeta v2 identifica la versión del proyecto; el nombre académico acordado es Taller 3 — Parte 2, aunque el material de referencia y el README de Tech Store conservan el título Taller 2.

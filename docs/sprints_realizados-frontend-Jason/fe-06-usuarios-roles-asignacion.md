@@ -5,6 +5,14 @@ Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce
 
 **Estado vigente: Directorio y administración de usuarios implementados para ADMIN: creación, edición pública, rol, actividad, contraseña y asignaciones.**
 
+**Navegación del 26 de octubre:** Asignaciones incorpora acceso directo en el
+menú ADMIN hacia `/asignaciones`, además de Usuarios → Laboratorios. Conserva
+consulta por ID y reemplazo del conjunto completo de asignaciones. No cambia
+el contrato del backend. La navegación se comprobó en navegador local con API
+simulada: ADMIN ve el acceso; GESTOR/LECTOR no lo ven ni acceden a la ruta.
+El cierre aprobó 90/90 tests frontend y build; las métricas siguientes del
+3 de octubre son históricas. No se repitieron escrituras sobre una BD real.
+
 ## Implementación y verificación actuales
 
 `/usuarios` muestra `Usuarios.jsx`; `/asignaciones` conserva el recorrido independiente por ID y ya no es el destino del alias `/usuarios`. Consume GET/POST `/api/admin/usuarios`, GET/PUT `/{id}`, PATCH `/{id}/rol`, PATCH `/{id}/estado`, PUT `/{id}/password` y GET/PUT `/{id}/laboratorios`. Username es inmutable, la lista incluye inactivos y el último ADMIN activo está protegido con 409. Guardar laboratorios reemplaza la lista del usuario consultado; cambiar ID invalida el resultado.

@@ -1,6 +1,5 @@
 package com.utec.inventario.service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
@@ -25,6 +24,7 @@ import com.utec.inventario.mapper.UsuarioMapper;
 import com.utec.inventario.repository.RolRepository;
 import com.utec.inventario.repository.UsuarioRepository;
 import com.utec.inventario.security.UserInfoDetails;
+import com.utec.inventario.security.PasswordPolicy;
 
 @Service
 @Transactional(readOnly = true)
@@ -193,8 +193,7 @@ public class AdminUsuarioService {
     }
 
     private void validarPassword(String password) {
-        if (password == null || password.isBlank() || password.length() < 4 || password.length() > 72
-                || password.getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (!PasswordPolicy.isValid(password)) {
             throw new PasswordUsuarioInvalidaException();
         }
     }

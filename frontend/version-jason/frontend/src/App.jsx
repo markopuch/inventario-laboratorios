@@ -15,7 +15,7 @@ import Asignaciones from './pantallas/Asignaciones';
 import Usuarios from './pantallas/Usuarios';
 import Mantenimientos from './pantallas/Mantenimientos';
 import Reportes from './pantallas/Reportes';
-import ModuloVisual from './pantallas/ModuloVisual';
+import Auditoria from './pantallas/Auditoria';
 import './App.css';
 
 function Layout(){
@@ -42,7 +42,7 @@ function Layout(){
         <Route path="/movimientos" element={<Movimientos/>}/>
         <Route path="/mantenimientos" element={<Mantenimientos/>}/>
         <Route path="/reportes" element={<Reportes/>}/>
-        <Route path="/configuracion" element={<Protegida roles={['ADMIN']}><ModuloVisual titulo="Configuración" subtitulo="Preferencias generales y seguridad del sistema."/></Protegida>}/>
+        <Route path="/auditoria" element={<Protegida roles={['ADMIN']}><Auditoria/></Protegida>}/>
         <Route path="*" element={<Navigate to="/" replace/>}/>
       </Routes></main>
       <PiePagina/>

@@ -1,13 +1,31 @@
 # FE-09 — Reportes, indicadores y exportación
 
 Fecha de inicio: 1 de octubre de 2026.
-Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
+Actualización funcional: **26 de octubre de 2026**. Evidencia Docker histórica:
+3 de octubre, despliegue `e1ce75a`.
 
-**Estado vigente: Reportes implementados con cinco agregados reales y filtros; exportación y gráficos completos del mockup quedan fuera del alcance actual.**
+**Estado vigente: cinco agregados reales con filtros y descarga CSV por bloque.
+Los gráficos completos del mockup y otros formatos siguen fuera del alcance.**
 
 ## Implementación y verificación actuales
 
-`Reportes.jsx` reemplaza el placeholder. Consume GET `/api/reportes/resumen`, `/equipos/por-estado`, `/equipos/por-laboratorio`, `/movimientos` y `/mantenimientos`. Muestra totales y tablas de agregados; no simula gráficos/exportación. ADMIN tiene alcance global; GESTOR/LECTOR reciben resultados según laboratorios autorizados.
+`Reportes.jsx` reemplaza el placeholder. Consume GET `/api/reportes/resumen`, `/equipos/por-estado`, `/equipos/por-laboratorio`, `/movimientos` y `/mantenimientos`. Muestra totales y tablas de agregados. ADMIN tiene alcance global; GESTOR/LECTOR reciben resultados según laboratorios autorizados.
+
+El cierre del 26 de octubre incorpora **cinco CSV**, generados desde las
+respuestas validadas del cliente, sin endpoint nuevo ni inventario detallado.
+Cada archivo conserva reporte, generación UTC, alcance, ocho filtros aplicados
+y columnas de agrupación/indicador/laboratorio/total. Usa `;`, BOM UTF-8, CRLF,
+comillas y protección de textos interpretables como fórmulas. Editar filtros
+sin aplicarlos deshabilita la descarga; cambiar sesión/alcance invalida resultados.
+La [guía de uso](../frontend/guia-reportes-auditoria.md) explica la operación.
+
+**Verificación del 26 de octubre:** 90/90 tests frontend y build aprobado con
+1679 módulos. Navegador local con API simulada: cinco descargas con BOM, filtros
+aplicados, bloqueo del borrador, estados carga/error/vacío y alcance de los tres
+roles, dentro de diez comprobaciones sin errores de página. Ver
+[detalle y límites](../frontend/guia-reportes-auditoria.md#verificación-local-del-26-de-octubre).
+No hubo pruebas nuevas contra BD/backend reales ni publicación remota. Los
+resultados siguientes corresponden al 3 de octubre y conservan su alcance.
 
 Filtros: sede, área, laboratorio, estado de Equipo, estado/tipo de Mantenimiento y fechas. Rango invertido se rechaza localmente; el backend también valida. Equipos filtra fecha de registro, Movimientos fecha del movimiento con días UTC y Mantenimiento fechaProgramada. Estado/tipo de mantenimiento afecta solo sus indicadores. Errores/reintento se distinguen de respuestas válidas vacías.
 

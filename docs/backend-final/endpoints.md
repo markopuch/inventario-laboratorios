@@ -275,9 +275,13 @@ No hay DELETE ni registro público. Todas las filas están IMPLEMENTADAS.
 | PUT | `/api/admin/usuarios/{id}/password` | CambiarPasswordUsuarioRequest: password | 204 sin cuerpo | 404 inexistente; 400 contraseña inválida |
 
 Create: userName ≤50, nombre/apellido ≤100, email válido ≤150, cargo opcional
-≤100, password de 4–72 caracteres y máximo 72 bytes UTF-8, rol ADMIN/GESTOR/LECTOR,
+≤100, password de al menos 15 caracteres Unicode y máximo 72 bytes UTF-8, rol ADMIN/GESTOR/LECTOR,
 activo booleano (predeterminado true). Username y email se normalizan a
-minúsculas y trim; su unicidad incluye inactivos. Password no se recorta.
+minúsculas y trim; su unicidad incluye inactivos. Password no se recorta ni
+transforma; claves compuestas solo por blancos se rechazan. Esta política rige
+desde el 27 de octubre de 2026 para alta/restablecimiento y cuentas demo nuevas.
+El login conserva las claves anteriores; no se migran hashes ni se obliga a
+restablecerlas. El máximo de bytes mantiene el límite de BCrypt.
 
 Update admite solo nombre, apellido, email y cargo. No cambia userName,
 activo, rol ni password: esos cambios usan sus rutas específicas. Se rechazan

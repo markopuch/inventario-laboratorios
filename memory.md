@@ -29,7 +29,8 @@ flowchart LR
     M[Flyway V1–V13] --> D
 ```
 
-**Corte de esta memoria: 26 de octubre de 2026, America/Lima.** Se contrastaron
+**Corte de esta memoria: 27 de octubre de 2026, America/Lima.** La auditoría inicial
+fue el 26; las secciones históricas conservan su momento y alcance. Se contrastaron
 código, configuración, lockfiles, JAR/reportes históricos, herramientas instaladas,
 GitHub Actions y conversaciones identificadas. Las observaciones operativas de
 hoy no deben confundirse con las del 3 u 11 de octubre. Esta memoria es local y
@@ -83,7 +84,8 @@ parte que se vaya a cambiar:
 | [Frontend](docs/memory/frontend.md) | Jason, antecedentes locales/históricos de Marko, versiones, rutas, sesión, API, módulos, pruebas y pendientes |
 | [Docker y deployment](docs/memory/docker-deployment.md) | Tres modos de ejecución, puertos, variables, volumen, CI/GHCR, nube y runbooks |
 | [Historia y decisiones](docs/memory/history-decisions.md) | Evolución, sprints, decisiones del usuario, 11 chats recuperados y asuntos no confirmados |
-| [Registro de verificación](docs/memory/verification-2026-10-26.md) | Qué se comprobó hoy, qué fue histórico y qué queda por comprobar |
+| [Registro de verificación del 26](docs/memory/verification-2026-10-26.md) | Auditoría inicial y etapas posteriores del 26, con enlace al cierre del 27 |
+| [Cierre local y publicación](docs/despliegue/verificacion-cierre-2026-10-27.md) | Importación aplicada, recorrido con API/BD reales, política de contraseñas y resultados posteriores de JUnit/CI |
 | [Snapshot de fuentes](docs/memory/snapshot-2026-10-26.json) | Auditoría inicial: HEAD y SHA-256 de fuentes, incluidas cinco rutas de Marko ahora solo locales; no es un manifiesto del árbol publicado tras la reorganización |
 
 Orden para resolver discrepancias: **instrucción actual del usuario → código y
@@ -145,6 +147,10 @@ Autenticación: `POST /api/auth/login` recibe `{ userName, password }`; devuelve
 externo de al menos 32 bytes. El backend recarga usuario/rol/actividad de BD en
 cada solicitud. No hay sesión HTTP, refresh token ni revocación por logout.
 BCrypt guarda contraseñas; restablecerlas no invalida automáticamente JWT emitidos.
+Desde el 27 de octubre, altas/restablecimientos y cuentas demo nuevas requieren
+al menos 15 caracteres Unicode y máximo 72 bytes UTF-8. No se recortan claves;
+se rechazan las compuestas únicamente por blancos. El login de cuentas existentes
+conserva su contrato: no se migraron hashes ni se forzó un cambio de contraseña.
 Las rutas desconocidas terminan en `denyAll()`.
 
 | Rol | Operaciones y alcance |
@@ -212,10 +218,19 @@ Axios, CSS propio y Lucide. Carpetas: `pantallas`, `componentes`, `contextos`,
 
 Rutas: `/login`, `/`, `/equipos`, `/categorias` (alias `/catalogo`),
 `/laboratorios`, `/usuarios`, `/asignaciones`, `/movimientos`, `/mantenimientos`,
-`/reportes` y `/configuracion`. Usuarios/asignaciones/configuración son ADMIN.
-Configuración es placeholder: tiene ruta ADMIN, pero su entrada lateral está
-deshabilitada como «Próximamente». No existe pantalla de Auditoría. Usuarios,
-catálogos, equipos, traslados, mantenimiento y reportes sí consumen contratos reales.
+`/reportes` y `/auditoria`. Usuarios, Asignaciones y Auditoría son ADMIN y tienen
+acceso desde el menú. Configuración se retiró del menú y las rutas por decisión
+del usuario; `/configuracion` llega al fallback de inicio. Se eliminó el componente
+vacío `ModuloVisual`. Usuarios, catálogos, equipos, traslados, mantenimiento,
+reportes y auditoría consumen contratos reales.
+
+**Cierre funcional autorizado del 26 de octubre:** Reportes permite exportar
+sus cinco bloques como CSV UTF-8 con BOM, separador `;`, metadatos y filtros
+aplicados, protección de fórmulas y descargas independientes por bloque. No exporta
+inventario detallado. Auditoría es de solo lectura ADMIN, utiliza la API existente
+`GET /api/admin/auditoria`, seis filtros, hora visible de Lima y rangos por días UTC.
+Las consultas descartan resultados obsoletos de otra sesión, alcance o filtros.
+Guía: [Reportes CSV y Auditoría](docs/frontend/guia-reportes-auditoria.md).
 
 JWT vive **solo en memoria**: recargar exige login. El acceso inicial usa perfil
 devuelto por login y consulta alcance; el refresco de perfil usa `/auth/me` y
@@ -231,6 +246,22 @@ no forman parte de un clon nuevo ni son dependencias de Jason, backend, Compose
 o CI. No borrarlos del disco ni forzar su incorporación con `git add -f`.
 
 ## Ejecución, Docker y despliegue
+
+**Carga demo autorizada y aplicada localmente, 26–27 de octubre:** se ejecutó la importación del
+Excel del usuario, con L201 hasta la fila 128 y las hojas L409/L413/L414. Son
+288 candidatos: **257 equipos importados** y 31 pendientes con estado vacío en el
+plan; la API/BD no admite equipos sin estado. Se autorizaron Jason ADMIN, Jorge
+GESTOR y Gabriela ADMIN como cuentas demo, conservando Marko ADMIN y Aldo GESTOR.
+El reparto reproducible es Marko L414, Aldo L413, Jason L201 y Jorge L409;
+Gabriela participa en altas administrativas sin asignación nueva. Los ADMIN
+mantienen alcance global. La base suma **258 equipos**, al conservar un registro
+previo en BAJA. El conflicto de serie `1` del brazo OpenManipulator X, L201 fila
+57, se resolvió creando el equipo con serie `null` y referencia original en el
+comentario, sin editar el anterior. El manifiesto privado registra la resolución,
+337 altas de recursos de esta carga y participación real de los cinco actores.
+El [comando de carga](importar-inventario-demo.ps1) prepara por defecto y solo
+aplica con `-Aplicar`, respaldo verificado y credenciales introducidas localmente.
+Guía y límites: [importación demo](docs/importacion-inventario-demo.md).
 
 | Modo | Recorrido | Particularidades |
 |---|---|---|
@@ -256,21 +287,27 @@ proceso del editor/terminal. El script genera JWT_SECRET por proceso si falta;
 al cambiarlo dejan de funcionar tokens firmados con la clave anterior.
 
 CI: [imagen.yml](.github/workflows/imagen.yml) construye/publica imágenes separadas
-backend y Jason en GHCR, tags `latest` y `sha-<commit>`. Jason ejecuta tests en
-Node 22; Docker backend ejecuta `bootJar -x test`, **sin JUnit en el workflow**.
+backend y Jason en GHCR, tags `latest` y `sha-<commit>`. El cierre autorizado
+integra verificaciones backend/JUnit con PostgreSQL aislado, frontend y herramienta
+de importación antes de publicar. El Dockerfile backend continúa con
+`bootJar -x test`; la verificación JUnit se realiza antes del build de imagen.
+El [anexo del cierre](docs/despliegue/verificacion-cierre-2026-10-27.md) registra
+el resultado remoto cuando exista; no inferirlo solo de la configuración.
 Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 
 ## Estado actual y evidencia
 
-| Componente | Estado acreditado al 26 de octubre |
+| Componente | Estado acreditado al 27 de octubre, con fechas de cada evidencia |
 |---|---|
-| Código backend/BD | Implementado el alcance ampliado V13 y 70 operaciones; no se inició backend hoy |
-| Pruebas backend | 40 XML históricos del 3 de octubre: **319 aprobadas**, cero fallos/errores/omitidas; no se repitieron hoy |
-| Jason | **67/67 tests aprobados hoy**, salida 0; prueba de lógica/contratos, sin build nuevo ni E2E |
+| Código backend/BD | V13 y 70 operaciones; API local real utilizada en la importación y recorrido. Política de contraseñas reforzada sin migraciones. |
+| Pruebas backend | Histórico del 3 de octubre: 319 aprobadas. Regresión real del 27: **365/365**, 0 fallos/errores/omitidas; `compileJava test bootJar --rerun-tasks` correcto. PostgreSQL 18 temporal en 55432, builtin `C.UTF-8`; clúster propio eliminado al terminar. |
+| Jason | Etapa inicial 67/67; cierre CSV/Auditoría 90/90 y 10 recorridos simulados; política de contraseñas: **93/93 y build de 1679 módulos**. Recorrido con API/BD reales **8/8**, cero errores, el 26 de octubre. |
 | Marko local | **Lint aprobado en la auditoría del 26 de octubre**, salida 0; sigue sin login montado y ahora está excluido de Git |
 | Docker | CLI/Desktop instalados; daemon Linux inaccesible, no se pudo inventariar estado real de contenedores/imágenes/volumen |
-| Puertos locales | 3000/8080 rechazaron consultas; no se observó Vite en 5173. PostgreSQL Windows sí escucha en 5432 |
-| Datos vivos Windows | No consultados: faltan credenciales SQL en el entorno; no se certifican esquema/migraciones/conteos actuales |
+| Puertos locales | En la auditoría inicial 3000/8080 no respondían. Posteriormente se utilizó backend 8080 y Vite 5173 con PostgreSQL Windows; el estado de un proceso debe volver a comprobarse al reanudar. |
+| Datos vivos Windows | Importación y API reales acreditan 257 equipos de Excel más uno previo BAJA; 31 estados vacíos pendientes. Esta comprobación no equivale a una nueva consulta SQL de todo el esquema. |
+| Herramienta de importación | Regresión final **28/28 aprobada**: 12 pruebas de preparación y 16 de aplicación, con datos/HTTP simulados. |
+| Validación de contraseñas | API real: 11 casos válidos/inválidos sin cambiar cuentas ni auditorías. Formularios reales: mínimo 15 y cinco casos Unicode/espacios sin errores ni escrituras. |
 | Último Docker local documentado | `e1ce75a`, 3 de octubre: V13, tres servicios saludables y smoke aislado 94 HTTP/30 aserciones/7 SQL; es histórico |
 | Última publicación CI visible | [run 38183985364](https://github.com/markopuch/inventario-laboratorios/actions/runs/38183985364), commit `b164c44`, ambos jobs success, 11 de octubre 18:23:14 Lima |
 | Vercel hoy | [/login](https://inventario-laboratorios.vercel.app/login) responde HTTP 200 HTML |
@@ -284,12 +321,21 @@ publicación comunicada por el usuario; todavía falta acreditar el flujo autent
 
 ## Pendientes concretos
 
+**Prioridad aclarada el 26 de octubre:** el usuario quiere terminar primero la
+web y su documentación Markdown; la PPT queda para después. El
+[plan de cierre web](docs/plan-cierre-web.md) ordena revisión de los módulos,
+documentación de roles, decisión de Configuración, correcciones y comprobaciones.
+El usuario autorizó después retirar Configuración, mejorar accesos administrativos,
+exportar CSV y añadir Auditoría exclusiva para ADMIN. Ese bloque está implementado
+y verificado localmente; no incorpora todo el backlog ni acredita una publicación
+en nube. Los README y el backlog distinguen evidencia histórica y estado en fuente.
+
 1. **Cierre cloud:** verificar release/variables por nombre en Render/Vercel, salud/proxy y existencia del primer ADMIN; probar login, roles/alcance y flujo funcional con cuentas autorizadas.
-2. **BD local:** cuando se disponga de acceso autorizado, consultar versión real, `flyway_schema_history`, esquema y conteos agregados de la instancia correcta, sin exportar registros privados.
+2. **BD local:** carga y conteos comprobados mediante API. Completar los 31 estados pendientes con información confirmada; consultar versión real y `flyway_schema_history` de la instancia concreta cuando se necesite verificación SQL, sin exportar registros privados.
 3. **Docker local:** cuando responda su motor, comprobar contenedores, imágenes, tags/digests y volumen existente antes de cualquier actualización.
-4. **Producto:** Configuración persistida, pantalla de Auditoría, exportación de reportes y calendario de mantenimiento siguen pendientes de priorización; no presentarlos como implementados.
+4. **Producto:** Configuración está fuera del alcance y fue retirada. Auditoría ADMIN y CSV de reportes están implementados; gráficos completos, Excel/PDF, exportación detallada y calendario siguen pendientes de priorización.
 5. **Mejoras de plataforma:** Swagger/OpenAPI, refresh/revocación, recuperación de contraseña, paginación, permisos dinámicos y operación avanzada no están implementados en el alcance revisado. Asignar roles sí existe; CRUD del catálogo Rol no.
-6. **Calidad:** no hay verificación nueva de build, E2E, accesibilidad completa, carga o backups/restauración. CI backend omite JUnit; evaluar su integración si se pide.
+6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de la política de contraseñas sin escrituras. Accesibilidad completa, carga y restauración siguen fuera de esa cobertura. Registrar el resultado remoto de Actions en el anexo del cierre; no reutilizar resultados históricos como actuales.
 
 Los pendientes no autorizan por sí mismos cambiar código o desplegar: orientan la
 próxima petición. No se requieren Kubernetes ni una reestructuración del monorepo

@@ -1,6 +1,12 @@
-# Matriz de permisos — estado vigente
+# Matriz de roles y permisos — ADMIN, GESTOR y LECTOR
 
-**Revisión documental:** 3 de octubre de 2026, commit `e1ce75a`.
+Este documento compara qué puede hacer cada rol y sobre qué laboratorios.
+Incluye una tabla funcional, un gráfico Mermaid y un ejemplo de traslado.
+La tabla incorpora la exportación CSV y el acceso exclusivo de ADMIN a Auditoría.
+
+**Revisión documental:** 26 de octubre de 2026. La evidencia Docker del
+3 de octubre corresponde al commit `e1ce75a`; no acredita los cambios nuevos
+de navegación, Auditoría y CSV ni su despliegue remoto.
 Fuente: [SecurityConfig](../backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java)
 y Services actuales. La [evidencia Docker/Actions](despliegue/verificacion-docker-actions-2026-10-03.md)
 incluye las extensiones posteriores a Sprint 7. V9/233 y las 42 operaciones
@@ -18,6 +24,66 @@ Historial de Movimiento usa origen **o** destino dentro del alcance actual.
 Mantenimiento usa el Laboratorio actual del Equipo. Reportes aplican alcance
 en servidor; un filtro explícito fuera de alcance se rechaza con 403.
 ADMIN conserva consulta histórica de equipos y movimientos globalmente.
+
+### Comparación para explicar los tres roles
+
+| Acción de usuario | ADMIN | GESTOR | LECTOR |
+|---|---|---|---|
+| Consultar equipos, movimientos y mantenimientos | Global | Laboratorios autorizados | Laboratorios autorizados |
+| Crear/editar/dar de baja equipos | Sí | En sus laboratorios | No |
+| Trasladar equipos | Sí | Acceso al origen y al destino | No |
+| Programar y cambiar estados de mantenimiento | Sí | En sus laboratorios | No |
+| Consultar reportes y descargar CSV de agregados | Global | Laboratorios autorizados | Laboratorios autorizados |
+| Consultar catálogos activos | Sí | Sí, global | Sí, global |
+| Administrar catálogos y organización | Sí | No | No |
+| Administrar usuarios, asignar roles y laboratorios | Sí | No | No |
+| Consultar Auditoría | Sí, solo lectura | No | No |
+
+Las acciones también cumplen las reglas de negocio: por ejemplo, un equipo en
+mantenimiento EN_PROCESO no puede editarse, darse de baja o trasladarse.
+
+```mermaid
+flowchart TB
+    U["Usuario autenticado y activo"] --> R{"Rol vigente"}
+    R --> A["ADMIN<br/>Alcance global"]
+    R --> G["GESTOR<br/>Laboratorios asignados activos"]
+    R --> L["LECTOR<br/>Laboratorios asignados activos"]
+
+    A --> A1["Administrar usuarios y asignar roles y laboratorios<br/>Administrar catálogos y organización"]
+    A --> A2["Gestionar equipos, traslados y mantenimientos<br/>Consultar historial y reportes; exportar CSV"]
+    A --> A3["Consultar Auditoría<br/>Exclusivo de ADMIN; solo lectura"]
+
+    G --> G1["Crear, editar y dar de baja equipos<br/>Gestionar mantenimientos en su alcance"]
+    G --> G2["Trasladar equipos<br/>Requiere acceso al origen y al destino"]
+    G --> G3["Consultar historial y reportes<br/>Exportar CSV de su alcance"]
+
+    L --> L1["Consultar equipos, historial y mantenimientos<br/>Consultar reportes y exportar CSV de su alcance"]
+
+    R -.-> C["Los tres roles consultan<br/>los catálogos activos globales"]
+
+    classDef admin fill:#eaf5ff,stroke:#1478b8,color:#132a50;
+    classDef gestor fill:#eafaf1,stroke:#168352,color:#145637;
+    classDef lector fill:#fff7e6,stroke:#b77709,color:#754b00;
+    class A,A1,A2,A3 admin;
+    class G,G1,G2,G3 gestor;
+    class L,L1 lector;
+```
+
+El gráfico resume permisos. Todas las operaciones respetan las validaciones de
+negocio de la tabla; exportar CSV no concede permisos de modificación. El rol
+ADMIN permite asignar los tres roles existentes, sin crear roles o permisos nuevos.
+
+**Ejemplo:** un GESTOR con acceso al laboratorio A puede gestionar sus equipos.
+Para trasladar uno de A a B necesita además acceso activo a B. Si únicamente
+conserva A después del traslado, puede consultar el movimiento por su origen,
+pero no el detalle actual del equipo situado en B. Un LECTOR con A consulta
+su información autorizada y descarga sus agregados, sin ejecutar el traslado.
+ADMIN consulta y gestiona globalmente, sujeto a las mismas reglas de integridad.
+
+En Jason, **Usuarios**, **Asignaciones** y **Auditoría** son entradas ADMIN.
+Configuración queda retirada del menú y de las rutas. La autorización del
+servidor sigue siendo obligatoria aunque un enlace se oculte en la interfaz.
+La [guía de uso](frontend/guia-reportes-auditoria.md) detalla los CSV y la auditoría.
 
 ## 2. Operaciones implementadas
 
@@ -81,7 +147,14 @@ entonces estaban fuera de su alcance; las extensiones posteriores no
 reescriben esa historia.
 
 No existen registro público, CRUD del catálogo Rol, refresh token, permisos
-dinámicos ni borrado físico de Equipo. Estas propuestas y el despliegue remoto
-están en el [backlog](backend-final/backlog.md), separados de bugs.
-La comprobación Docker vigente no reejecutó JUnit: 94 HTTP/30 aserciones
+dinámicos ni borrado físico de Equipo. Estas propuestas y la comprobación del
+flujo autenticado remoto están en el [backlog](backend-final/backlog.md), separados de bugs.
+La comprobación Docker histórica no reejecutó JUnit: 94 HTTP/30 aserciones
 son otra evidencia distinta de las suites backend y frontend.
+
+**Comprobación local del 26 de octubre, actualizada el 27:** el recorrido con
+API/BD reales aprobó 8/8 comprobaciones, sin errores de página. ADMIN pudo
+consultar Auditoría; GESTOR y LECTOR mantuvieron su alcance y no accedieron a
+esa pantalla/API. Se verificaron CSV y filtro L201. La cuenta Jorge se usó
+temporalmente como LECTOR y quedó restaurada a GESTOR. Ver
+[evidencia y límites](despliegue/verificacion-cierre-2026-10-27.md).
