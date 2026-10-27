@@ -28,10 +28,18 @@ conservando «L209» como ambiente original en el comentario de procedencia.
 
 Los nombres, apellidos y correos nuevos corresponden a cuentas de demostración.
 Las contraseñas nuevas se generaron al aplicar y permanecen en un archivo privado
-fuera de Git. Las contraseñas existentes de Marko y Aldo no se cambiaron. La
+fuera de Git. Durante esa importación no se cambiaron las contraseñas existentes
+de Marko y Aldo. La
 política posterior del 27 de octubre exige al menos 15 caracteres Unicode y
 máximo 72 bytes UTF-8 para altas y restablecimientos; no obliga a renovar claves
 anteriores ni modifica el login de esas cuentas.
+
+Después de la carga, el usuario solicitó un restablecimiento puntual para las
+cuentas demo locales. Se comprobaron seis cuentas nativas y tres Docker por
+separado, con logins correctos y datos/roles conservados. El archivo privado de
+Jason/Jorge/Gabriela se actualizó; no se publican sus valores. Esta operación
+de mantenimiento no modifica la política general ni es un paso adicional del
+importador. Ver [comprobación y límites](despliegue/verificacion-cierre-2026-10-27.md).
 
 | Cuenta | Rol | Laboratorio de la carga |
 |---|---|---|

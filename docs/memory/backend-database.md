@@ -18,6 +18,17 @@ errores u omitidas, con XML JUnit comprobados: `compileJava test bootJar
 resolver un fallo del primer intento con locale `C`. El clúster de pruebas
 propio se detuvo y eliminó; el backend habitual en 8080 respondió salud UP.
 
+**Mantenimiento demo posterior del 27:** se comprobaron nueve restablecimientos
+puntuales locales, seis en PostgreSQL nativo y tres en Docker principal, con
+nueve logins correctos. Hubo seis eventos reales actor Jason en nativa y tres
+actor Marko en Docker, conservando los anteriores, roles, asignaciones e
+inventario. Es una excepción operativa autorizada fuera de la API; su validación
+general de 15 caracteres/72 bytes sigue activa. El helper temporal se retiró,
+el código quedó sin diferencias y `compileJava` aprobó en 19 s; salud UP y seis
+logins nativos se repitieron después. Claves y hashes no se documentan.
+Detalle en el anexo del cierre, incluidas las instancias y el smoke Docker
+aislado de las imágenes publicadas.
+
 ## Arquitectura y estado comprobado
 
 El backend es un **monolito REST por capas**, compilado como JAR ejecutable de Spring Boot con servidor Tomcat embebido. Spring Security autentica JWT y consulta usuarios/roles en PostgreSQL. Los controladores transforman DTO de entrada/salida mediante MapStruct; los servicios concentran transacciones y reglas; los repositorios JPA persisten entidades. Los reportes usan SQL parametrizado con `NamedParameterJdbcTemplate` para agregar datos en PostgreSQL. Flyway mantiene el esquema y Hibernate lo valida, sin generarlo.

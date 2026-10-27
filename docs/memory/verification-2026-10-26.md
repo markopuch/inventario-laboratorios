@@ -205,6 +205,42 @@ pruebas backend/frontend/importador antes de publicar ambas imágenes. Las cuatr
 etiquetas GHCR se consultaron independientemente y coincidieron con los digests
 de publicación. Ver [anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md).
 
-El daemon Docker local continúa inaccesible; no se validó ejecución de nuevas
+Hasta ese corte de las 00:19 Lima, el daemon Docker local seguía inaccesible; no se validó ejecución de nuevas
 imágenes localmente ni hubo despliegue manual en Render/Vercel. Esas limitaciones
 no invalidan la comprobación del modo nativo ni trasladan sus datos a otros entornos.
+
+Después el usuario encendió Docker: motor accesible y tres servicios saludables
+del stack anterior; web en 3000 HTTP 200 y proxy anónimo 401. La base Docker
+contenía tres equipos, veinte auditorías, dos laboratorios y tres usuarios,
+distinta del inventario nativo. No se migraron datos ni se actualizaron imágenes
+en esa consulta. La comprobación posterior se documenta en el anexo del cierre.
+
+A las **00:36:35 Lima del 27**, el mantenimiento autorizado de las tres cuentas
+demo Docker actualizó sus hashes BCrypt y añadió tres eventos reales de
+restablecimiento, sin alterar los veinte anteriores: auditoría **23**. Los tres
+logins devolvieron HTTP 200 con los mismos roles; equipos, laboratorios y cuatro
+asignaciones se conservaron. La política general y la API no cambiaron. La
+comprobación de las seis cuentas nativas todavía no había finalizado en ese corte;
+no se documenta el valor solicitado de la clave ni los hashes.
+
+El **27 a las 00:45:44 Lima** terminó un smoke con las imágenes publicadas
+exactas 58ac8f6: **22/22 comprobaciones**, incluidas **7/7 de UI**, sin errores
+de página. Usó los puertos loopback 18080/13000, PostgreSQL 18.6 en tmpfs y red exclusiva,
+V1–V13, tres cuentas seed y cero equipos iniciales. Verificó salud/proxy,
+permisos, evento real de categoría, política de 15 caracteres y CSV UTF-8/BOM de 17 columnas.
+Los recursos propios y tres archivos privados se eliminaron; el stack principal
+conservó IDs/imágenes/volúmenes y tres servicios saludables. La
+[evidencia publicable](../despliegue/evidencias/docker-smoke-58ac8f6-2026-10-27.json)
+no contiene secretos ni rutas privadas. Esa prueba no actualizó el stack principal
+ni transfirió datos de la base nativa.
+
+El **27 a las 00:46:30 Lima** se comprobaron seis restablecimientos nativos y
+seis logins HTTP 200, con los mismos roles/asignaciones y 258 equipos; hubo seis
+eventos reales de restablecimiento, actor Jason, conservando los anteriores.
+Las claves antiguas de Jason/Jorge/Gabriela recibieron 401 y la API rechazó una
+contraseña de ocho caracteres con 400: el mantenimiento puntual no cambió la
+política general de 15 caracteres/72 bytes. El helper/import/clase y payloads
+temporales se eliminaron; código sin diferencias y `compileJava` correcto en
+19 s. Después de limpiar se repitieron salud nativa UP y seis logins HTTP 200.
+Docker principal permaneció saludable, con su volumen intacto. Ningún valor
+de contraseña, hash privado o JWT se incorpora a la evidencia versionada.

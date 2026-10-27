@@ -1,0 +1,221 @@
+{
+  "smoke_id": "b653d188a8834d168859d19b98ff0ee5",
+  "commit": "58ac8f6",
+  "started_utc": "2026-10-27T05:44:35.136287+00:00",
+  "completed_utc": "2026-10-27T05:45:44.789181+00:00",
+  "checks": [
+    {
+      "name": "Puertos propios libres y restringidos a loopback",
+      "passed": true
+    },
+    {
+      "name": "Imagen backend identifica commit publicado",
+      "passed": true
+    },
+    {
+      "name": "Imagen frontend identifica commit publicado",
+      "passed": true
+    },
+    {
+      "name": "PostgreSQL propio healthy y datos solo tmpfs",
+      "passed": true
+    },
+    {
+      "name": "Backend publicado arranca healthy en Java y BD propios",
+      "passed": true
+    },
+    {
+      "name": "Frontend publicado arranca healthy y proxy resuelve backend propio",
+      "passed": true
+    },
+    {
+      "name": "Flyway aplica exactamente V1 a V13 sin fallos",
+      "passed": true
+    },
+    {
+      "name": "Health backend HTTP 200 UP",
+      "passed": true
+    },
+    {
+      "name": "Health frontend HTTP 200",
+      "passed": true
+    },
+    {
+      "name": "Proxy conserva autorización: anónimo HTTP 401",
+      "passed": true
+    },
+    {
+      "name": "Login seed ADMIN HTTP 200",
+      "passed": true
+    },
+    {
+      "name": "Login seed GESTOR HTTP 200",
+      "passed": true
+    },
+    {
+      "name": "Login seed LECTOR HTTP 200",
+      "passed": true
+    },
+    {
+      "name": "Auditoría deniega GESTOR con HTTP 403",
+      "passed": true
+    },
+    {
+      "name": "Auditoría deniega LECTOR con HTTP 403",
+      "passed": true
+    },
+    {
+      "name": "ADMIN crea catálogo en la BD efímera",
+      "passed": true
+    },
+    {
+      "name": "Auditoría ADMIN expone evento real del catálogo",
+      "passed": true
+    },
+    {
+      "name": "Catálogo deniega escritura GESTOR",
+      "passed": true
+    },
+    {
+      "name": "Catálogo deniega escritura LECTOR",
+      "passed": true
+    },
+    {
+      "name": "Imagen conserva política de mínimo 15 en restablecimientos",
+      "passed": true
+    },
+    {
+      "name": "Reporte real de BD efímera devuelve ceros coherentes",
+      "passed": true
+    },
+    {
+      "name": "UI publicada: login, Auditoría ADMIN y CSV descargado",
+      "passed": true
+    }
+  ],
+  "images": {
+    "backend": {
+      "id": "sha256:ccde889fa75361e791c9375c031e0c63450c40cf02d34233a4c5af4a61de14b9",
+      "digests": [
+        "ghcr.io/markopuch/inventario-laboratorios-backend@sha256:ccde889fa75361e791c9375c031e0c63450c40cf02d34233a4c5af4a61de14b9"
+      ],
+      "labels": {
+        "org.opencontainers.image.revision": "58ac8f6123849e7467663a53ac62b1c9a09318b2",
+        "org.opencontainers.image.source": "https://github.com/markopuch/inventario-laboratorios"
+      }
+    },
+    "frontend": {
+      "id": "sha256:183d4100c69eb95879b7ba13fd0e9c3ae7ea6c53118118ae1235c8361efa8a74",
+      "digests": [
+        "ghcr.io/markopuch/inventario-laboratorios-frontend-jason@sha256:183d4100c69eb95879b7ba13fd0e9c3ae7ea6c53118118ae1235c8361efa8a74"
+      ],
+      "labels": {
+        "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>",
+        "org.opencontainers.image.revision": "58ac8f6123849e7467663a53ac62b1c9a09318b2",
+        "org.opencontainers.image.source": "https://github.com/markopuch/inventario-laboratorios"
+      }
+    }
+  },
+  "database_storage": {
+    "mounts": [],
+    "tmpfs": {
+      "/var/lib/postgresql": "rw,noexec,nosuid,size=512m"
+    }
+  },
+  "initial_database": {
+    "database": "inventario_verificacion_docker_smoke",
+    "server_version": "18.6",
+    "flyway_total": 13,
+    "flyway_success": 13,
+    "flyway_versions": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13"
+    ],
+    "users": [
+      {
+        "name": "marko",
+        "role": "ADMIN",
+        "active": true
+      },
+      {
+        "name": "aldo",
+        "role": "GESTOR",
+        "active": true
+      },
+      {
+        "name": "romel",
+        "role": "LECTOR",
+        "active": true
+      }
+    ],
+    "equipment": 0
+  },
+  "ui": {
+    "success": true,
+    "checks": [
+      {
+        "name": "Login UI ADMIN",
+        "passed": true
+      },
+      {
+        "name": "Auditoría UI muestra evento real ADMIN",
+        "passed": true
+      },
+      {
+        "name": "CSV UI UTF-8 BOM, 17 columnas, tres agregados en cero y alcance global",
+        "passed": true
+      },
+      {
+        "name": "Login UI GESTOR",
+        "passed": true
+      },
+      {
+        "name": "Navegación oculta administración para GESTOR",
+        "passed": true
+      },
+      {
+        "name": "Login UI LECTOR",
+        "passed": true
+      },
+      {
+        "name": "Navegación oculta administración para LECTOR",
+        "passed": true
+      }
+    ],
+    "page_errors": []
+  },
+  "success": true,
+  "historical_stack_preserved": true,
+  "isolation": {
+    "database_persistence": "tmpfs only",
+    "shared_volumes": false,
+    "host_ports": [
+      "127.0.0.1:18080",
+      "127.0.0.1:13000"
+    ],
+    "own_resources_removed": true,
+    "historical_compose_updated": false,
+    "cloud_deployed": false
+  },
+  "cleanup": {
+    "containers_removed": [
+      "a50e11ef26f33f5b2c0282ff51adbd9edb462a6ef52ee4cbe4269cdf040831e8",
+      "ba32ce89d39533aada32d274509d75d49ea6e67cca1c0af68f72d273f25fbdb0",
+      "9ced31c7da5a97a95ce502c1f94375a6b2b6646014ab67abe3e23cde62f3eb71"
+    ],
+    "network_removed": true,
+    "private_secret_files_deleted": 3,
+    "errors": []
+  }
+}

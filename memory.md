@@ -49,7 +49,7 @@ versionable; no contiene contraseñas, JWT, dumps ni hashes de contraseñas.
 | Flyway / driver PostgreSQL JDBC | **12.4.0 / 42.7.13** | Mismo JAR; no son la versión del servidor PostgreSQL |
 | MapStruct / JJWT / Lombok binding | **1.6.3 / 0.13.0 / 0.2.0** | Declarados; Lombok sin versión explícita, gestionado por BOM |
 | PostgreSQL Windows | Binarios **18.6**, servicio principal 18 activo | No hubo `SELECT version()` ni lectura autenticada del esquema |
-| PostgreSQL Docker | `postgres:18-alpine` | Etiqueta declarada; patch/runtime actual no inspeccionado |
+| PostgreSQL Docker | `postgres:18-alpine` | Smoke aislado del 27: servidor **18.6** comprobado; no extrapolar su patch a la base del stack principal. |
 | Jason, versión de paquete | **1.0.0** | Frontend integrado |
 | Jason React / React DOM | **18.3.1 / 18.3.1** | Lockfile e instalación local |
 | Jason Vite / plugin React | **6.4.3 / 4.7.0** | Lockfile; los rangos de package.json son distintos |
@@ -60,7 +60,7 @@ versionable; no contiene contraseñas, JWT, dumps ni hashes de contraseñas.
 | Node del build Docker / CI | `node:22-alpine` / **22** | Declarado; patch no fijado |
 | Nginx del frontend Docker | `nginx:stable-alpine` | Etiqueta móvil; versión exacta no verificada |
 | Java de imágenes Docker | `eclipse-temurin:21-jdk` / `21-jre-alpine` | Build / runtime declarados |
-| Docker Desktop / CLI / Compose | **4.92.0 / 29.8.0 / 5.5.1** | Instalados; Engine inaccesible hoy, versión de servidor no determinada |
+| Docker Desktop / CLI / Compose | **4.92.0 / 29.8.0 / 5.5.1** | Instalados; motor inaccesible en la auditoría inicial y cierre hasta 00:19; accesible en la comprobación posterior del 27. Versión exacta del servidor no registrada aquí. |
 | Git / GitHub CLI | **2.54.0.windows.1 / 2.101.0** | Instalación local |
 | PowerShell / Python | **7.6.5 / 3.14.6** | Herramientas locales; Python no es runtime de la aplicación |
 | VS Code / Postman / pgAdmin 4 | **1.143.1 / 12.31.7 / 9.17** | Registro/metadatos locales; herramientas de desarrollo |
@@ -150,7 +150,9 @@ BCrypt guarda contraseñas; restablecerlas no invalida automáticamente JWT emit
 Desde el 27 de octubre, altas/restablecimientos y cuentas demo nuevas requieren
 al menos 15 caracteres Unicode y máximo 72 bytes UTF-8. No se recortan claves;
 se rechazan las compuestas únicamente por blancos. El login de cuentas existentes
-conserva su contrato: no se migraron hashes ni se forzó un cambio de contraseña.
+conserva su contrato; la introducción de esa política no migró hashes ni forzó
+un cambio de contraseña. El mantenimiento demo posterior autorizado se registra
+por instancia en el anexo del cierre y no modifica esta política.
 Las rutas desconocidas terminan en `denyAll()`.
 
 | Rol | Operaciones y alcance |
@@ -304,13 +306,14 @@ Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 | Pruebas backend | Histórico del 3 de octubre: 319 aprobadas. Regresión real del 27: **365/365**, 0 fallos/errores/omitidas; `compileJava test bootJar --rerun-tasks` correcto. PostgreSQL 18 temporal en 55432, builtin `C.UTF-8`; clúster propio eliminado al terminar. |
 | Jason | Etapa inicial 67/67; cierre CSV/Auditoría 90/90 y 10 recorridos simulados; política de contraseñas: **93/93 y build de 1679 módulos**. Recorrido con API/BD reales **8/8**, cero errores, el 26 de octubre. |
 | Marko local | **Lint aprobado en la auditoría del 26 de octubre**, salida 0; sigue sin login montado y ahora está excluido de Git |
-| Docker | CLI/Desktop instalados; daemon Linux inaccesible, no se pudo inventariar estado real de contenedores/imágenes/volumen |
+| Docker | Motor accesible y stack principal anterior saludable: web en 3000 HTTP 200 y proxy anónimo 401. Imágenes exactas 58ac8f6 aprobaron **22/22 comprobaciones aisladas**, incluidas siete de UI, sin errores de página; stack principal, imágenes y volumen se conservaron. |
 | Puertos locales | En la auditoría inicial 3000/8080 no respondían. Posteriormente se utilizó backend 8080 y Vite 5173 con PostgreSQL Windows; el estado de un proceso debe volver a comprobarse al reanudar. |
 | Datos vivos Windows | Importación y API reales acreditan 257 equipos de Excel más uno previo BAJA; 31 estados vacíos pendientes. Esta comprobación no equivale a una nueva consulta SQL de todo el esquema. |
 | Herramienta de importación | Regresión final **28/28 aprobada**: 12 pruebas de preparación y 16 de aplicación, con datos/HTTP simulados. |
 | Validación de contraseñas | API real: 11 casos válidos/inválidos sin cambiar cuentas ni auditorías. Formularios reales: mínimo 15 y cinco casos Unicode/espacios sin errores ni escrituras. |
+| Mantenimiento de cuentas demo | 27 de octubre: tres cuentas Docker a las 00:36:35 y seis nativas a las 00:46:30 Lima, nueve logins HTTP 200. Eventos reales: tres actor Marko en Docker (auditoría 20→23) y seis actor Jason en nativa; anteriores intactos. Roles, asignaciones e inventario conservados; operación puntual fuera de la API sin relajar política 15/72. Claves/hashes/JWT fuera de Git. |
 | Publicación del cierre | Commit [`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2) publicado en `main`. [Actions 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249) **completed/success, 5/5 trabajos**. Dos imágenes GHCR publicadas con `sha-58ac8f6`/`latest`; cuatro etiquetas consultadas independientemente, con digests coincidentes. |
-| Último Docker local documentado | `e1ce75a`, 3 de octubre: V13, tres servicios saludables y smoke aislado 94 HTTP/30 aserciones/7 SQL; es histórico |
+| Último smoke Docker acreditado | **58ac8f6, 27 de octubre 00:45:44 Lima**, entorno aislado 22/22 incluidas siete de UI, V1–V13 y PostgreSQL 18.6; limpieza correcta. El stack principal conserva su versión anterior. La prueba e1ce75a con 94 comprobaciones HTTP del 3 de octubre sigue histórica. |
 | Última publicación CI comprobada | [run 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249), commit `58ac8f6`, cinco trabajos success, **27 de octubre 00:18:54 Lima**; imágenes y digests en el anexo del cierre. La publicación histórica de `b164c44` se conserva en el anexo de infraestructura. |
 | Vercel hoy | [/login](https://inventario-laboratorios.vercel.app/login) responde HTTP 200 HTML |
 | Render y proxy hoy | GET salud/proxy agotaron 35 y 50 segundos; estado indeterminado, sin atribuir causa |
@@ -334,7 +337,7 @@ en nube. Los README y el backlog distinguen evidencia histórica y estado en fue
 
 1. **Cierre cloud:** verificar release/variables por nombre en Render/Vercel, salud/proxy y existencia del primer ADMIN; probar login, roles/alcance y flujo funcional con cuentas autorizadas.
 2. **BD local:** carga y conteos comprobados mediante API. Completar los 31 estados pendientes con información confirmada; consultar versión real y `flyway_schema_history` de la instancia concreta cuando se necesite verificación SQL, sin exportar registros privados.
-3. **Docker local:** cuando responda su motor, comprobar contenedores, imágenes, tags/digests y volumen existente antes de cualquier actualización.
+3. **Docker local:** el motor responde y el stack principal anterior está saludable. Las imágenes publicadas 58ac8f6 aprobaron 22 comprobaciones aisladas; actualizar el stack principal solo con autorización, conservando volumen y datos. Su base tiene tres equipos/tres cuentas, distinta de los 258 equipos/seis cuentas nativos; no se copió la carga Excel a Docker.
 4. **Producto:** Configuración está fuera del alcance y fue retirada. Auditoría ADMIN y CSV de reportes están implementados; gráficos completos, Excel/PDF, exportación detallada y calendario siguen pendientes de priorización.
 5. **Mejoras de plataforma:** Swagger/OpenAPI, refresh/revocación, recuperación de contraseña, paginación, permisos dinámicos y operación avanzada no están implementados en el alcance revisado. Asignar roles sí existe; CRUD del catálogo Rol no.
 6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos localmente y repetidos en CI; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de la política de contraseñas sin escrituras. Actions 5/5 e imágenes publicadas y consultadas en GHCR. Accesibilidad completa, carga y restauración siguen fuera de esa cobertura; no reutilizar estos resultados como acreditación de Docker local o nube.

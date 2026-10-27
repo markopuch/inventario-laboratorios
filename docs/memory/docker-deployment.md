@@ -9,9 +9,59 @@ frontend **93/93** y backend **365/365**, con build frontend y JAR correctos.
 JUnit utilizó PostgreSQL 18 temporal en 55432 y locale builtin `C.UTF-8`;
 ese clúster propio se detuvo y eliminó. El
 [anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md)
-registra los resultados finales de las suites, commit y Actions. El motor Docker
-local sigue inaccesible: no se acredita ejecución local de las imágenes nuevas.
+registra los resultados finales de las suites, commit y Actions. Durante el
+cierre hasta las 00:19 el motor Docker estaba inaccesible; después el usuario lo
+encendió y se comprobaron tres servicios saludables. El stack sigue con imágenes
+anteriores sin revisión OCI identificable. Después, las imágenes nuevas 58ac8f6
+aprobaron **22/22 comprobaciones en Docker aislado**, incluidas siete de UI y
+cero errores de página; eso no actualizó el stack principal.
 No hubo despliegue manual Render/Vercel y sus datos siguen siendo independientes.
+
+**Comprobación posterior del 27:** la web Docker en `localhost:3000` devolvió
+HTTP 200 y `/api/auth/me` anónimo a través de su proxy devolvió 401. Esa base
+contiene tres equipos, dos laboratorios y tres
+cuentas (Marko ADMIN, Aldo LECTOR y Romel LECTOR); la nativa conserva 258 equipos
+y seis cuentas. No se migraron datos ni se cambiaron roles en esta consulta.
+Ver [estado posterior y separación de instancias](../despliegue/verificacion-cierre-2026-10-27.md).
+
+**Mantenimiento Docker posterior, 27 de octubre 00:36:35 Lima:** por solicitud
+expresa se restablecieron las tres cuentas demo en una transacción serializable
+privada, fuera de la API: tres hashes BCrypt y tres eventos reales
+`RESTABLECER_CONTRASENA`, actor Marko. Los veinte eventos previos se conservaron;
+auditoría suma **23**. Tres logins HTTP 200 confirmaron Marko ADMIN, Aldo LECTOR
+y Romel LECTOR; equipos, dos laboratorios, cuatro asignaciones y roles se
+conservaron. Este mantenimiento no cambió los controles del stack anterior;
+la política de 15 caracteres/72 bytes del código publicado se verificó por
+separado en el smoke de las imágenes nuevas.
+El valor de la clave y sus hashes no se documentan. Las seis cuentas nativas
+se comprobaron después, de forma independiente.
+
+**Smoke de imágenes publicadas, 27 de octubre 00:44:35–00:45:44 Lima:** backend
+y Jason con revisión exacta 58ac8f6 y digests GHCR se ejecutaron en loopback
+18080/13000, red propia y PostgreSQL 18.6 en tmpfs, con cero equipos iniciales
+y tres cuentas seed. Flyway V1–V13, salud/proxy, tres roles, denegaciones 403,
+Auditoría real de una categoría temporal, política de 15 caracteres y CSV UTF-8/BOM de 17
+columnas aprobaron; son **22 comprobaciones, incluidas siete de UI**. La
+[evidencia versionable](../despliegue/evidencias/docker-smoke-58ac8f6-2026-10-27.json)
+registra la eliminación de los tres contenedores propios, su red y tres archivos
+privados, sin errores. El stack principal mantuvo exactamente IDs, imágenes y
+volúmenes, con tres servicios saludables; no se transfirieron datos.
+
+**Mantenimiento nativo posterior, 27 de octubre 00:46:30 Lima:** se verificaron
+los seis restablecimientos puntuales y seis logins HTTP 200 (Marko ADMIN, Aldo
+GESTOR, Romel LECTOR, Jason ADMIN, Jorge GESTOR y Gabriela ADMIN). Hubo seis
+eventos reales de restablecimiento, actor Jason; los anteriores, roles,
+asignaciones y resumen de inventario se conservaron. Las tres claves antiguas
+de las cuentas nuevas devolvieron 401. La API rechazó una clave de ocho caracteres
+con 400, por lo que la política general de 15/72 permanece intacta. El total de
+esta operación es nueve restablecimientos locales: seis nativos y tres Docker;
+no incluye la nube ni modifica el stack principal o sus imágenes.
+
+La limpieza final retiró el helper temporal y su import de arranque, además
+de los payloads privados de solicitud. El código backend/frontend/scripts/Actions
+quedó sin diferencias; `compileJava` aprobó en 19 s. Tras la limpieza, salud
+nativa UP y los seis logins HTTP 200 volvieron a comprobarse. El Docker principal
+conservó sus tres servicios saludables y volumen original.
 
 El código del cierre se publicó en `main`, commit
 [`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2).
@@ -306,7 +356,7 @@ Para reproducir exactamente el Docker local histórico, usar tags `sha-e1ce75a` 
 
 ## 8. Pendientes y límites concretos
 
-- Docker local no observable hoy: verificar inventario real de contenedores/imágenes/volumen cuando el motor esté disponible, sin recrear datos.
+- Docker principal sigue con sus imágenes y datos anteriores. Si se autoriza, actualizarlo conservando volumen y datos; las imágenes 58ac8f6 ya aprobaron un smoke aislado de 22 comprobaciones, sin reemplazar ese stack.
 - La salud cloud actual no quedó acreditada tras intentos de 35 s y 50 s; evitar presentar la verificación del 11 de octubre como estado actual.
 - Cuentas/login de Render y datos gestionados pendientes de comprobación; no asumir importación de la base local.
 - No se verificaron commit desplegado, plan, región, versiones de runtime, backups ni expiración de servicios Render/Vercel.

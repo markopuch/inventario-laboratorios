@@ -47,6 +47,21 @@ importador 28 pruebas, más ambas imágenes publicadas en GHCR con etiquetas
 `sha-58ac8f6` y `latest`. Los digests están en el anexo del cierre. Esto acredita
 publicación; Docker local y el recorrido autenticado de nube requieren su propia comprobación.
 
+**Comprobación posterior del 27:** después de encender Docker, se encontraron
+tres servicios saludables; la web en `localhost:3000` respondió HTTP 200 y
+`/api/auth/me` sin token respondió 401 por su proxy. Ese stack conserva imágenes
+y una base anteriores: tres equipos y tres cuentas, frente a los 258 equipos y
+seis cuentas de la base nativa. No se copiaron datos ni se actualizó ese stack.
+Las imágenes nuevas 58ac8f6 sí aprobaron después **22/22 comprobaciones en Docker
+aislado**, incluidas siete de UI, con cero errores de página y limpieza completa.
+La evidencia enlazada desde el anexo distingue ese smoke del entorno principal.
+
+El mantenimiento demo solicitado después comprobó nueve restablecimientos
+locales: seis cuentas nativas y tres del Docker principal, con logins correctos
+y roles/datos conservados. La política general de 15 caracteres/72 bytes sigue
+activa; el helper temporal se retiró y el código quedó restaurado. Las
+credenciales y sus hashes permanecen fuera del repositorio.
+
 
 ## 1. Descripción
 

@@ -46,7 +46,7 @@ no sustituyen la verificación final ni acreditan un despliegue remoto.
 | Reportes CSV | Cinco descargas de agregados desde respuestas validadas, con filtros aplicados y alcance. | Comprobar UTF-8/BOM, `;`, comillas, protección de fórmulas, metadatos y bloqueo ante filtros sin aplicar o datos inválidos. |
 | Auditoría | API ADMIN existente; nueva pantalla de solo lectura con filtros. | Comprobar acceso ADMIN, denegación de otros roles, fechas UTC y visualización en Lima, estados vacío/error y filtros válidos. |
 | Vercel y Render | Publicación documentada; flujo autenticado actual pendiente de acreditar. | Verificar el entorno que se utilizará para cerrar la web. |
-| Docker local | Funcionamiento documentado el 3 de octubre; motor inaccesible en la auditoría del 26. | Comprobarlo si se elige ese entorno; no darlo por disponible. |
+| Docker local | Motor accesible y tres servicios saludables del stack principal anterior. Las imágenes nuevas 58ac8f6 aprobaron 22 comprobaciones aisladas, incluidas siete de UI. | El stack principal conserva imágenes/datos anteriores; actualizarlo solo si se autoriza. La base Docker no contiene la carga Excel nativa. |
 | Variante y sprints Marko | Conservados localmente y excluidos del seguimiento Git. | Mantenerlos fuera del producto activo y preservar sus archivos locales. |
 
 ## Ampliaciones que siguen pendientes de priorización
