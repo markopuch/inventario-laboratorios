@@ -22,7 +22,7 @@ public class LoginRateLimiter {
     private final int maxEntries;
     private final LongSupplier nanoTime;
     private final Map<String, IpWindow> sources = new HashMap<>();
-    private final Map<UserSource, UserWindow> users = new HashMap<>();
+    private final Map<String, UserWindow> users = new HashMap<>();
     private long lastCleanup;
 
     @Autowired
@@ -70,11 +70,11 @@ public class LoginRateLimiter {
         window.attempts++;
     }
 
-    /** Reserva un intento antes de BCrypt; solicitudes concurrentes no eluden el límite. */
-    public synchronized Attempt beginUser(String userName, String remoteAddress) {
+    /** Presupuesto agregado antes de BCrypt: cambiar de proxy/peer no lo reinicia. */
+    public synchronized Attempt beginUser(String userName) {
         long now = nanoTime.getAsLong();
         cleanup(now);
-        UserSource key = new UserSource(userName.trim().toLowerCase(Locale.ROOT), source(remoteAddress));
+        String key = userName.trim().toLowerCase(Locale.ROOT);
         UserWindow window = users.get(key);
         if (window != null) expireFailures(window, now);
         if (window == null) {
@@ -128,16 +128,15 @@ public class LoginRateLimiter {
     private static String source(String value) { return value == null || value.isBlank() ? "unknown" : value; }
 
     public final class Attempt implements AutoCloseable {
-        private final UserSource key;
+        private final String key;
         private final UserWindow window;
         private boolean completed;
-        private Attempt(UserSource key, UserWindow window) { this.key = key; this.window = window; }
+        private Attempt(String key, UserWindow window) { this.key = key; this.window = window; }
         public void succeeded() { finish(this, true, false); }
         public void failed() { finish(this, false, true); }
         @Override public void close() { finish(this, false, false); }
     }
 
-    private record UserSource(String userName, String source) { }
     private static final class UserWindow { private int failures; private int inFlight; private long firstFailure; }
     private static final class IpWindow {
         private final long since;

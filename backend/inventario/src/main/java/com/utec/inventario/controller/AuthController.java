@@ -42,7 +42,6 @@ import com.utec.inventario.service.UsuarioService;
 import com.utec.inventario.service.AlcanceLaboratorioService;
 
 import jakarta.validation.Valid;
-import jakarta.servlet.http.HttpServletRequest;
 
 @Tag(name = "Autenticación", description = "Acceso JWT, perfil propio y alcance efectivo de laboratorios.")
 @RestController
@@ -72,7 +71,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Iniciar sesión y obtener JWT",
-            description = "Acceso público con userName y password. Normaliza el usuario; no recorta la contraseña. Cinco fallos por usuario/origen en 15 minutos y 60 solicitudes por origen/minuto por defecto. Un éxito reinicia los fallos de ese usuario/origen. HTTP 429 incluye Retry-After; no bloquea cuentas en BD. Devuelve Bearer, vigencia y perfil; no renueva ni revoca tokens previos.")
+            description = "Acceso público con userName y password. Normaliza el usuario; no recorta la contraseña. Cinco fallos agregados por nombre normalizado en 15 minutos, aunque cambie el peer/proxy, y 60 solicitudes por peer/minuto por defecto. Un éxito reinicia los fallos de ese nombre; no reinicia la cuota por peer. Los contadores son temporales por instancia y no confían en headers de origen del cliente. HTTP 429 incluye Retry-After; no bloquea cuentas en BD. Devuelve Bearer, vigencia y perfil; no renueva ni revoca tokens previos.")
     @ApiResponse(responseCode = "200", description = "Autenticación correcta", useReturnTypeSchema = true)
     @ApiResponse(responseCode = "429", description = "Límite temporal de intentos de login",
             headers = @Header(name = "Retry-After", description = "Segundos antes de volver a intentar",
@@ -81,10 +80,9 @@ public class AuthController {
     @SecurityRequirements
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public AuthResponse login(@Valid @RequestBody AuthRequest request,
-            @Parameter(hidden = true) HttpServletRequest servletRequest) {
+    public AuthResponse login(@Valid @RequestBody AuthRequest request) {
         String userName = request.getUserName().trim().toLowerCase(Locale.ROOT);
-        try (LoginRateLimiter.Attempt attempt = loginRateLimiter.beginUser(userName, servletRequest.getRemoteAddr())) {
+        try (LoginRateLimiter.Attempt attempt = loginRateLimiter.beginUser(userName)) {
             try {
                 // BCrypt compara como máximo 72 bytes; evita aceptar sufijos truncados.
                 if (request.getPassword().getBytes(StandardCharsets.UTF_8).length > 72) {
