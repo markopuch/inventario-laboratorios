@@ -1,5 +1,45 @@
 # Memoria técnica del frontend
 
+**Paginación/login, publicados el 27 de octubre:** Equipos y Auditoría usan páginas
+del servidor con tamaño20/50/100, navegación y totales del conjunto filtrado;
+Equipos busca con q mediante Buscar/Enter/Aplicar. Al cambiar filtros/búsqueda/
+tamaño vuelve a página0; cancela solicitudes e ignora sesiones/respuestas
+obsoletas. Indicadores de estado de Equipos dicen «en esta página». Métodos
+listar anteriores conservan arrays para dashboard/selectores/importador.
+Login interpreta 429 y Retry-After con espera visible y submit bloqueado, sin
+reintentos automáticos ni persistir claves. **107/107** pruebas y build1681
+aprobados; Chrome con API/BD temporales verificó paginación, búsqueda fuera de
+primera página, Auditoría, móvil390 y cinco401→sexto429, cero errores de página.
+El frontend se publicó en `74128312fe30a8ac85280bf9c5a6f749ce4d364b`, después
+del backend compatible `34d8033`. Vercel reporta success para ese SHA exacto,
+ficha `nBQ59JBg7CcodNPtqu2y7NGYCpTs`. Actions 40565271628 terminó correctamente
+(406 backend, 107 frontend/build 1681 y 28 importador). La UI pública verificó
+tamaños 20/50/100, página 2 de 258 equipos, búsqueda fuera de primera página y
+Auditoría 20/100 de 351 eventos. El recorrido con 53 fixtures citado arriba es
+local y no se suma al recorrido cloud. [Guía](../backend-final/paginacion-login.md),
+[evidencia local](../despliegue/verificacion-paginacion-login-2026-10-27.md) y
+[publicación cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+El contrato corregido agrega fallos por username normalizado, no por IP;
+publicado en ef31d65 tras 410 pruebas backend locales aprobadas. Actions
+40567596491 aprobó 5/5 con 410 backend, 107 frontend/build 1681 y 28 importador;
+Vercel ef31d65 success, ficha `E4o5pumzx8Z9hPRVXSsvtQKYysTu`. Render ef31d65
+marcó primero Live en dep-dbgfh18473hc739j058g, 11m46s y salud UP, pero cuatro
+GET públicos sin caché mostraron el contrato previo. El despliegue del mismo
+SHA con caché limpia, `dep-dbgfo1mi0phs73dt8020`, quedó **Live en 4m52s**,
+startup 171.8 s y OpenAPI pública corregida; la discrepancia quedó resuelta,
+sin causa exacta demostrada. Cinco POST con conexiones independientes a
+Render devolvieron 401 para un username ficticio; el sexto desde la UI Vercel
+mostró espera 868→839 s y botón Reintentar deshabilitado, sin reintentos
+automáticos. El [registro visual](../frontend/evidencias/cloud-login-limite-2026-10-27.png)
+conserva el campo contraseña vacío. La comprobación API cloud final aprobó
+**59/59**, con cinco 401 y sexto 429 desde conexiones independientes,
+Retry-After 893 s, no-store y ApiError. El login ADMIN posterior devolvió 200;
+páginas, búsqueda, Auditoría, Jorge con 56 equipos y proxy correctos. Se
+conservaron 258 equipos, seis usuarios y 351 auditorías.
+La espera indicada por Retry-After
+puede afectar al dueño de un username atacado. La UI no cambia esa política,
+no desbloquea cuentas y no reintenta automáticamente.
+
 Fecha de auditoría: **2026-10-26, America/Lima**. Alcance: lectura del código, configuración, lockfiles y documentación de ambas versiones locales; pruebas indicadas abajo. No se instalaron dependencias, no se arrancaron servidores y no se modificaron datos ni código de aplicación.
 
 ## Arquitectura y decisión de versión
@@ -75,7 +115,7 @@ Los componentes compartidos incluyen `Boton`, `TarjetaEquipo`, `FiltroEquipo`, `
 |---|---|---|
 | `/login` | Pública | Formulario de acceso real, validación, envío y errores; sesión ya abierta redirige al inicio. |
 | `/` | Sesión válida | Dashboard con inventario visible, cantidad de laboratorios autorizados, últimos movimientos y resumen de mantenimiento consultados por API; diferencia errores de conteos cero. |
-| `/equipos` | ADMIN/GESTOR/LECTOR | Lista y búsqueda local; cuatro filtros de API; alta, edición, baja lógica y traslado para quienes gestionan. BAJA oculta acciones de modificación. |
+| `/equipos` | ADMIN/GESTOR/LECTOR | Páginas del servidor 20/50/100, búsqueda q y cuatro filtros; alta, edición, baja lógica y traslado para quienes gestionan. BAJA oculta acciones de modificación. |
 | `/categorias`, `/catalogo` | Sesión válida | Mismo componente: categorías/subcategorías. ADMIN crea/edita, consulta inactivos y cambia actividad; otros roles consultan catálogos comunes. |
 | `/laboratorios` | Sesión válida | Gestión/consulta de sedes, áreas y laboratorios. Administración restringida a ADMIN. Separa `activo` de `estadoOperativo`. |
 | `/usuarios` | ADMIN | Directorio, creación, edición de datos públicos, cambio de rol, actividad, contraseña y asignaciones. |
@@ -83,7 +123,7 @@ Los componentes compartidos incluyen `Boton`, `TarjetaEquipo`, `FiltroEquipo`, `
 | `/movimientos` | Sesión válida | Historial real, búsqueda, filtro de laboratorio, origen/destino y actor. El traslado se inicia desde Equipos. |
 | `/mantenimientos` | Sesión válida | Listado, seis filtros, creación, edición y transiciones de estado; lectura según alcance, escritura ADMIN/GESTOR. |
 | `/reportes` | Sesión válida | Cinco consultas agregadas, ocho filtros y cinco botones Exportar CSV. Descargas con filtros aplicados, identidad de consulta y alcance vigentes; bloqueadas en carga/error/sin filas o con cambios sin aplicar. |
-| `/auditoria` | ADMIN | Tabla de eventos con seis filtros, hora de Lima, detalle de resúmenes, actualizar/reintentar y estados de carga/error/vacío. Acceso protegido en ruta, menú y API backend existente. |
+| `/auditoria` | ADMIN | Tabla paginada con seis filtros, hora de Lima, detalle de resúmenes, actualizar/reintentar y estados de carga/error/vacío. Acceso protegido en ruta, menú y API backend existente. |
 | `/configuracion` | Retirada | Sin entrada de menú ni ruta propia; alcanza la redirección general a inicio. El módulo quedó fuera del alcance por decisión del usuario. |
 | Cualquier otra | — | Redirección a `/`. Sin sesión, el guard redirige a `/login`. |
 

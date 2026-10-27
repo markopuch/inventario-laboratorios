@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-27",
+  "environment": "Render + Vercel públicos",
+  "frontendFeatureCommit": "74128312fe30a8ac85280bf9c5a6f749ce4d364b",
+  "backendRateLimitCommit": "ef31d659983493e9ca9eeea2e063caf0b5e63029",
+  "renderDeployment": "dep-dbgfo1mi0phs73dt8020",
+  "checks": {
+    "equipmentTotal": 258,
+    "equipmentPage1": "1–20 de 258 · Página 1 de 13",
+    "equipmentPage2": "21–40 de 258 · Página 2 de 13",
+    "equipmentSize50": "1–50 de 258 · Página 1 de 6",
+    "equipmentSize100": "1–100 de 258 · Página 1 de 3",
+    "serverSearchOutsideFirstPage": true,
+    "auditTotal": 351,
+    "auditSize20": true,
+    "auditSize100": true
+  },
+  "loginVerification": {
+    "nonexistentUser": true,
+    "userCreated": false,
+    "realAccountFailures": 0,
+    "firstFiveVia": "Render HTTPS, conexiones independientes",
+    "firstFiveStatuses": [
+      401,
+      401,
+      401,
+      401,
+      401
+    ],
+    "sixthVia": "UI pública de Vercel, mismo nombre ficticio",
+    "sixthAttemptRateLimited": true,
+    "countdownInitialSeconds": 868,
+    "countdownLaterSeconds": 839,
+    "submitDisabled": true,
+    "passwordFieldEmptyInScreenshot": true
+  },
+  "productionInventoryScreenshots": "Privadas fuera de Git en %LOCALAPPDATA%/inventario-laboratorios/evidencias-cloud-2026-10-27/",
+  "publicScreenshot": "cloud-login-limite-2026-10-27.png",
+  "existingDatabasesModified": false
+}

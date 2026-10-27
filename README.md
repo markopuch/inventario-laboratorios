@@ -1,5 +1,43 @@
 # Inventario de Laboratorios
 
+**Paginación y límite de login publicados el 27 de octubre.** Equipos y
+Auditoría ofrecen páginas de 20/50/100 registros, totales filtrados y búsqueda
+de equipos en servidor. Sin `page/size`, la API conserva los arrays anteriores.
+El contrato corregido de login agrega cinco fallos por usuario normalizado en
+15 minutos, sin depender del origen, y conserva 60 solicitudes por origen/minuto;
+responde 429 con Retry-After y la interfaz muestra una espera. La corrección del
+límite agregado se publicó en `ef31d65`, tras **410/410 pruebas backend locales**
+y JAR correctos. Actions **40567596491** aprobó cinco trabajos, 410 backend,
+107 frontend/build 1681 y 28 importador; ambas imágenes publicadas. Vercel
+reporta success para ef31d65, ficha `E4o5pumzx8Z9hPRVXSsvtQKYysTu`. Render
+marcó ef31d65 Live en `dep-dbgfh18473hc739j058g`, en 11m46s y con salud UP;
+sin embargo, cuatro GET públicos sin caché aún mostraron el contrato previo
+por usuario/origen. Se inició un nuevo despliegue del mismo SHA con caché de
+build limpia (`dep-dbgfo1mi0phs73dt8020`): **Live en 4m52s**, arranque 171.8 s
+y OpenAPI pública corregida. Cinco fallos directos a Render con conexiones
+independientes y un username ficticio devolvieron 401; el sexto desde Vercel
+activó espera 868→839 s y botón deshabilitado. La discrepancia quedó resuelta
+tras reconstruir, sin causa exacta demostrada. La comprobación API cloud final
+aprobó **59/59**: cinco 401 y sexto 429 desde conexiones independientes,
+Retry-After 893 s, no-store y ApiError. Un login ADMIN posterior devolvió 200;
+se conservaron 258 equipos, seis usuarios y 351 auditorías.
+Ver [contratos y configuración](docs/backend-final/paginacion-login.md) y
+[comprobación](docs/despliegue/verificacion-paginacion-login-2026-10-27.md):
+406/406 pruebas backend, 107/107 frontend, build/JAR y recorrido real en entorno
+aislado aprobados. El backend se publicó primero en `34d8033`; Actions
+40564481861 aprobó sus cinco trabajos (406 backend, 93 frontend anterior y
+28 importador). Render desplegó ese commit: Live en 4m16s, salud UP y página
+administrativa de 20 equipos sobre un total de 258 comprobadas.
+El frontend se publicó después en `7412831`; Vercel reporta success para ese
+SHA exacto. Actions 40565271628 terminó correctamente: 406 backend, 107
+frontend/build 1681 y 28 importador. La web pública comprobó tamaños 20/50/100,
+página 2 de 258 equipos, búsqueda fuera de la primera página y Auditoría
+20/100 sobre 351 eventos. El límite corregido ya se comprobó entre Render y
+Vercel. El [informe cloud](docs/despliegue/verificacion-paginacion-login-cloud-2026-10-27.md)
+separa esta publicación de las comprobaciones locales anteriores.
+Un ataque que acumule fallos contra un username puede causar también una espera
+temporal a su dueño; los contadores son por proceso y no bloquean cuentas en BD.
+
 Frontend de trabajo actual: [versión Jason — Docker, ejecución local y pruebas manuales](frontend/version-jason/frontend/README.md), conectado al backend Docker del [Sprint 8](docs/sprints_realizados-backend/sprint-8.md). El Compose de `backend/inventario` levanta PostgreSQL, backend y Jason (puerto 3000); `imagen.yml` publica backend y frontend Jason por separado. La [auditoría de integración](docs/sprints_realizados-frontend-Jason/auditoria-integracion.md) registra el estado comprobado.
 
 **Organización desde el 26 de octubre de 2026:** la variante de tutoría
@@ -576,7 +614,10 @@ exportación CSV de agregados; Configuración se retira de la navegación y las 
 La copia y el acceso autenticado cloud están acreditados en el informe de
 migración del 27. Siguen pendientes ampliar E2E si se solicita,
 Configuración persistida si se prioriza, PDF/XLSX, refresh tokens,
-permisos dinámicos y paginación para escala futura. La auditoría administrativa
+permisos dinámicos y paginación de otros listados para escala futura. Equipos y
+Auditoría ya tienen paginación publicada el 27, junto con límite de login;
+el informe cloud registra API final 59/59 y la comprobación de la interfaz pública.
+La auditoría administrativa
 existente no equivale a una plataforma general de auditoría/observabilidad.
 
 El [backlog](docs/backend-final/backlog.md) separa esas ampliaciones de mejoras

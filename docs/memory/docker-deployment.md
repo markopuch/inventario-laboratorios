@@ -1,5 +1,72 @@
 # Memoria de Docker, CI/CD y deployment
 
+**Paginación y limitación de login, publicación posterior del 27:** backend406,
+frontend107/build1681 y UI real con53 fixtures temporales aprobados. No se cambian
+Dockerfiles/Compose ni migraciones. Configuración nueva opcional `LOGIN_MAX_FAILURES`,
+`LOGIN_FAILURE_WINDOW_SECONDS`, `LOGIN_IP_ATTEMPTS`, `LOGIN_IP_WINDOW_SECONDS`,
+`LOGIN_MAX_ENTRIES`; defaults5/900/60/60/10000. El contrato corregido agrega
+fallos por username normalizado, independiente del peer; la cuota general de
+solicitudes usa getRemoteAddr y puede compartirse detrás de un proxy. No se
+interpretan X-Forwarded-For ni Forwarded. Los contadores son por instancia y se reinician
+con el proceso. No configurar trusted headers implícitamente ni afirmar que
+se identificó la IP pública de cada navegador. Para probar UI se acortó únicamente
+la ventana temporal de fallos a60s, sin tocar servicios habituales; pruebas de
+reloj controlado verificaron expiración y concurrencia. Contenedores/redes y
+Vite temporales detenidos. La revisión automática bloqueó borrar un fixture
+privado de acceso de un entorno ya eliminado dentro de build/ ignorado; sin
+claves de bases habituales. [Verificación](../despliegue/verificacion-paginacion-login-2026-10-27.md).
+El backend se publicó primero en `34d8033ed4e9e79b1f8767f9e277240b7159891b`.
+Actions **40564481861** aprobó 5/5 trabajos (406 backend, 93 frontend anterior y
+28 importador). Render desplegó ese SHA, `dep-dbgf7bdg1s2s739dull0`, **Live en
+4m16s**, arranque 181.6 s, trece migraciones al día y salud UP. Swagger muestra
+page/size/q y 429; ADMIN consultó 20 elementos de un total de 258.
+Después se publicó el frontend `74128312fe30a8ac85280bf9c5a6f749ce4d364b`.
+Vercel reporta success para ese SHA, ficha `nBQ59JBg7CcodNPtqu2y7NGYCpTs`;
+Actions **40565271628** terminó completed/success el 27 a las 14:05:11 Lima:
+406 backend, 107 frontend/build 1681 y 28 importador. La UI pública comprobó
+tamaños 20/50/100, página 2 de 258 equipos, búsqueda y Auditoría 20/100 sobre
+351 eventos. La corrección del límite cloud se comprobó después, como se
+detalla a continuación.
+El stack Docker principal no se actualizó por publicar commits o imágenes.
+[Informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+La corrección de los fallos agregados por username se publicó en
+`ef31d659983493e9ca9eeea2e063caf0b5e63029`; regresión local **410/410**, sin
+fallos/errores/omitidas, JAR correcto y BUILD SUCCESSFUL en 2m17s. Actions
+**40567596491** aprobó 5/5 a las 14:20:24 Lima: 410 backend, 107 frontend/build
+1681, 28 importador y ambas imágenes publicadas. Vercel ef31d65 success,
+ficha `E4o5pumzx8Z9hPRVXSsvtQKYysTu`. Render desplegó ef31d65 en
+`dep-dbgfh18473hc739j058g`, **Live en 11m46s**, con salud UP. Se observó un
+arranque prolongado y un pod nuevo; el diagnóstico PostgreSQL de solo lectura
+con `sslmode=verify-full` confirmó 258 equipos, trece migraciones y ausencia
+de bloqueadores en ese momento. No se demostró la causa exacta ni se hicieron
+reinicios manuales o cambios de configuración antes de ese diagnóstico.
+Después, cuatro GET públicos con nonce y sin caché aún mostraron el contrato
+previo por usuario/origen; GitHub ef31d65 sí contiene el contrato agregado.
+Se contrastaron repo/main, raíz backend/inventario, Dockerfile ./Dockerfile y
+contexto . de Render. Esa discrepancia no demuestra su causa. Se inició
+**Clear build cache & deploy** del mismo ef31d65, `dep-dbgfo1mi0phs73dt8020`,
+con Building y Build cache cleared visibles. El primer intento UI ficticio
+devolvió 401 y se detuvo.
+La reconstrucción limpia acreditó en logs checkout ef31d659 de main, COPY
+de src y bootJar BUILD SUCCESSFUL en 26 s (14:31:30–14:32:41 Lima). El build
+correcto se completó con el nuevo Live: **4m52s**, startup 171.8 s y OpenAPI
+pública corregida. Cinco POST con conexiones independientes a Render y un
+username ficticio devolvieron 401; el sexto desde la UI Vercel activó espera
+868→839 s y botón Reintentar deshabilitado. La prueba cruzada acredita el
+contador agregado. La discrepancia quedó resuelta tras reconstruir sin causa
+exacta demostrada. La comprobación API cloud final aprobó **59/59**, de
+14:37:40 a 14:38:42 Lima: cinco 401 y sexto 429 desde conexiones independientes,
+Retry-After 893 s, no-store y ApiError. Login ADMIN posterior 200, páginas,
+búsqueda, Auditoría, Jorge con 56 equipos y proxy correctos; conteos finales
+258 equipos, seis usuarios y 351 auditorías conservados. El JSON fallido
+inicial y el final conservan resultados separados en el informe cloud.
+El clúster
+PostgreSQL privado quedó detenido, con limpieza recursiva rechazada por la
+revisión automática (`blocked by policy`, sin motivo adicional); permanece un
+residuo privado fuera de Git, además de los anteriores. Un tercero puede provocar una espera
+temporal al acumular fallos contra un nombre; no es bloqueo persistente de
+cuenta. El contador se reinicia con el proceso y no se comparte entre réplicas.
+
 **Documentación API posterior, 27 de octubre:** el backend incorpora Springdoc
 3.2.0 y `API_DOCS_ENABLED` (default true), sin modificar Dockerfiles ni Compose.
 La especificación y Swagger UI se sirven desde el backend, no desde las rutas
@@ -52,7 +119,9 @@ encendió y se comprobaron tres servicios saludables. El stack sigue con imágen
 anteriores sin revisión OCI identificable. Después, las imágenes nuevas 58ac8f6
 aprobaron **22/22 comprobaciones en Docker aislado**, incluidas siete de UI y
 cero errores de página; eso no actualizó el stack principal.
-No hubo despliegue manual Render/Vercel y sus datos siguen siendo independientes.
+Ese cierre inicial no hizo despliegue manual Render/Vercel; la reconstrucción
+limpia posterior del límite de login se registra arriba. Sus datos siguen
+siendo independientes de Docker.
 
 **Comprobación posterior del 27:** la web Docker en `localhost:3000` devolvió
 HTTP 200 y `/api/auth/me` anónimo a través de su proxy devolvió 401. Esa base
@@ -394,9 +463,9 @@ Para reproducir exactamente el Docker local histórico, usar tags `sha-e1ce75a` 
 ## 8. Pendientes y límites concretos
 
 - Docker principal sigue con sus imágenes y datos anteriores. Si se autoriza, actualizarlo conservando volumen y datos; las imágenes 58ac8f6 ya aprobaron un smoke aislado de 22 comprobaciones, sin reemplazar ese stack.
-- La salud cloud actual no quedó acreditada tras intentos de 35 s y 50 s; evitar presentar la verificación del 11 de octubre como estado actual.
-- Cuentas/login de Render y datos gestionados pendientes de comprobación; no asumir importación de la base local.
-- No se verificaron commit desplegado, plan, región, versiones de runtime, backups ni expiración de servicios Render/Vercel.
+- Los timeouts de 35 s y 50 s pertenecen a la auditoría inicial del 26; el 27 se acreditó salud UP y Render ef31d65 Live. La nueva interfaz/CI se contrastan en el informe cloud, sin reutilizar esos timeouts como estado actual.
+- La copia puntual Windows → Render y los logins/roles se comprobaron el 27; no hay sincronización continua ni copia de esos datos al Docker principal.
+- Commit, plan Free, región, runtime y respaldos de Render se documentaron en la migración y publicaciones posteriores. Revisar la retención/expiración y el estado del despliegue concreto cuando vuelva a operar; la ficha Vercel por SHA no sustituye comprobar su alias e interfaz.
 - El PostgreSQL nativo escucha en todas las interfaces; no se inspeccionaron firewall, `listen_addresses` ni `pg_hba.conf`, por lo que no se afirma acceso remoto efectivo. El Compose limita backend/frontend a loopback y no publica PostgreSQL.
 - Versiones base Docker y tags de acciones son mutables; no están fijados a digest/SHA. No se modificó esta decisión durante la auditoría.
 - La documentación de octubre 3 es valiosa para evidencia reproducible, pero su apartado de nube quedó superado por octubre 11; consultar esta memoria junto con el historial y la configuración actual.

@@ -87,13 +87,13 @@ de validación/autenticación. Añade límites por instancia:
 
 | Límite predeterminado | Clave y ventana |
 |---|---|
-| Cinco fallos de autenticación | Usuario normalizado + origen; 900 segundos desde el primer fallo |
+| Cinco fallos de autenticación | Usuario normalizado agregado, independiente del origen; 900 segundos desde el primer fallo |
 | Sesenta solicitudes de login | Origen; 60 segundos desde la primera solicitud |
 
 El usuario se normaliza con trim/minúsculas; la contraseña no se transforma.
 Los primeros cinco fallos secuenciales devuelven `401`; el siguiente dentro
 de la ventana devuelve `429`, aunque entonces se envíe una contraseña válida.
-Un éxito previo al bloqueo reinicia los fallos de ese usuario/origen, pero no
+Un éxito previo al bloqueo reinicia los fallos de ese usuario, pero no
 la cuota general del origen. Las reservas concurrentes también cuentan para
 impedir superar el límite mientras BCrypt trabaja.
 
@@ -104,7 +104,10 @@ origen. El límite cubre únicamente el POST de login.
 
 El origen procede de `HttpServletRequest.getRemoteAddr()`. El filtro no toma
 la dirección de `Forwarded` o `X-Forwarded-For` enviados por el cliente.
-Con un proxy, distintos usuarios pueden compartir el mismo peer y su cuota.
+Con un proxy, distintos usuarios pueden compartir el mismo peer y su cuota
+general de solicitudes. El límite de fallos por username no depende de ese peer:
+acumula intentos contra el mismo nombre aunque lleguen desde conexiones u
+orígenes diferentes. Esto evita depender de la estabilidad del peer del proxy.
 No equivale automáticamente a la IP pública de cada navegador: verificar
 la configuración de infraestructura del entorno concreto.
 
@@ -131,6 +134,9 @@ Retry-After: 900
 
 La espera concreta depende del tiempo restante. Respetar la cabecera; no
 reintentar automáticamente ni guardar un token de esa respuesta.
+Un tercero que acumule fallos contra un username puede causar también esa
+espera temporal al dueño de la cuenta. No se modifica su estado en la BD ni
+se garantiza defensa distribuida frente a intentos atendidos por otras réplicas.
 Los contadores viven en memoria, con caducidad y hasta 10000 entradas por mapa.
 Se reinician con el proceso y no se comparten entre réplicas. No hay Redis,
 migración ni bloqueo persistente de cuentas en PostgreSQL. No cambia la política
@@ -176,6 +182,40 @@ y [configuración](../../backend/inventario/src/main/resources/application.prope
 
 La [verificación local del 27](../despliegue/verificacion-paginacion-login-2026-10-27.md)
 registra 406 pruebas backend, 107 frontend, build y recorrido Chrome con API/BD
-temporales aprobados. La publicación de este bloque está pendiente.
+temporales aprobados. Después se publicó el backend `34d8033` y luego el frontend
+`7412831`. Actions 40564481861 del primer commit aprobó 5/5 trabajos, con 406
+pruebas backend, 93 del frontend anterior y 28 del importador. Render desplegó
+ese backend en `dep-dbgf7bdg1s2s739dull0`, Live en 4m16s, salud UP y trece
+migraciones al día; ADMIN consultó una página de 20 equipos de un total de 258.
+Vercel reporta success para el SHA exacto del nuevo frontend. Su CI
+40565271628 aprobó 406 backend, 107 frontend/build 1681 y 28 importador. La UI
+pública verificó tamaños 20/50/100, segunda página/búsqueda con 258 equipos y
+Auditoría 20/100 sobre 351 eventos. El límite agregado corregido de login en
+cloud se comprobó después, como se detalla a continuación.
+La implementación y las pruebas locales no acreditan por sí solas ese límite
+tras un proxy. El [informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md)
+registra commit, despliegue y comportamientos observados por separado.
+El contrato agregado por username documentado aquí es una corrección posterior
+al observar seis 401 en la primera prueba cloud. Se publicó en `ef31d65`, tras
+**410/410 pruebas backend locales** sin fallos/errores/omitidas, JAR y BUILD
+SUCCESSFUL en 2m17s. Actions 40567596491 aprobó 5/5 trabajos, con 410 backend,
+107 frontend/build 1681 y 28 importador, y publicó ambas imágenes. Vercel
+reporta success para ef31d65, ficha E4o5pumzx8Z9hPRVXSsvtQKYysTu. Render
+desplegó ese SHA en dep-dbgfh18473hc739j058g, Live en 11m46s y salud UP.
+El guard posterior observó cuatro GET públicos sin caché con el contrato
+previo pese al Live del panel; GitHub ef31d65 sí contiene el contrato agregado.
+Se inició Clear build cache & deploy del mismo SHA, dep-dbgfo1mi0phs73dt8020.
+Quedó Live en 4m52s, startup 171.8 s y OpenAPI pública corregida. Cinco POST
+con conexiones independientes a Render devolvieron 401 para un username
+ficticio; el sexto desde la UI Vercel activó espera 868→839 s y botón Reintentar
+deshabilitado. La discrepancia quedó resuelta tras reconstruir, sin causa
+exacta demostrada. La comprobación API cloud final aprobó **59/59** el 27, de
+14:37:40 a 14:38:42 Lima: seis conexiones independientes dieron
+`[401, 401, 401, 401, 401, 429]`, Retry-After 893 s, no-store y ApiError.
+Un login ADMIN posterior devolvió 200; páginas, búsqueda, Auditoría, alcance de
+Jorge con 56 equipos y proxy correctos. Se conservaron 258 equipos, seis
+usuarios y 351 auditorías. El [JSON final](../despliegue/evidencias/paginacion-login-cloud-2026-10-27.json)
+se conserva separado de la prueba inicial fallida. Los 406 tests y el recorrido
+temporal con 53 fixtures anteriores conservan su alcance propio.
 Referencias de diseño: [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
 y [HTTP 429/Retry-After, RFC 6585](https://www.rfc-editor.org/rfc/rfc6585#section-4).

@@ -1,5 +1,56 @@
 # Memoria técnica: backend y base de datos
 
+**Paginación/login, publicados el 27:** tres GET admiten page/size opcionales
+(base0, 20 por defecto, máximo100), conservando array sin ambos. Specification
+de Equipos aplica q literal, filtros y alcance al contenido y al COUNT; Auditoría
+ordena fecha/id DESC. Repositorios limitan en PostgreSQL; DTO de página explícito,
+sin exponer Page/JPA. Login añade filtro de cuota por peer antes de parsear body/JWT,
+reserva concurrente agregada por usuario normalizado y 429 público con Retry-After.
+El contrato corregido usa 5 fallos/900s por username, independiente del peer,
+y 60 peticiones/origen/60s; memoria acotada de 10000 entradas por mapa,
+sin cuentas bloqueadas en BD. Éxito reinicia fallos, no la cuota general.
+Regresión local **406/406**, sin fallos/omitidas, JAR correcto; frontend107/build1681 y
+UI real con53 fixtures temporales aprobados. Sin migraciones o cambios de datos
+habituales durante la implementación. El backend se publicó primero en
+`34d8033ed4e9e79b1f8767f9e277240b7159891b`; Actions 40564481861 aprobó sus
+cinco trabajos, con 406 pruebas backend, 93 del frontend anterior y 28 del
+importador. Render `dep-dbgf7bdg1s2s739dull0` está Live con ese commit: 4m16s,
+arranque 181.6 s, trece migraciones al día y salud UP. La consulta ADMIN
+page=0/size=20 devolvió 20 elementos y total 258; Swagger muestra page/size/q
+y 429. Actions 40565271628 del frontend 7412831 repitió 406 backend, 107 frontend
+y 28 importador con éxito; la UI pública comprobó la paginación sobre 258
+equipos y 351 auditorías. La corrección del límite cloud se comprobó después,
+como se detalla a continuación.
+La corrección del límite agregado por username se publicó en
+`ef31d659983493e9ca9eeea2e063caf0b5e63029`, después de aprobar **410/410**
+pruebas backend locales, cero fallos/errores/omitidas, JAR y BUILD SUCCESSFUL
+en 2m17s. Actions 40567596491 aprobó 5/5 (410 backend, 107 frontend/build 1681,
+28 importador y ambas imágenes publicadas). Render desplegó ef31d65 en
+`dep-dbgfh18473hc739j058g`, Live en 11m46s, con salud UP. El diagnóstico SQL
+de solo lectura con TLS confirmó 258 equipos, trece migraciones y ausencia de
+bloqueadores en ese momento; no demuestra la causa exacta del arranque prolongado.
+El guard posterior observó cuatro GET públicos sin caché con el contrato previo,
+aunque el panel marcaba ef31d65 Live. Se inició un nuevo despliegue del mismo
+SHA con caché de build limpia, `dep-dbgfo1mi0phs73dt8020`; no está demostrada
+la causa de la discrepancia. El nuevo despliegue quedó Live en 4m52s, startup
+171.8 s y OpenAPI pública corregida. Cinco POST con conexiones independientes
+a Render devolvieron 401 para un username ficticio; el sexto desde Vercel
+activó espera 868→839 s y botón deshabilitado. La discrepancia quedó resuelta
+tras reconstruir sin causa exacta demostrada. La comprobación API cloud final
+aprobó **59/59** el 27, de 14:37:40 a 14:38:42 Lima: cinco 401 y sexto 429
+desde conexiones independientes, Retry-After 893 s, no-store y ApiError.
+Un login ADMIN posterior devolvió 200; páginas, búsqueda, Auditoría, alcance de
+Jorge con 56 equipos y proxy correctos. Conteos finales: 258 equipos, seis
+usuarios y 351 auditorías, conservados.
+El PostgreSQL privado de la regresión quedó detenido;
+limpieza recursiva bloqueada por revisión automática, con residuo fuera de Git.
+Fallar repetidamente contra un username puede imponer espera temporal a su
+dueño, sin modificar su actividad ni guardar bloqueos en PostgreSQL. Los
+contadores no se comparten entre procesos y se pierden al reiniciar.
+[Guía](../backend-final/paginacion-login.md),
+[verificación local](../despliegue/verificacion-paginacion-login-2026-10-27.md)
+y [publicación cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+
 **OpenAPI/Postman, 27 de octubre:** Springdoc **3.2.0** genera las 70 operaciones
 desde Controllers/DTO. Swagger UI `/swagger-ui.html`, JSON `/v3/api-docs` y YAML
 `/v3/api-docs.yaml` públicos solo GET; JWT y roles de negocio sin cambios.
@@ -275,7 +326,7 @@ Pendientes de comprobación actualizados, sin tratarlos como fallos confirmados 
 1. La carga y los conteos están comprobados mediante API sobre la base nativa. Consultar versión de servidor y `flyway_schema_history` en la instancia concreta si se requiere acreditación SQL del esquema/checksums; no extrapolar los resultados de otra base.
 2. Validar despliegue efectivo, variables de entorno y salud del backend en su plataforma; revisar la [memoria de infraestructura](./docker-deployment.md).
 3. Revisar políticas de producto si se requieren invalidación inmediata de JWT al restablecer contraseña, refresh token o recuperaciones: no están implementadas en los endpoints revisados.
-4. Si crecen datos, evaluar paginación: los listados revisados, incluidos movimientos/auditoría, devuelven listas completas. No atribuir paginación o exportación de reportes a la API actual.
+4. Equipos y Auditoría admiten paginación opcional publicada y comprobada en Render el 27; el despliegue limpio del límite agregado ya acredita su contrato público y espera entre Render/Vercel. Sin page/size conservan listas completas por compatibilidad. Los demás listados aún no paginan; evaluar según volumen. No hay exportación detallada nueva en la API.
 5. Al trabajar con rangos de fechas desde interfaz peruana, preservar conscientemente la interpretación UTC de filtros con timestamp o cambiarla mediante una decisión y verificación explícitas.
 
 Este documento no es un respaldo SQL ni exportación de datos. Es una memoria técnica reproducible desde fuentes y evidencia local. No incorpora valores de configuración privados, hashes de contraseñas, JWT ni contenido de filas de usuarios.

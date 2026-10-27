@@ -1,0 +1,353 @@
+{
+  "fecha_inicio_utc": "2026-10-27T19:37:40.228781+00:00",
+  "commit_objetivo": "ef31d659983493e9ca9eeea2e063caf0b5e63029",
+  "render_deploy_id": "dep-dbgfo1mi0phs73dt8020",
+  "release_live_fuente": "Panel Render comprobado por agente principal; API identifica contrato corregido",
+  "tls_verificado": true,
+  "checks": [
+    {
+      "name": "openapi_limite_por_nombre_normalizado",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "openapi_paginacion",
+      "passed": true
+    },
+    {
+      "name": "openapi_70_operaciones",
+      "passed": true
+    },
+    {
+      "name": "salud",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "login_admin",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "login_gestor",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_array_258",
+      "passed": true,
+      "status": 200,
+      "count": 258
+    },
+    {
+      "name": "equipos_orden_id_asc",
+      "passed": true
+    },
+    {
+      "name": "usuarios_array_6",
+      "passed": true,
+      "status": 200,
+      "count": 6
+    },
+    {
+      "name": "auditoria_array_351",
+      "passed": true,
+      "status": 200,
+      "count": 351
+    },
+    {
+      "name": "auditoria_orden_fecha_id_desc",
+      "passed": true
+    },
+    {
+      "name": "equipos_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "equipos_page1_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_page1_20_metadata",
+      "passed": true,
+      "number": 1,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_page1_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "equipos_size50_default0_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_size50_default0_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 50,
+      "total": 258,
+      "pages": 6
+    },
+    {
+      "name": "equipos_size50_default0_content",
+      "passed": true,
+      "content_count": 50
+    },
+    {
+      "name": "equipos_size100_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_size100_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 100,
+      "total": 258,
+      "pages": 3
+    },
+    {
+      "name": "equipos_size100_content",
+      "passed": true,
+      "content_count": 100
+    },
+    {
+      "name": "equipos_page_default20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_page_default20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_page_default20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "equipos_fuera_rango_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_fuera_rango_metadata",
+      "passed": true,
+      "number": 99,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_fuera_rango_content",
+      "passed": true,
+      "content_count": 0
+    },
+    {
+      "name": "admin_equipos_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "admin_equipos_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "admin_equipos_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "auditoria_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "auditoria_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 351,
+      "pages": 18
+    },
+    {
+      "name": "auditoria_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "invalido_page_negativo",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_size_cero",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_size_101",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_page_texto",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_page_vacio",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_q_201",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "busqueda_fuera_primera_pagina",
+      "passed": true,
+      "status": 200,
+      "result_count": 1,
+      "query_exportada": false
+    },
+    {
+      "name": "busqueda_legacy_array",
+      "passed": true,
+      "status": 200,
+      "count": 1
+    },
+    {
+      "name": "gestor_alcance_un_laboratorio",
+      "passed": true,
+      "status": 200,
+      "laboratorios": 1
+    },
+    {
+      "name": "gestor_array_56",
+      "passed": true,
+      "status": 200,
+      "count": 56
+    },
+    {
+      "name": "gestor_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "gestor_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 56,
+      "pages": 3
+    },
+    {
+      "name": "gestor_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "proxy_vercel_page1_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "proxy_vercel_page1_20_metadata",
+      "passed": true,
+      "number": 1,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "proxy_vercel_page1_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "cinco_401_sexto_429",
+      "passed": true,
+      "statuses": [
+        401,
+        401,
+        401,
+        401,
+        401,
+        429
+      ],
+      "cuenta_existente": false
+    },
+    {
+      "name": "retry_after_1_a_900",
+      "passed": true,
+      "retry_after_seconds": 893
+    },
+    {
+      "name": "limite_no_store",
+      "passed": true,
+      "cache_control": "no-store"
+    },
+    {
+      "name": "limite_api_error",
+      "passed": true
+    },
+    {
+      "name": "cuenta_real_valida_no_afectada",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_conservados",
+      "passed": true,
+      "total": 258
+    },
+    {
+      "name": "auditoria_conservada",
+      "passed": true,
+      "total": 351
+    },
+    {
+      "name": "usuarios_conservados",
+      "passed": true,
+      "count": 6
+    }
+  ],
+  "credenciales_solo_en_memoria": true,
+  "datos_individuales_exportados": false,
+  "escrituras_negocio": 0,
+  "logins_fallidos_usuario_inexistente": 6,
+  "conexiones_independientes": true,
+  "evidencia_inicial_conservada": "paginacion-login-cloud-inicial-2026-10-27.json",
+  "passed": true,
+  "fecha_fin_utc": "2026-10-27T19:38:42.740360+00:00"
+}

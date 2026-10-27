@@ -1,0 +1,340 @@
+{
+  "fecha_inicio_utc": "2026-10-27T18:59:26.810473+00:00",
+  "commit_objetivo": "34d8033",
+  "commit_runtime_verificado_por_esta_prueba": false,
+  "tls_verificado": true,
+  "checks": [
+    {
+      "name": "openapi_paginacion",
+      "passed": true
+    },
+    {
+      "name": "openapi_70_operaciones",
+      "passed": true
+    },
+    {
+      "name": "salud",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "login_admin",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "login_gestor",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_array_258",
+      "passed": true,
+      "status": 200,
+      "count": 258
+    },
+    {
+      "name": "equipos_orden_id_asc",
+      "passed": true
+    },
+    {
+      "name": "usuarios_array_6",
+      "passed": true,
+      "status": 200,
+      "count": 6
+    },
+    {
+      "name": "auditoria_array_351",
+      "passed": true,
+      "status": 200,
+      "count": 351
+    },
+    {
+      "name": "auditoria_orden_fecha_id_desc",
+      "passed": true
+    },
+    {
+      "name": "equipos_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "equipos_page1_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_page1_20_metadata",
+      "passed": true,
+      "number": 1,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_page1_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "equipos_size50_default0_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_size50_default0_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 50,
+      "total": 258,
+      "pages": 6
+    },
+    {
+      "name": "equipos_size50_default0_content",
+      "passed": true,
+      "content_count": 50
+    },
+    {
+      "name": "equipos_size100_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_size100_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 100,
+      "total": 258,
+      "pages": 3
+    },
+    {
+      "name": "equipos_size100_content",
+      "passed": true,
+      "content_count": 100
+    },
+    {
+      "name": "equipos_page_default20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_page_default20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_page_default20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "equipos_fuera_rango_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "equipos_fuera_rango_metadata",
+      "passed": true,
+      "number": 99,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "equipos_fuera_rango_content",
+      "passed": true,
+      "content_count": 0
+    },
+    {
+      "name": "admin_equipos_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "admin_equipos_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "admin_equipos_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "auditoria_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "auditoria_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 351,
+      "pages": 18
+    },
+    {
+      "name": "auditoria_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "invalido_page_negativo",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_size_cero",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_size_101",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_page_texto",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_page_vacio",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "invalido_q_201",
+      "passed": true,
+      "status": 400
+    },
+    {
+      "name": "busqueda_fuera_primera_pagina",
+      "passed": true,
+      "status": 200,
+      "result_count": 1,
+      "query_exportada": false
+    },
+    {
+      "name": "busqueda_legacy_array",
+      "passed": true,
+      "status": 200,
+      "count": 1
+    },
+    {
+      "name": "gestor_alcance_un_laboratorio",
+      "passed": true,
+      "status": 200,
+      "laboratorios": 1
+    },
+    {
+      "name": "gestor_array_56",
+      "passed": true,
+      "status": 200,
+      "count": 56
+    },
+    {
+      "name": "gestor_page0_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "gestor_page0_20_metadata",
+      "passed": true,
+      "number": 0,
+      "size": 20,
+      "total": 56,
+      "pages": 3
+    },
+    {
+      "name": "gestor_page0_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "proxy_vercel_page1_20_http",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "proxy_vercel_page1_20_metadata",
+      "passed": true,
+      "number": 1,
+      "size": 20,
+      "total": 258,
+      "pages": 13
+    },
+    {
+      "name": "proxy_vercel_page1_20_content",
+      "passed": true,
+      "content_count": 20
+    },
+    {
+      "name": "cinco_401_sexto_429",
+      "passed": false,
+      "statuses": [
+        401,
+        401,
+        401,
+        401,
+        401,
+        401
+      ],
+      "cuenta_existente": false
+    },
+    {
+      "name": "equipos_conservados",
+      "passed": true,
+      "status": 200,
+      "total": 258
+    },
+    {
+      "name": "auditoria_conservada",
+      "passed": true,
+      "status": 200,
+      "total": 351
+    },
+    {
+      "name": "usuarios_conservados",
+      "passed": true,
+      "status": 200,
+      "total": 6
+    }
+  ],
+  "credenciales_solo_en_memoria": true,
+  "datos_individuales_exportados": false,
+  "escrituras_negocio": 0,
+  "logins_fallidos_usuario_inexistente": 6,
+  "passed": false,
+  "failure_stage": "limite_usuario_inexistente",
+  "failure_type": "AssertionError",
+  "failure_check": "cinco_401_sexto_429",
+  "fecha_fin_utc": "2026-10-27T19:02:12.593913+00:00",
+  "diagnostico_limite": {
+    "cliente": "urllib con conexiones HTTPS separadas",
+    "seis_solicitudes_completadas": true,
+    "reintentos_fallidos_adicionales": 0,
+    "origen_getRemoteAddr_observado": false,
+    "hipotesis_no_confirmada": "El peer del proxy puede variar entre conexiones; contrastar con cliente persistente sin bloquear cuentas reales."
+  },
+  "fecha_preservacion_utc": "2026-10-27T19:03:00.180082+00:00"
+}

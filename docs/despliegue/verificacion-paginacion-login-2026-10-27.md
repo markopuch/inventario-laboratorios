@@ -1,7 +1,10 @@
 # Verificación local: paginación y límite de login
 
-**27 de octubre de 2026, America/Lima.** Implementación local posterior a
-Swagger d8f2123; no se hizo commit/push ni despliegue de este bloque.
+**Corte local previo a la publicación del 27 de octubre de 2026, America/Lima.**
+Implementación posterior a Swagger d8f2123. Este informe conserva las pruebas
+locales anteriores a los commits 34d8033 y 7412831. La publicación, la corrección
+del contador de login y sus comprobaciones reales se registran por separado en
+la [verificación cloud](verificacion-paginacion-login-cloud-2026-10-27.md).
 Contratos y variables: [guía](../backend-final/paginacion-login.md).
 [Resumen verificable](evidencias/paginacion-login-2026-10-27.json).
 
@@ -83,8 +86,9 @@ por Git, no contiene claves de las bases habituales y no se publica su contenido
 Ese es el único residuo de acceso de este bloque; los servicios de prueba ya no
 existen. La comprobación visual final pasó credenciales solo por entorno/memoria.
 
-La API publicada en Render sigue siendo d8f2123; este bloque está preparado
-localmente. Al publicar, coordinar backend y frontend: clientes antiguos siguen
-aceptando arrays, pero el cliente nuevo necesita un backend con page/size.
-Los contadores de login son por proceso; detrás de un proxy pueden compartir
-origen. No se acredita coordinación entre réplicas ni defensa de borde.
+En ese corte local Render conservaba d8f2123. La publicación posterior se hizo
+por etapas: backend compatible antes del frontend paginado. La prueba cloud
+detectó que el contador inicial por usuario/origen no garantizaba el límite
+entre conexiones distintas; el contrato vigente agrega fallos por username.
+Los contadores siguen siendo por proceso. No se acredita coordinación entre
+réplicas ni defensa de borde; véase la verificación cloud enlazada al inicio.

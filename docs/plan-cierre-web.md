@@ -4,6 +4,28 @@ Actualización: **27 de octubre de 2026, America/Lima**.
 Estado: **cierre implementado y recorrido comprobado con backend/BD locales
 reales**. La publicación GitHub/Actions se registra por separado en el
 [anexo del cierre](despliegue/verificacion-cierre-2026-10-27.md).
+La ampliación posterior de paginación/login está publicada: backend 34d8033
+Live en Render y frontend 7412831 con Vercel success, CI 406/107/28 y recorrido
+público de paginación/búsqueda/Auditoría aprobados. El límite agregado corregido
+ya se comprobó entre Render y Vercel; ver el
+[informe actual](despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+La corrección posterior limita cinco fallos/900s agregados por username,
+independiente del peer; conserva 60 solicitudes/60s por peer, sin headers IP
+confiados. Se publicó en ef31d65, con regresión local 410/410 y JAR aprobados;
+Actions 40567596491 aprobó 5/5 trabajos, con 410 backend, 107 frontend/build
+1681 y 28 importador, y publicó ambas imágenes. Vercel reporta success para
+ef31d65; Render desplegó ese SHA en dep-dbgfh18473hc739j058g, Live en 11m46s,
+con salud UP. El guard posterior observó cuatro GET públicos sin caché con el
+contrato previo; se inició Clear build cache & deploy del mismo ef31d65,
+dep-dbgfo1mi0phs73dt8020: Live en 4m52s, startup 171.8 s y OpenAPI corregida.
+Cinco 401 directos a Render y el sexto intento desde Vercel activaron espera
+868→839 s y botón deshabilitado. La discrepancia quedó resuelta tras reconstruir,
+sin causa exacta demostrada. La comprobación API cloud final aprobó **59/59**:
+cinco 401 y sexto 429 desde conexiones independientes, Retry-After 893 s,
+no-store y ApiError; login ADMIN posterior 200. Se conservaron 258 equipos,
+seis usuarios y 351 auditorías. La espera puede afectar
+al dueño de un nombre atacado; el estado de la cuenta en BD no se modifica y
+los contadores se reinician con el proceso.
 
 ## Objetivo y alcance
 
@@ -45,14 +67,14 @@ no sustituyen la verificación final ni acreditan un despliegue remoto.
 | Asignaciones | Ruta y contratos ADMIN existentes; nuevo acceso propio en menú. | Comprobar visibilidad ADMIN y reemplazo de asignaciones sin cambiar contratos. |
 | Reportes CSV | Cinco descargas de agregados desde respuestas validadas, con filtros aplicados y alcance. | Comprobar UTF-8/BOM, `;`, comillas, protección de fórmulas, metadatos y bloqueo ante filtros sin aplicar o datos inválidos. |
 | Auditoría | API ADMIN existente; nueva pantalla de solo lectura con filtros. | Comprobar acceso ADMIN, denegación de otros roles, fechas UTC y visualización en Lima, estados vacío/error y filtros válidos. |
-| Vercel y Render | Publicación documentada; flujo autenticado actual pendiente de acreditar. | Verificar el entorno que se utilizará para cerrar la web. |
+| Vercel y Render | ef31d65 tiene CI 410/107/28, Vercel success, Render Live con contrato corregido y API cloud final 59/59. UI pública de paginación/búsqueda/Auditoría con 258 equipos/351 eventos y espera de login entre Render/Vercel comprobadas. | Bloque publicado cerrado; mantener respaldo/retención y distinguir este recorrido de las suites locales. |
 | Docker local | Motor accesible y tres servicios saludables del stack principal anterior. Las imágenes nuevas 58ac8f6 aprobaron 22 comprobaciones aisladas, incluidas siete de UI. | El stack principal conserva imágenes/datos anteriores; actualizarlo solo si se autoriza. La base Docker no contiene la carga Excel nativa. |
 | Variante y sprints Marko | Conservados localmente y excluidos del seguimiento Git. | Mantenerlos fuera del producto activo y preservar sus archivos locales. |
 
 ## Ampliaciones que siguen pendientes de priorización
 
 PDF/XLSX, exportación de registros detallados, gráficos completos del mockup,
-calendario, paginación, refresh tokens, recuperación de contraseña, permisos
+calendario, paginación de otros listados, refresh tokens, recuperación de contraseña, permisos
 dinámicos no se incorporan en bloque al cierre.
 Se evaluarán según necesidad y requisitos acordados.
 La demora inicial al ingresar permanece fuera del trabajo solicitado.
@@ -60,6 +82,18 @@ La demora inicial al ingresar permanece fuera del trabajo solicitado.
 El **27 de octubre**, el usuario autorizó por separado actualizar Postman a las
 70 operaciones y añadir Swagger/OpenAPI. La [guía API](backend-final/openapi.md)
 documenta ese bloque y su comprobación; no incluye paginación ni refresh token.
+
+Por petición posterior del mismo día, se implementaron localmente paginación de
+Equipos/Auditoría y límite de intentos de login. [Guía](backend-final/paginacion-login.md)
+y [verificación local](despliegue/verificacion-paginacion-login-2026-10-27.md).
+Backend406, frontend107 y UI real aislada aprobados; backend 34d8033 y frontend
+7412831 publicados después. Actions 40564481861 aprobó 5/5 (406 backend,
+93 del frontend anterior, 28 importador); Render quedó Live y Vercel reportó
+success para el frontend nuevo. Su CI 40565271628 aprobó después 406 backend,
+107 frontend/build 1681 y 28 importador; la UI pública verificó páginas/tamaños,
+búsqueda y Auditoría. El límite agregado corregido se comprobó después entre Render/Vercel
+en el [informe cloud](despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+El resto de las ampliaciones mantiene su prioridad por definir.
 
 El usuario autorizó después reforzar contraseñas y preparar la verificación de
 GitHub Actions/Docker antes de publicar en GitHub; ese trabajo sí forma parte

@@ -1,7 +1,7 @@
 # Backlog y alcance vigente
 
 Base funcional documentada al **3 de octubre de 2026**, commit `e1ce75a`.
-Actualización documental del **26 de octubre**: se contrastó el estado de
+Actualización documental del **27 de octubre**: se contrastó el estado de
 publicación con la [memoria de despliegue](../memory/docker-deployment.md).
 El [plan de cierre web y Markdown](../plan-cierre-web.md) recoge la prioridad
 actual del usuario; las ampliaciones de este backlog requieren priorización.
@@ -15,6 +15,7 @@ distingue publicación, despliegue y comprobaciones de funcionamiento.
 
 | Tema | Estado vigente y evidencia |
 |---|---|
+| Paginación y límite de login | Publicados el 27 en 34d8033/7412831 y corrección ef31d65. Arrays compatibles sin page/size, q y conteos por alcance; cuota de login configurable con 429/Retry-After y espera UI. Regresión vigente y CI 410/107/28 aprobados, build 1681. Render Live, Vercel success y paginación/búsqueda/Auditoría públicas sobre 258 equipos/351 eventos comprobados. Cinco 401 directos a Render y sexto intento desde Vercel acreditan el contador agregado y espera 868→839 s con botón deshabilitado. [Guía](paginacion-login.md) e [informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md). |
 | OpenAPI y Postman V13 | Añadidos el 27 de octubre: Springdoc 3.2.0, 70 operaciones, JWT, DTO/filtros/errores y colección completa. Publicados en d8f2123, Actions 5/5 y Render Live; Swagger y Authorize/perfil 200 comprobados. [Guía](openapi.md) e [informe cloud](../despliegue/verificacion-swagger-render-2026-10-27.md). |
 | Usuarios administrativos | ADMIN lista, consulta, crea y edita usuarios; cambia actividad, rol y contraseña; configura asignaciones. `AdminUsuarioController` y `AdminUsuarioService` protegen al último ADMIN activo. No hay registro público ni CRUD del catálogo Rol. |
 | Mantenimiento | Entity/tabla desde V12; consulta, programación, edición y ciclo PROGRAMADO → EN_PROCESO → COMPLETADO/CANCELADO. Un mantenimiento en proceso bloquea edición, baja y traslado de Equipo. |
@@ -30,15 +31,15 @@ distingue publicación, despliegue y comprobaciones de funcionamiento.
 Estas funciones se implementaron **después** del cierre Sprint 7. Reconocerlas
 en documentación no modifica los resultados ni las restricciones de aquel sprint.
 
-## Pendientes de despliegue y producto
+## Operación y ampliaciones por priorizar
 
 | Tema | Estado y trabajo por definir |
 |---|---|
-| Nube | El 27 se copiaron 258 equipos/seis usuarios tras respaldar ambas bases. Después se desplegó d8f2123 con Swagger público; salud, tres logins, Authorize/perfil, alcance y proxy Vercel acreditados. Sigue separado el recorrido integral de escrituras en navegador. [Verificación](../despliegue/verificacion-swagger-render-2026-10-27.md). |
-| Límite de intentos de login | No incorporado en el bloque OpenAPI/Postman. La política 15 caracteres/72 bytes de altas y restablecimientos sí existe; limitar intentos es otra mejora. |
+| Nube | Bloque publicado y comprobado: ef31d65 con CI 410/107/28, Vercel success y Render Live tras reconstrucción limpia dep-dbgfo1mi0phs73dt8020, 4m52s y startup 171.8 s. API cloud final 59/59: cinco 401 y sexto 429, Retry-After 893 s/no-store/ApiError y login ADMIN posterior 200. Páginas/búsqueda/Auditoría/alcance/proxy correctos; 258 equipos, seis usuarios y 351 auditorías conservados. La discrepancia inicial quedó resuelta sin causa exacta demostrada. Mantener respaldo/retención y verificar nuevamente cuando se opere. [Informe actual](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md). |
+| Operación del límite de login | Corrección ef31d65 implementada y comprobada entre Render/Vercel: cinco fallos/900s por username normalizado, independiente del peer; cuota 60/60s por peer conservada. 410 pruebas backend locales y CI aprobados. Un ataque al username puede imponer espera al dueño. Contadores por proceso/reinicio, sin bloqueo BD; distribución entre réplicas requiere infraestructura adicional si se adopta ese despliegue. |
 | Refresh token | No existe; el vencimiento actual requiere nuevo login. Su política de renovación y revocación requiere una decisión de producto. |
 | Permisos dinámicos | No existe administración dinámica de permisos; siguen ADMIN/GESTOR/LECTOR y UsuarioLaboratorio. |
-| Paginación | Listas sin contrato nuevo de paginación; evaluar solo si el volumen lo exige. |
+| Paginación de otros listados | Equipos/Auditoría tienen código publicado; el backend paginado ya se comprobó en Render. Catálogos, movimientos y otros listados conservan sus contratos. Priorizar ampliación según volumen y consumidores. |
 | CRUD de Rol | No hay administración del catálogo Rol por API; asignar uno de los tres roles a un Usuario sí está implementado. |
 | Versionado histórico completo | Movimientos conservan el hecho del traslado y auditoría registra acciones; no reconstruyen cada versión de nombres/datos. |
 | Configuración persistida | Sin contrato backend; el cierre del 26 de octubre retira menú y ruta del placeholder. Definir opciones y persistencia solo si se prioriza esta ampliación. |

@@ -1,5 +1,56 @@
 # Memoria de conversaciones, decisiones y evolución
 
+**Bloque posterior autorizado y publicado el 27:** el usuario pidió continuar con
+paginación y límite de login, y después indicó continuar hasta terminar.
+Equipos/Auditoría paginan sin romper arrays anteriores; búsqueda y COUNT respetan
+alcance/filtros. Login limita en memoria con 429/Retry-After y espera visible.
+406 backend,107 frontend, build y UI real temporales aprobados. No se cambian
+claves, migraciones ni datos habituales durante la implementación. El usuario
+autorizó después publicar backend y frontend y verificar Render/Vercel. Se
+publicó primero el backend compatible `34d8033`: Actions 40564481861 aprobó 5/5
+(406 backend, 93 frontend anterior y 28 importador); Render quedó Live en 4m16s
+con salud UP, trece migraciones al día y lectura ADMIN paginada de 20/258 equipos.
+Después se publicó el frontend `7412831`; Vercel reporta success para ese SHA,
+ficha `nBQ59JBg7CcodNPtqu2y7NGYCpTs`. Su CI 40565271628 terminó correctamente
+(406 backend, 107 frontend/build 1681 y 28 importador). La UI pública comprobó
+páginas/tamaños 20/50/100 y búsqueda con 258 equipos, además de Auditoría
+20/100 sobre 351 eventos. [Publicación cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+La primera prueba de límite cloud obtuvo seis 401 con una cuenta inexistente.
+Se aprobó corregir el contador a cinco fallos agregados por username normalizado
+en 900s, sin depender de un peer estable; permanece la cuota 60/60s por peer.
+No se confía en headers IP ni se añaden dependencias. La corrección se publicó
+en ef31d65 tras 410/410 pruebas backend locales, JAR y BUILD SUCCESSFUL en
+2m17s; Actions 40567596491 aprobó 5/5 con 410 backend, 107 frontend/build 1681
+y 28 importador, ambas imágenes publicadas. Vercel reporta success para ef31d65,
+ficha `E4o5pumzx8Z9hPRVXSsvtQKYysTu`; Render desplegó ef31d65 en
+`dep-dbgfh18473hc739j058g`, Live en 11m46s y salud UP. El diagnóstico SQL de
+solo lectura con TLS confirmó 258 equipos, trece migraciones y ningún
+bloqueador en ese momento, sin demostrar la causa exacta del arranque
+prolongado; no hubo reinicios manuales ni cambios de configuración. La
+respuesta 429 cloud se comprobó después. El guard posterior observó cuatro
+GET públicos sin caché con el contrato previo pese al Live del panel, mientras
+GitHub ef31d65 contiene el contrato agregado. Tras contrastar repo/main,
+root/Dockerfile/contexto, se inició Clear build cache & deploy del mismo SHA,
+`dep-dbgfo1mi0phs73dt8020`. No se demostró la causa de la discrepancia ni se
+dio por aprobado el límite; el primer intento UI ficticio terminó en 401 y se
+detuvo. La reconstrucción limpia acreditó checkout ef31d659, COPY de src y
+bootJar BUILD SUCCESSFUL en 26 s. El nuevo despliegue quedó Live en 4m52s,
+startup 171.8 s y OpenAPI pública corregida. Cinco POST con conexiones
+independientes a Render dieron 401 para un username ficticio; el sexto desde
+la UI Vercel mostró espera 868→839 s y botón deshabilitado. La discrepancia
+quedó resuelta tras reconstruir sin causa exacta demostrada. La comprobación
+API cloud final aprobó **59/59** el 27, de 14:37:40 a 14:38:42 Lima: cinco 401 y
+sexto 429 desde conexiones independientes, Retry-After 893 s/no-store/ApiError;
+login ADMIN posterior 200. Páginas, búsqueda, Auditoría, Jorge con 56 equipos y
+proxy correctos; final 258 equipos, seis usuarios y 351 auditorías. El JSON
+inicial fallido queda separado de la evidencia final. El PostgreSQL
+privado quedó detenido, con limpieza bloqueada por revisión automática y residuo
+fuera de Git. Un ataque contra un nombre puede
+causar una espera temporal a su dueño; no hay bloqueo en BD y los contadores
+son por proceso, reiniciables y sin coordinación entre réplicas.
+La revisión automática bloqueó limpiar un fixture temporal privado de una BD
+de prueba ya eliminada dentro de build/ ignorado. [Detalle](../despliegue/verificacion-paginacion-login-2026-10-27.md).
+
 **Nuevo bloque autorizado el 27 de octubre:** el usuario pidió actualizar
 Postman y añadir Swagger/OpenAPI. Se incorporó Springdoc 3.2.0, documentación
 generada de las 70 operaciones y colección V13 sin credenciales. Regresión
@@ -154,6 +205,6 @@ Ver [guía](../importacion-inventario-demo.md) y
 
 1. Leer [memory.md](../../memory.md), el anexo del componente y `git status`.
 2. Identificar entorno: nativo, Compose o nube, y no transferir credenciales entre ellos por suposición.
-3. Para cierre cloud, confirmar el primer ADMIN y ejecutar login/permisos/flujos con una cuenta autorizada, sin publicar credenciales ni usar la BD habitual como fixture.
+3. El acceso ADMIN, permisos y flujos cloud quedaron acreditados el 27, con comprobación posterior 59/59. Al cambiar un despliegue, volver a comprobar con una cuenta autorizada, sin publicar credenciales ni usar la BD habitual como fixture.
 4. Configuración está fuera del alcance y retirada. Auditoría ADMIN y CSV se incorporaron en el cierre del 26 de octubre; mantener separada esa evidencia de los sprints antiguos y del despliegue efectivo.
 5. Actualizar fecha y evidencia de la memoria cuando cambie el estado.

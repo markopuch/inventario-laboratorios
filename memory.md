@@ -2,6 +2,80 @@
 
 ## Arquitectura general
 
+**Paginación y login, 27 de octubre — publicación posterior:** Equipos,
+su alias ADMIN y Auditoría admiten `page/size` opcionales, base cero, tamaño 20
+por defecto y máximo 100; sin ambos conservan el arreglo anterior. La búsqueda
+`q` se aplica en PostgreSQL antes de limitar/contar, junto con filtros y alcance.
+Jason pagina Equipos/Auditoría con tamaños 20/50/100, totales y descarte de
+respuestas obsoletas; dashboard, selectores e importador conservan arrays.
+El contrato corregido de login limita cinco fallos agregados por usuario
+normalizado en 900 s, independientemente del origen, y 60 solicitudes por peer
+en 60 s, configurable y con contadores acotados en memoria por instancia.
+429 incluye ApiError/Retry-After; la UI muestra espera y no reintenta sola.
+No cambian claves, JWT existentes, tablas o migraciones. Regresión nueva:
+**406/406 backend, 107/107 frontend**, build 1681 módulos y JAR correctos;
+recorrido real Chrome/BD temporal con 53 fixtures, paginación/búsqueda/Auditoría,
+móvil 390 px y sexto login 429 aprobados, cero errores de página.
+Los servicios temporales se eliminaron. Un archivo de acceso a una instancia
+de prueba ya eliminada quedó en `backend/inventario/build/paginacion-ui.private.json`:
+la revisión automática bloqueó su borrado; está ignorado y no contiene claves
+de Windows/Render ni de la base habitual. No copiarlo a Git.
+El backend se publicó primero en `34d8033ed4e9e79b1f8767f9e277240b7159891b`;
+Actions **40564481861**, 5/5 trabajos aprobados, ejecutó 406 pruebas backend,
+93 del frontend anterior y 28 del importador. Render desplegó ese commit en
+`dep-dbgf7bdg1s2s739dull0`: **Live en 4m16s**, arranque 181.6 s, trece
+migraciones vigentes sin cambios, salud UP y GET administrativo page=0/size=20
+con 20 elementos y total 258 comprobados. Swagger muestra page/size/q y 429.
+Después se publicó el frontend `74128312fe30a8ac85280bf9c5a6f749ce4d364b`.
+Vercel reporta success para ese SHA, ficha `nBQ59JBg7CcodNPtqu2y7NGYCpTs`;
+Actions **40565271628** terminó completed/success el 27 a las **14:05:11 Lima**
+(19:05:11 UTC): 406 backend, 107 frontend/build 1681 y 28 importador. La web
+pública comprobó tamaños 20/50/100, página 2 de 258 equipos, búsqueda fuera
+de la primera página y Auditoría 20/100 sobre 351 eventos.
+El límite por usuario agregado corrige la primera prueba cloud de seis 401.
+Se publicó en `ef31d659983493e9ca9eeea2e063caf0b5e63029`, tras **410/410**
+pruebas backend locales, cero fallos/errores/omitidas, JAR correcto y
+BUILD SUCCESSFUL en 2m17s. Actions **40567596491** aprobó **5/5 trabajos** el
+27 a las **14:20:24 Lima**, con 410 backend, 107 frontend/build 1681 y 28
+importador, más ambas imágenes publicadas. Vercel reporta success para el
+mismo SHA ef31d65, ficha `E4o5pumzx8Z9hPRVXSsvtQKYysTu`. Render desplegó
+ef31d65 en `dep-dbgfh18473hc739j058g`, **Live en 11m46s**, con salud UP.
+El diagnóstico SQL de solo lectura, con TLS y verificación completa del
+certificado, confirmó 258 equipos, trece migraciones y ausencia de bloqueadores
+en ese momento. No se demostró una causa exacta del arranque prolongado ni se
+hicieron reinicios manuales o cambios de configuración antes de ese diagnóstico.
+El guard posterior detectó una discrepancia: cuatro GET públicos con nonce y
+sin caché aún mostraban el contrato anterior por usuario/origen, aunque GitHub
+ef31d65 contiene la descripción agregada. Se verificaron repo/main, raíz
+backend/inventario, Dockerfile y contexto de Render; eso no demuestra la causa.
+Se inició **Clear build cache & deploy** del mismo SHA, nuevo deployment
+`dep-dbgfo1mi0phs73dt8020`, con Building y Build cache cleared visibles. El
+primer intento UI con nombre ficticio devolvió 401 y se detuvo, sin probar
+otras cuentas.
+Los logs de la reconstrucción limpia acreditan checkout ef31d659 de main,
+COPY de src y bootJar BUILD SUCCESSFUL en 26 s. El despliegue limpio quedó
+**Live en 4m52s**, arranque 171.8 s, y la OpenAPI pública ya muestra el contrato
+agregado. Cinco POST con conexiones independientes a Render y un username
+ficticio devolvieron 401; el sexto desde la UI Vercel activó el límite, cuenta
+868→839 s y botón Reintentar deshabilitado, sin reintentos automáticos. Esto
+acredita el contador compartido entre ambos recorridos. La discrepancia quedó
+resuelta tras reconstruir sin demostrar su causa exacta. La comprobación API
+cloud final aprobó **59/59**, entre **14:37:40 y 14:38:42 Lima**: seis conexiones
+independientes devolvieron cinco 401 y sexto 429, Retry-After 893 s, no-store y
+ApiError. Un login ADMIN posterior devolvió 200; páginas, búsqueda, Auditoría,
+Jorge con 56 equipos y proxy quedaron correctos. Los conteos finales fueron
+258 equipos, seis usuarios y 351 auditorías. La evidencia inicial fallida
+queda separada de la final; la captura pública conserva el campo contraseña vacío.
+El PostgreSQL privado de esa
+regresión quedó detenido; una revisión automática bloqueó su limpieza recursiva
+con `blocked by policy`, sin motivo adicional. Queda residuo privado fuera
+de Git, además de los residuos históricos ya descritos. Acumular fallos
+contra un username puede imponer una espera temporal también a su dueño; no
+es un bloqueo en BD y los contadores desaparecen al reiniciar el proceso.
+[Guía](docs/backend-final/paginacion-login.md),
+[verificación local](docs/despliegue/verificacion-paginacion-login-2026-10-27.md)
+y [publicación cloud](docs/despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+
 **Documentación API, 27 de octubre:** por petición del usuario se añadió
 Springdoc **3.2.0**, compatible con Spring Boot 4.1.x, y se actualizó Postman a
 las **70 operaciones V13**. Swagger UI, JSON/YAML, JWT mediante Authorize,
@@ -303,7 +377,7 @@ Guía y límites: [importación demo](docs/importacion-inventario-demo.md).
 |---|---|---|
 | Desarrollo nativo | Vite `5173` → proxy `/api` → Spring `8080` → PostgreSQL Windows `5432` | Script de backend solicita credenciales; requiere entorno de proceso |
 | Docker local | `127.0.0.1:3000` → Nginx `80` → backend `8080` → `db:5432` | Tres servicios, un Compose; backend también expuesto en `127.0.0.1:8080` |
-| Nube publicada | Vercel → rewrite `/api` → backend Render → BD Render | Render ejecuta 58ac8f6; BD copiada del respaldo Windows el 27, sin sincronización continua |
+| Nube publicada | Vercel → rewrite `/api` → backend Render → BD Render | SHA y despliegue vigentes documentados en el estado acreditado; BD copiada del respaldo Windows el 27, sin sincronización continua |
 
 Compose canónico: [backend/inventario/docker-compose.yml](backend/inventario/docker-compose.yml),
 proyecto `inventario-docker`. Volumen declarado `postgres_data`, nombre esperado
@@ -337,8 +411,8 @@ Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 | Componente | Estado acreditado al 27 de octubre, con fechas de cada evidencia |
 |---|---|
 | Código backend/BD | V13 y 70 operaciones; API local real utilizada en la importación y recorrido. Política de contraseñas reforzada sin migraciones. |
-| Pruebas backend | Histórico del 3 de octubre: 319 aprobadas. Regresión real del 27: **365/365**, 0 fallos/errores/omitidas; `compileJava test bootJar --rerun-tasks` correcto. PostgreSQL 18 temporal en 55432, builtin `C.UTF-8`; clúster propio eliminado al terminar. |
-| Jason | Etapa inicial 67/67; cierre CSV/Auditoría 90/90 y 10 recorridos simulados; política de contraseñas: **93/93 y build de 1679 módulos**. Recorrido con API/BD reales **8/8**, cero errores, el 26 de octubre. |
+| Pruebas backend | Corrección ef31d65: **410/410** locales, cero fallos/errores/omitidas, JAR y BUILD SUCCESSFUL en 2m17s; 410 también aprobadas en CI 40567596491. PostgreSQL privado detenido, limpieza bloqueada y residuo fuera de Git. Los 406 aprobados en los CI anteriores corresponden al límite previo; no se suman a 410. |
+| Jason | Paginación/login: **107/107** pruebas locales y repetidas en CI, build de **1681 módulos**. UI pública comprobó páginas/tamaños/búsqueda con 258 equipos y Auditoría con 351 eventos. Con ef31d65, cinco 401 directos a Render y el sexto intento desde Vercel mostraron espera 868→839 s y botón deshabilitado para un username ficticio. Los resultados 67/90/93 y recorridos temporales anteriores conservan su alcance histórico. |
 | Marko local | **Lint aprobado en la auditoría del 26 de octubre**, salida 0; sigue sin login montado y ahora está excluido de Git |
 | Docker | Motor accesible y stack principal anterior saludable: web en 3000 HTTP 200 y proxy anónimo 401. Imágenes exactas 58ac8f6 aprobaron **22/22 comprobaciones aisladas**, incluidas siete de UI, sin errores de página; stack principal, imágenes y volumen se conservaron. |
 | Puertos locales | En la auditoría inicial 3000/8080 no respondían. Posteriormente se utilizó backend 8080 y Vite 5173 con PostgreSQL Windows; el estado de un proceso debe volver a comprobarse al reanudar. |
@@ -348,9 +422,9 @@ Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 | Mantenimiento de cuentas demo | 27 de octubre: tres cuentas Docker a las 00:36:35 y seis nativas a las 00:46:30 Lima, nueve logins HTTP 200. Eventos reales: tres actor Marko en Docker (auditoría 20→23) y seis actor Jason en nativa; anteriores intactos. Roles, asignaciones e inventario conservados; operación puntual fuera de la API sin relajar política 15/72. Claves/hashes/JWT fuera de Git. |
 | Publicación del cierre | Commit [`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2) publicado en `main`. [Actions 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249) **completed/success, 5/5 trabajos**. Dos imágenes GHCR publicadas con `sha-58ac8f6`/`latest`; cuatro etiquetas consultadas independientemente, con digests coincidentes. |
 | Último smoke Docker acreditado | **58ac8f6, 27 de octubre 00:45:44 Lima**, entorno aislado 22/22 incluidas siete de UI, V1–V13 y PostgreSQL 18.6; limpieza correcta. El stack principal conserva su versión anterior. La prueba e1ce75a con 94 comprobaciones HTTP del 3 de octubre sigue histórica. |
-| Última publicación CI comprobada | [run 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249), commit `58ac8f6`, cinco trabajos success, **27 de octubre 00:18:54 Lima**; imágenes y digests en el anexo del cierre. La publicación histórica de `b164c44` se conserva en el anexo de infraestructura. |
-| Vercel hoy | [/login](https://inventario-laboratorios.vercel.app/login) responde HTTP 200 HTML |
-| Render y proxy | Auditoría inicial del 26: timeouts. El 27: despliegue 58ac8f6 observado, backend reanudado y salud UP; proxy Vercel autenticado devuelve 258 equipos y el acceso anónimo a `/auth/me` devuelve 401. |
+| Última publicación CI comprobada | [run 40567596491](https://github.com/markopuch/inventario-laboratorios/actions/runs/40567596491), corrección `ef31d65`, 5/5 aprobados el 27 a las 14:20:24 Lima: 410 backend, 107 frontend/build 1681, 28 importador y ambas imágenes publicadas. Los runs 40564481861 y 40565271628 corresponden a las dos etapas previas con 406 backend. |
+| Vercel | Estado success para ef31d65, ficha `E4o5pumzx8Z9hPRVXSsvtQKYysTu`. UI pública acreditó tamaños 20/50/100, segunda página, búsqueda y Auditoría paginada. El límite agregado se comprobó con cinco 401 directos a Render y sexto intento desde Vercel: espera 868→839 s y botón deshabilitado. |
+| Render | ef31d65, despliegue limpio `dep-dbgfo1mi0phs73dt8020` Live en 4m52s, startup 171.8 s y OpenAPI pública corregida. Salud UP y API cloud **59/59**: cinco 401 y sexto 429, Retry-After 893 s/no-store/ApiError; login ADMIN posterior 200. La discrepancia inicial quedó resuelta tras reconstruir, sin causa exacta demostrada. Diagnóstico SQL previo de solo lectura/TLS: 258 equipos, trece migraciones y ningún bloqueador en ese momento. |
 | Datos cloud | Copia SQL confirmada el 27 a las 11:22:05 Lima: 258 equipos, seis cuentas activas, 351 auditorías y cuatro asignaciones; las trece tablas coinciden con el respaldo Windows. |
 | Acceso cloud | Logins HTTP 200 de Jason ADMIN, Jorge GESTOR y Gabriela ADMIN; alcance efectivo comprobado. Jorge consulta 56 equipos de L409 y un laboratorio. API ADMIN acredita seis usuarios, 258 equipos y 351 auditorías, y el reporte resumen devuelve 258. |
 
@@ -372,12 +446,12 @@ exportar CSV y añadir Auditoría exclusiva para ADMIN. Ese bloque está impleme
 y verificado localmente; no incorpora todo el backlog ni acredita una publicación
 en nube. Los README y el backlog distinguen evidencia histórica y estado en fuente.
 
-1. **Operación cloud:** copia de datos, despliegue Render 58ac8f6, salud, tres logins/roles/alcance y proxy Vercel acreditados el 27. Ampliar E2E solo si se solicita y mantener un plan de respaldo/retención; la base Free indica expiración el 9 de noviembre. Los dos respaldos privados verificados se conservan fuera de Git.
+1. **Operación cloud:** ef31d65 tiene CI 410/107/28, Vercel success, Render Live y API cloud 59/59; paginación/búsqueda/Auditoría, alcance y espera de login entre Render/Vercel comprobados. El bloque publicado está cerrado. Mantener un plan de respaldo/retención; la base Free indica expiración el 9 de noviembre. Los dos respaldos privados verificados se conservan fuera de Git.
 2. **BD local:** carga y conteos comprobados mediante API. Completar los 31 estados pendientes con información confirmada; consultar versión real y `flyway_schema_history` de la instancia concreta cuando se necesite verificación SQL, sin exportar registros privados.
 3. **Docker local:** el motor responde y el stack principal anterior está saludable. Las imágenes publicadas 58ac8f6 aprobaron 22 comprobaciones aisladas; actualizar el stack principal solo con autorización, conservando volumen y datos. Su base tiene tres equipos/tres cuentas, distinta de los 258 equipos/seis cuentas nativos; no se copió la carga Excel a Docker.
 4. **Producto:** Configuración está fuera del alcance y fue retirada. Auditoría ADMIN y CSV de reportes están implementados; gráficos completos, Excel/PDF, exportación detallada y calendario siguen pendientes de priorización.
-5. **Mejoras de plataforma:** Swagger/OpenAPI y Postman V13 están implementados, publicados en d8f2123 y comprobados en Render el 27; Actions 5/5. Refresh/revocación, recuperación de contraseña, límite de intentos de login, paginación, permisos dinámicos y operación avanzada siguen fuera de este bloque. Asignar roles sí existe; CRUD del catálogo Rol no.
-6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos localmente y repetidos en CI; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de contraseñas. Actions 5/5 e imágenes comprobadas en GHCR. La transferencia cloud añade su propia evidencia SQL/HTTP y restauración de ambos backups; no es otra ejecución de esas suites. Accesibilidad completa y carga siguen pendientes.
+5. **Mejoras de plataforma:** Swagger/OpenAPI, Postman V13, paginación compatible de Equipos/Auditoría y límite agregado de login publicados y comprobados entre Render/Vercel. Otros listados paginados, refresh/revocación, recuperación de contraseña, permisos dinámicos y operación avanzada siguen pendientes. Asignar roles sí existe; CRUD del catálogo Rol no.
+6. **Calidad:** regresión vigente backend 410/410, frontend 107/107 e importador 28/28, JAR/build aprobados; repetidos en CI 40567596491. El recorrido aislado previo con 53 fixtures corresponde a 406 tests backend. UI pública de paginación/búsqueda/Auditoría y espera de login aprobada; API cloud final 59/59. Las comprobaciones cloud no son otra ejecución de esas suites. Accesibilidad completa y carga siguen pendientes.
 
 Los pendientes no autorizan por sí mismos cambiar código o desplegar: orientan la
 próxima petición. No se requieren Kubernetes ni una reestructuración del monorepo
