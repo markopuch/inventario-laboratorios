@@ -521,7 +521,9 @@ Con el backend actualizado en ejecución, abre
 [YAML](http://localhost:8080/v3/api-docs.yaml). La
 [guía OpenAPI](docs/backend-final/openapi.md) explica el login, **Authorize**,
 roles/alcance y `API_DOCS_ENABLED=false`. Estas rutas pertenecen al backend;
-su disponibilidad en Render requiere desplegar esta actualización.
+su [disponibilidad en Render](https://inventario-laboratorios-tyni.onrender.com/swagger-ui.html)
+quedó comprobada el 27 de octubre, commit **d8f2123**, con login/Authorize y
+consulta de perfil HTTP 200. [Informe de publicación](docs/despliegue/verificacion-swagger-render-2026-10-27.md).
 
 ## 14. Documentación
 

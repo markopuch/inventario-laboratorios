@@ -5,7 +5,12 @@ Postman y añadir Swagger/OpenAPI. Se incorporó Springdoc 3.2.0, documentación
 generada de las 70 operaciones y colección V13 sin credenciales. Regresión
 backend 373/373 y frontend 93/93; scripts Postman simulados y Swagger probado
 en Chrome contra backend/BD temporales, incluidos Authorize y GET autenticado.
-No se cambiaron migraciones ni bases habituales; no hubo publicación/despliegue.
+No se cambiaron migraciones ni bases habituales durante esa implementación.
+Por solicitud posterior, se publicó **d8f2123** en main y se comprobó Actions
+40554578802 (5/5) y Auto-Deploy Live de Render. Swagger y JWT funcionan en el
+dominio publicado; conteos 258 equipos/seis cuentas/351 auditorías conservados.
+La [verificación cloud](../despliegue/verificacion-swagger-render-2026-10-27.md)
+separa esa evidencia de las pruebas locales.
 Detalle y evidencia: [documentación API](../backend-final/openapi.md).
 
 Corte: **27 de octubre de 2026, America/Lima**. Este archivo conserva contexto

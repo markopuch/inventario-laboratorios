@@ -14,8 +14,10 @@ Con el backend actualizado en ejecución:
 
 Estas direcciones corresponden al backend. El frontend Vercel y el proxy de
 desarrollo reenvían `/api`; no sirven las rutas `/swagger-ui` y `/v3/api-docs`.
-En Render se utiliza el dominio del **backend**, una vez desplegado este cambio,
-con los mismos sufijos. Una comprobación local no acredita ese despliegue.
+En Render se utiliza el dominio del **backend**, con los mismos sufijos.
+**Verificado el 27 de octubre:** [Swagger público](https://inventario-laboratorios-tyni.onrender.com/swagger-ui.html),
+[JSON](https://inventario-laboratorios-tyni.onrender.com/v3/api-docs) y
+[YAML](https://inventario-laboratorios-tyni.onrender.com/v3/api-docs.yaml).
 
 La especificación agrupa autenticación, catálogos, organización, usuarios y
 asignaciones, equipos, movimientos, mantenimientos, reportes y auditoría.
@@ -110,5 +112,8 @@ efectivamente comprobados se registran en la memoria técnica tras la ejecución
 [evidencia de contratos y pruebas](evidencias/openapi-postman-2026-10-27.json).
 Esta comprobación no ejecutó todas las escrituras de Postman contra una API
 real, ni modificó Render, PostgreSQL Windows o la base Docker habitual.
-Los cambios de código, colección y CI siguen locales, sin publicación remota
-durante este bloque.
+Ese bloque fue una comprobación local. Posteriormente se publicó el commit
+**d8f2123**, Actions aprobó cinco trabajos y Render lo desplegó automáticamente.
+El [informe cloud](../despliegue/verificacion-swagger-render-2026-10-27.md)
+acredita Swagger público, Authorize y GET de perfil 200, JSON/YAML, salud UP y
+conservación de los datos, con capturas sin JWT ni credenciales.

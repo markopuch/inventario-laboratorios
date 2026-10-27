@@ -1,0 +1,107 @@
+{
+  "verified_at_utc": "2026-10-27T17:59:14.858832+00:00",
+  "release": "d8f212321107afedcb3b703b3bf0751d9c641860",
+  "base_url": "https://inventario-laboratorios-tyni.onrender.com",
+  "openapi_operations": 70,
+  "openapi_version": "3.1.0",
+  "http_checks": {
+    "/actuator/health": {
+      "status": 200,
+      "content_type": "application/vnd.spring-boot.actuator.v3+json"
+    },
+    "/swagger-ui.html": {
+      "status": 200,
+      "content_type": "text/html"
+    },
+    "/swagger-ui/index.html": {
+      "status": 200,
+      "content_type": "text/html"
+    },
+    "/swagger-ui/swagger-ui-bundle.js": {
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    "/v3/api-docs.yaml": {
+      "status": 200,
+      "content_type": "application/vnd.oai.openapi"
+    },
+    "/v3/api-docs/swagger-config": {
+      "status": 200,
+      "content_type": "application/json"
+    },
+    "/api/auth/me": {
+      "status": 401,
+      "content_type": "application/json;charset=UTF-8"
+    },
+    "/api/admin/auditoria": {
+      "status": 401,
+      "content_type": "application/json;charset=UTF-8"
+    }
+  },
+  "logins": {
+    "jason": {
+      "status": 200,
+      "role": "ADMIN",
+      "global_scope": true,
+      "laboratories": 5
+    },
+    "jorge": {
+      "status": 200,
+      "role": "GESTOR",
+      "global_scope": false,
+      "laboratories": 1,
+      "audit_denied": 403
+    },
+    "gabriela": {
+      "status": 200,
+      "role": "ADMIN",
+      "global_scope": true,
+      "laboratories": 5
+    }
+  },
+  "data_counts": {
+    "equipos": 258,
+    "usuarios": 6,
+    "auditoria": 351,
+    "vercel_proxy_equipos": 258
+  },
+  "application_writes": false,
+  "tokens_recorded": false,
+  "render": {
+    "service_id": "srv-db60s7id0e5s73900jr0",
+    "deploy_id": "dep-dbge9f15efls73f5u2c0",
+    "status": "Live",
+    "trigger": "Auto-Deploy",
+    "duration": "4m56s",
+    "spring_startup_seconds": 175.701,
+    "flyway_version": 13,
+    "new_migrations": 0
+  },
+  "github_actions": {
+    "run_id": 40554578802,
+    "status": "success",
+    "successful_jobs": 5,
+    "backend_tests": 373,
+    "frontend_tests": 93,
+    "importer_tests": 28,
+    "postman_operations": 70
+  },
+  "browser": {
+    "verified_at_utc": "2026-10-27T18:03:43.820841+00:00",
+    "operations_visible": 70,
+    "swagger_ui_login_status": 200,
+    "authorize_profile_status": 200,
+    "profile_matched_expected_user": true,
+    "protected_operations_unlocked_after_reload": 69,
+    "protected_operations_locked_after_reload": 0,
+    "tokens_persisted": false
+  },
+  "screenshots": [
+    "swagger-render-2026-10-27.png",
+    "render-swagger-live-2026-10-27.png"
+  ],
+  "ghcr_digests": {
+    "backend": "sha256:6aa03d099c8b7d7158c50e0038070bd0259cb137ad922e6b0ec0312e4a79b350",
+    "frontend_jason": "sha256:2e8910b7b276d691f5d270a7d900af9d1133685e152220da901b8d431f6066b6"
+  }
+}

@@ -10,8 +10,14 @@ Comprobación local nueva: 373/373 backend y 93/93 frontend; Postman 70 rutas y
 consulta autenticada 200 y autorización no persistida, sin errores de página.
 Se ejecutó el JAR nuevo en backend/BD/red Docker temporales, eliminados al final;
 stack principal conservado saludable. [Guía y evidencia](../backend-final/openapi.md).
-No hubo commit/push, ejecución Actions ni despliegue de este bloque. El Render
-58ac8f6 comprobado abajo no incluye todavía Swagger.
+Después se publicó **d8f2123** en main; Actions **40554578802** aprobó 5/5,
+373 backend, 93 frontend, 28 importador y Postman. Ambas imágenes GHCR
+`sha-d8f2123`/`latest` coinciden por digest. Render hizo Auto-Deploy del commit,
+**Live en 4m56s**; startup 175.701 s, V1–V13 validadas sin migración nueva.
+Swagger público, Authorize/login/perfil 200, JSON/YAML y salud UP verificados;
+258 equipos/seis usuarios/351 auditorías conservados, con proxy Vercel válido.
+La autorización de prueba se eliminó al recargar. [Informe cloud](../despliegue/verificacion-swagger-render-2026-10-27.md).
+El estado Render 58ac8f6 descrito abajo es el antecedente de la migración.
 
 **Migración de datos a Render, 27 de octubre:** copia SQL finalizada a las
 11:22:05 Lima desde un respaldo nuevo de PostgreSQL Windows. Se respaldaron

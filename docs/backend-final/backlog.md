@@ -15,7 +15,7 @@ distingue publicación, despliegue y comprobaciones de funcionamiento.
 
 | Tema | Estado vigente y evidencia |
 |---|---|
-| OpenAPI y Postman V13 | Añadidos el 27 de octubre por solicitud posterior: Springdoc 3.2.0, 70 operaciones, JWT, DTO/filtros/errores y colección completa. Ocho pruebas HTTP nuevas; regresión backend 373/373 y frontend 93/93. Implementación local, sin afirmar despliegue nuevo. [Guía](openapi.md). |
+| OpenAPI y Postman V13 | Añadidos el 27 de octubre: Springdoc 3.2.0, 70 operaciones, JWT, DTO/filtros/errores y colección completa. Publicados en d8f2123, Actions 5/5 y Render Live; Swagger y Authorize/perfil 200 comprobados. [Guía](openapi.md) e [informe cloud](../despliegue/verificacion-swagger-render-2026-10-27.md). |
 | Usuarios administrativos | ADMIN lista, consulta, crea y edita usuarios; cambia actividad, rol y contraseña; configura asignaciones. `AdminUsuarioController` y `AdminUsuarioService` protegen al último ADMIN activo. No hay registro público ni CRUD del catálogo Rol. |
 | Mantenimiento | Entity/tabla desde V12; consulta, programación, edición y ciclo PROGRAMADO → EN_PROCESO → COMPLETADO/CANCELADO. Un mantenimiento en proceso bloquea edición, baja y traslado de Equipo. |
 | Auditoría | Tabla V13, registro de acciones de los servicios y consulta/filtros exclusivamente ADMIN mediante `GET /api/admin/auditoria`. No es un versionado completo de cada entidad. |
@@ -34,7 +34,7 @@ en documentación no modifica los resultados ni las restricciones de aquel sprin
 
 | Tema | Estado y trabajo por definir |
 |---|---|
-| Nube | El 27 se copiaron 258 equipos/seis usuarios tras respaldar ambas bases; salud, tres logins, alcance y proxy Vercel acreditados. La versión OpenAPI posterior aún no se publicó/desplegó. Falta ampliar el recorrido completo de navegador en nube. [Migración](../despliegue/verificacion-migracion-render-2026-10-27.md). |
+| Nube | El 27 se copiaron 258 equipos/seis usuarios tras respaldar ambas bases. Después se desplegó d8f2123 con Swagger público; salud, tres logins, Authorize/perfil, alcance y proxy Vercel acreditados. Sigue separado el recorrido integral de escrituras en navegador. [Verificación](../despliegue/verificacion-swagger-render-2026-10-27.md). |
 | Límite de intentos de login | No incorporado en el bloque OpenAPI/Postman. La política 15 caracteres/72 bytes de altas y restablecimientos sí existe; limitar intentos es otra mejora. |
 | Refresh token | No existe; el vencimiento actual requiere nuevo login. Su política de renovación y revocación requiere una decisión de producto. |
 | Permisos dinámicos | No existe administración dinámica de permisos; siguen ADMIN/GESTOR/LECTOR y UsuarioLaboratorio. |

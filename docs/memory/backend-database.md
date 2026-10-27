@@ -9,7 +9,11 @@ Regresión nueva en PostgreSQL temporal: **373/373 backend**, cero omitidas,
 JAR correcto; **93/93 frontend**. Ocho pruebas HTTP nuevas contrastan mappings,
 colección, schemas, éxito/errores, filtros, Swagger y seguridad, incluida la
 desactivación de documentación. No se tocaron migraciones ni bases habituales;
-no se publicó ni desplegó este bloque. [Guía y evidencia](../backend-final/openapi.md).
+la publicación posterior **d8f2123** aprobó Actions **40554578802** (5/5) y quedó
+Live en Render. JSON/YAML y Swagger cargan 70 operaciones; login y perfil por
+Authorize devuelven 200. Conteos cloud conservados: 258 equipos, seis usuarios,
+351 auditorías; sin escrituras de negocio. [Verificación cloud](../despliegue/verificacion-swagger-render-2026-10-27.md).
+[Guía API](../backend-final/openapi.md).
 
 **Copia a Render, 27 de octubre de 2026:** el respaldo nuevo de PostgreSQL
 Windows 18.6 se copió a `miproyecto-db` después de respaldar también el destino.

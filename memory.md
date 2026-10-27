@@ -10,9 +10,14 @@ roles/alcance, filtros, DTO y errores se documentan en la
 la API conserva seguridad y contratos. `API_DOCS_ENABLED=false` deshabilita
 interfaz y especificación. La regresión local aprobó **373/373 backend**
 (incluidas ocho pruebas nuevas OpenAPI) y **93/93 frontend**, con JAR generado
-y PostgreSQL temporal eliminado. Esta actualización sigue local; no acredita
-un nuevo commit, GitHub Actions ni despliegue Render. La migración de datos
-descrita abajo mantiene su evidencia propia.
+y PostgreSQL temporal eliminado. Después se publicó el commit **d8f2123**;
+Actions **40554578802** aprobó los cinco trabajos y Render desplegó ese commit
+automáticamente (**Live**, 4m56s). Swagger público muestra las 70 operaciones;
+login y GET de perfil mediante Authorize devolvieron 200. JSON/YAML, salud UP,
+tres logins, permisos y proxy Vercel quedaron comprobados, conservando 258
+equipos, seis usuarios y 351 auditorías. La [verificación cloud](docs/despliegue/verificacion-swagger-render-2026-10-27.md)
+registra evidencia sin credenciales. La migración de datos descrita abajo
+mantiene su evidencia propia.
 
 **Copia a Render, 27 de octubre:** se respaldaron de nuevo PostgreSQL Windows y
 `miproyecto-db`, y ambos respaldos se restauraron con éxito en una instancia
@@ -371,7 +376,7 @@ en nube. Los README y el backlog distinguen evidencia histórica y estado en fue
 2. **BD local:** carga y conteos comprobados mediante API. Completar los 31 estados pendientes con información confirmada; consultar versión real y `flyway_schema_history` de la instancia concreta cuando se necesite verificación SQL, sin exportar registros privados.
 3. **Docker local:** el motor responde y el stack principal anterior está saludable. Las imágenes publicadas 58ac8f6 aprobaron 22 comprobaciones aisladas; actualizar el stack principal solo con autorización, conservando volumen y datos. Su base tiene tres equipos/tres cuentas, distinta de los 258 equipos/seis cuentas nativos; no se copió la carga Excel a Docker.
 4. **Producto:** Configuración está fuera del alcance y fue retirada. Auditoría ADMIN y CSV de reportes están implementados; gráficos completos, Excel/PDF, exportación detallada y calendario siguen pendientes de priorización.
-5. **Mejoras de plataforma:** Swagger/OpenAPI y Postman V13 están implementados y verificados localmente el 27, pendientes de publicación/despliegue. Refresh/revocación, recuperación de contraseña, límite de intentos de login, paginación, permisos dinámicos y operación avanzada siguen fuera de este bloque. Asignar roles sí existe; CRUD del catálogo Rol no.
+5. **Mejoras de plataforma:** Swagger/OpenAPI y Postman V13 están implementados, publicados en d8f2123 y comprobados en Render el 27; Actions 5/5. Refresh/revocación, recuperación de contraseña, límite de intentos de login, paginación, permisos dinámicos y operación avanzada siguen fuera de este bloque. Asignar roles sí existe; CRUD del catálogo Rol no.
 6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos localmente y repetidos en CI; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de contraseñas. Actions 5/5 e imágenes comprobadas en GHCR. La transferencia cloud añade su propia evidencia SQL/HTTP y restauración de ambos backups; no es otra ejecución de esas suites. Accesibilidad completa y carga siguen pendientes.
 
 Los pendientes no autorizan por sí mismos cambiar código o desplegar: orientan la
