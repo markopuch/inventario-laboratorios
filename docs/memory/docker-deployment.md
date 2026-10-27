@@ -1,5 +1,21 @@
 # Memoria de Docker, CI/CD y deployment
 
+**Publicación de 17 Markdown, 27 de octubre de 2026:** commit `7d5240c147d3740a64eea4cabab3212853aab6c5`,
+sobre `a850dfb`, con cambios exclusivamente documentales. La arquitectura de
+la aplicación, el código, las dependencias y las migraciones no cambiaron.
+Actions **40575956477** aprobó **5/5 trabajos**, 410 pruebas backend, 107 frontend,
+28 del importador y ambas imágenes publicadas; build frontend de 1681 módulos.
+Vercel confirmó success para ese SHA, deployment `85eBggxBmMhuqaNcqfXh8wYgEdyd`.
+Render hizo Auto-Deploy `dep-dbggbb8473hc739kahv0`: **Live en 3m24s**, startup
+164.899 s, V1–V13 validadas sin migración nueva y salud pública UP.
+El smoke posterior aprobó **59/59** entre 15:16:55 y 15:18:41 Lima: OpenAPI,
+páginas, búsqueda, alcance de Jorge (56 equipos), proxy y cinco fallos ficticios/429 al sexto,
+Retry-After 894/no-store; login real posterior 200. Se conservaron 258 equipos,
+seis usuarios y 351 auditorías. La UI Vercel confirmó login ADMIN, Equipos de 20,
+página 2, tamaño 50 y Auditoría de 20/351. No se modificaron datos de negocio ni las
+instancias locales. [Evidencia nueva](../despliegue/evidencias/publicacion-markdown-cloud-2026-10-27.json).
+Las capturas con inventario real permanecen privadas fuera de Git.
+
 **Paginación y limitación de login, publicación posterior del 27:** backend406,
 frontend107/build1681 y UI real con53 fixtures temporales aprobados. No se cambian
 Dockerfiles/Compose ni migraciones. Configuración nueva opcional `LOGIN_MAX_FAILURES`,
