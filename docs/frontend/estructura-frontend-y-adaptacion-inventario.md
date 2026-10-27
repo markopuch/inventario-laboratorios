@@ -37,6 +37,18 @@ de las incorporaciones nuevas ni su publicación remota.
 
 ## 1. Contexto y alcance
 
+**Actualización de contratos — 27 de octubre de 2026:** la aplicación Jason
+publicada incorpora búsqueda `q` y páginas del servidor en Equipos y Auditoría,
+además de espera de login con `429/Retry-After`. Sin `page/size` se conservan
+arrays; con cualquiera de ambos se recibe un objeto paginado. El límite de
+login agrega cinco fallos por nombre normalizado en 900 s, entre conexiones,
+y conserva la cuota general de 60 solicitudes por peer en 60 s. Swagger y
+Postman documentan las 70 operaciones. Véanse la
+[guía vigente](../backend-final/paginacion-login.md) y el
+[informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+Las secciones de diseño de Tech Store y la propuesta inicial siguen siendo
+antecedentes; no reemplazan estos contratos ni los sprints activos de Jason.
+
 Tech Store es una aplicación de práctica construida con React y Vite. Reutiliza la apariencia del proyecto original en HTML/CSS, llamado v0, y organiza las vistas como componentes de React. La carpeta v2 identifica la versión del proyecto; el nombre académico acordado es Taller 3 — Parte 2, aunque el material de referencia y el README de Tech Store conservan el título Taller 2.
 
 La referencia revisada está en `fullstackweb/frontend-judith/actividad-techstore/v2/tech-store`.
@@ -562,9 +574,9 @@ Estas diferencias afectan textos, controles o datos. Deben ajustarse conservando
 1. **Identificación en Login.** La imagen dice «Correo institucional», pero la API autentica por `userName`. La primera versión debe pedir «Usuario» y enviar ese campo. Autenticar por correo requeriría cambiar el contrato. «Recordarme», «Olvidaste tu contraseña» y «Acceso de prueba» no deben aparentar funciones existentes sin una implementación definida; un acceso de prueba tampoco debe omitir la autenticación de la API.
 2. **Estados y campos de equipo.** El formulario dibuja «Activo»; el contrato utiliza `OPERATIVO`, `MANTENIMIENTO`, `INOPERATIVO` y `BAJA`, y este último se establece mediante DELETE. Se utilizarán etiquetas claras coherentes con esos valores. Subcategoría es obligatoria para la API aunque el diseño no la marque, y responsable es opcional aunque aparezca con asterisco.
 3. **Adjuntos y fechas.** Foto/documento, fecha de compra y último mantenimiento no pertenecen al request actual. `anio` y `ordenCompra` no equivalen a una fecha de compra. «Observaciones» puede presentarse como etiqueta del campo `comentario`, cuyo DTO actual no tiene el límite de 500 caracteres dibujado. Se incorporará la casilla `requiereMantenimiento`, obligatoria para la API.
-4. **Categoría y responsable.** La categoría puede servir para elegir una subcategoría, pero se guarda `idSubcategoria`. El resumen de subcategoría dentro de un equipo solo trae ID y nombre; para mostrar la categoría se necesita relacionarlo con el catálogo de subcategorías, o mostrar explícitamente Subcategoría. No existe un listado general de usuarios para llenar el selector de responsables: no debe inventarse ese origen de datos. Una primera versión puede omitir esa asignación opcional hasta acordar cómo seleccionar un usuario válido.
-5. **Búsqueda, paginación e indicadores.** Los endpoints de equipos no reciben búsqueda libre ni paginación. Si se implementan esos controles localmente, operan sobre el conjunto descargado y autorizado. El buscador general del encabezado no tiene una API de búsqueda global. Los contadores deben explicar su alcance; variaciones frente al mes anterior no pueden deducirse de una lista del estado actual. Exportar los datos descargados sería una función adicional del cliente, no una llamada a un endpoint de exportación ya existente.
-6. **Catálogos y laboratorios.** Los listados de catálogos exponen activos; no permiten reproducir una tabla de activos e inactivos como si ambos estuvieran disponibles. Laboratorio contiene código, nombre, ubicación, área y actividad; no tiene capacidad, responsable ni un estado «En mantenimiento». Un contador de equipos por laboratorio debe provenir de consultas autorizadas y describir su alcance.
+4. **Categoría y responsable.** La categoría puede servir para elegir una subcategoría, pero se guarda `idSubcategoria`. El resumen de subcategoría dentro de un equipo solo trae ID y nombre; para mostrar la categoría se necesita relacionarlo con el catálogo de subcategorías, o mostrar explícitamente Subcategoría. El contrato vigente incluye un directorio exclusivo de ADMIN, no un listado global para GESTOR/LECTOR. La pantalla de Equipos conserva la selección opcional del responsable por ID; un selector nominal para los roles autorizados sigue siendo una mejora por definir.
+5. **Búsqueda, paginación e indicadores.** Desde el 27 de octubre, Equipos admite `q` y Equipos/Auditoría admiten `page/size`: el servidor aplica alcance y filtros antes del conteo y del límite. Sin esos parámetros se conserva el array anterior. Jason utiliza páginas de 20/50/100 y distingue totales del conjunto de indicadores de la página. Esta ampliación sustituye la propuesta inicial de paginación local. El buscador general del encabezado no tiene una API de búsqueda global; las tendencias mensuales no se deducen de una lista del estado actual. La exportación detallada de equipos continúa como ampliación futura.
+6. **Catálogos y laboratorios.** Las consultas generales de catálogos exponen activos; ADMIN dispone además de consultas de activos/inactivos y operaciones de actividad. Laboratorio tiene `estadoOperativo` OPERATIVO/MANTENIMIENTO, independiente de `activo`; capacidad y responsable no pertenecen a su DTO. Un contador de equipos por laboratorio debe provenir de consultas autorizadas y describir su alcance. Estas ampliaciones superan las limitaciones de la propuesta inicial.
 7. **Movimientos.** La respuesta contiene el actor del evento, que no debe confundirse con el responsable del equipo. No contiene estados «Pendiente», «En proceso» o «Completado». Las nuevas operaciones disponibles son traslados confirmados en una transacción; leer tipos históricos no implica poder crear todos los tipos dibujados. El filtro de laboratorio sí existe; filtros por texto, fecha o tipo serían locales sobre los datos recibidos salvo una ampliación de la API.
 8. **Notificaciones y configuración.** La campana, los porcentajes, los calendarios, las preferencias de seguridad y el historial de reportes del diseño no demuestran que existan datos o servicios para alimentarlos. Cada control que se active debe tener una operación real o identificarse claramente como parte de una demostración visual.
 
@@ -652,7 +664,7 @@ El frontend adapta sus acciones al rol y al alcance de laboratorios:
 
 La interfaz puede ocultar acciones que no correspondan, pero la autorización efectiva siempre la aplica el backend. Los datos compartidos de sesión no deben mezclarse con todos los campos de los formularios.
 
-No debe copiarse CrearCuenta como registro funcional: actualmente no hay endpoint de alta de usuarios, recuperación de contraseña ni cambio de rol. La pantalla de asignaciones puede operar sobre un usuario identificado mediante las rutas existentes, pero no debe asumir un listado general de usuarios que el contrato no ofrece.
+No debe copiarse CrearCuenta como registro público: no existe autoinscripción. El contrato vigente sí permite a ADMIN listar, crear y editar usuarios, cambiar rol/actividad/contraseña y configurar laboratorios; se integra mediante Usuarios/Asignaciones. Recuperación de contraseña por el propio usuario y renovación de sesión siguen pendientes. Las limitaciones de usuarios de la propuesta inicial no describen la API administrativa actual.
 
 ### 12.6. Servicios HTTP y contratos de datos
 
@@ -662,13 +674,14 @@ Hay diferencias con la consulta del taller:
 
 | Aspecto | Contrato del inventario |
 |---|---|
-| Listados | Arreglos JSON directos; no leer `datos.products` ni asumir paginación |
-| Consulta sin resultados | `200` con `[]`, que debe mostrarse como lista vacía |
+| Listados | Arrays JSON por defecto; Equipos/Equipos ADMIN/Auditoría devuelven página con `page` o `size`. No leer `datos.products` |
+| Consulta sin resultados | `200` con `[]` o una página con `content: []`, según el contrato solicitado |
 | Creación | `201` con respuesta JSON |
 | Baja lógica | `204` sin cuerpo; no intentar ejecutar `response.json()` |
 | Actualización | PUT reemplaza campos editables; un opcional omitido o nulo se limpia |
 | Validación | `400`, con `errors` por campo cuando corresponde |
 | Autenticación | `401`, que requiere tratar credenciales o sesión inválida |
+| Intentos de login | `429` con ApiError, Retry-After y no-store; mostrar la espera sin reintentar automáticamente |
 | Permisos | `403`, que debe diferenciarse de un fallo de conexión |
 | Conflicto de negocio | `409`, mostrando el mensaje que explica la operación rechazada |
 

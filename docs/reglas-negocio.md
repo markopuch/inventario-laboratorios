@@ -1,10 +1,18 @@
 # Reglas de negocio - Sistema de Inventario de Laboratorios
 
 **Proyecto:** API REST de inventario de equipos de laboratorio  
-**Versión documental:** estado vigente V13, 3 de octubre de 2026
-**Estado:** RN-01–45 conservadas y contrastadas con el código del commit `e1ce75a`. Incluye precisiones de las extensiones posteriores al cierre histórico de Sprint 7.
+**Versión documental:** V13, contratos actualizados al 27 de octubre de 2026
+**Estado:** RN-01–45 conservan su numeración y su antecedente `e1ce75a`. Las ampliaciones de consulta, documentación API y control temporal de login no crean reglas numeradas ni modifican migraciones aplicadas.
 
 **Fuente de verdad:** migraciones Flyway y código del backend
+
+Las consultas de Equipos, su alias ADMIN y Auditoría incorporan `page/size`
+opcionales (base cero, tamaño 20 por defecto y máximo 100); sin ambos conservan
+arrays. La búsqueda `q` de Equipos, los filtros y el alcance se aplican antes de
+contar y limitar. La especificación Swagger/OpenAPI y Postman describen las 70
+operaciones; la [guía de contratos](backend-final/paginacion-login.md) y la
+[verificación publicada](despliegue/verificacion-paginacion-login-cloud-2026-10-27.md)
+documentan estas ampliaciones sin modificar RN-01–45.
 
 ## 1. Alcance
 
@@ -36,9 +44,20 @@ El correo de Usuario es obligatorio y válido en CreateUsuarioRequest/UpdateUsua
 
 La contraseña debe almacenarse únicamente como hash seguro, por ejemplo BCrypt. Ni la contraseña original ni `password_hash` deben aparecer en respuestas de la API, registros de aplicación o mensajes de error.
 
+Altas y restablecimientos exigen al menos 15 caracteres Unicode y como máximo
+72 bytes UTF-8. Las claves anteriores conservan su acceso; esta política no
+supuso una migración ni el reemplazo automático de contraseñas existentes.
+
 ### RN-03. Usuario activo
 
 Solo los usuarios activos pueden autenticarse y utilizar los endpoints protegidos. Un usuario inactivo conserva sus registros históricos, pero no puede operar en el sistema.
+
+Como control temporal de solicitudes, login admite cinco fallos por nombre
+normalizado en 900 s, aunque cambie la conexión, y 60 solicitudes por peer en
+60 s. El siguiente intento limitado devuelve `429`, ApiError, Retry-After y
+no-store. No cambia la actividad del usuario en BD; los contadores son acotados,
+por proceso, y se reinician con él. El contrato y sus límites se detallan en
+[paginación y login](backend-final/paginacion-login.md).
 
 ### RN-04. Rol obligatorio
 
@@ -250,7 +269,7 @@ Las reglas quedan correctamente implementadas cuando se demuestra que:
 - El servicio valida las reglas que dependen del usuario autenticado o del estado actual del equipo.
 - Los controladores solo coordinan HTTP y delegan la lógica al servicio.
 - Las pruebas automatizadas cubren los casos permitidos y rechazados.
-- Postman evidencia respuestas `200`, `201`, `204`, `400`, `401`, `403`, `404` y `409`.
+- Postman documenta respuestas `200`, `201`, `204`, `400`, `401`, `403`, `404`, `409` y `429`. La verificación HTTP y los resultados de su sandbox se registran por separado.
 
 ## 10. Reglas incorporadas en Sprint 4A y extendidas en Sprint 4B–4D
 

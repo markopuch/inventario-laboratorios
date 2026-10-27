@@ -3,8 +3,12 @@
 Actualización: **27 de octubre de 2026, America/Lima**. Describe el cierre
 frontend autorizado para Jason. Las comprobaciones locales del 26 y 27 se
 detallan al final; la evidencia del 3 de octubre conserva su alcance histórico.
-La publicación en GitHub/GHCR se registra en el anexo del cierre; este documento
-no acredita la versión efectiva ni el recorrido autenticado de Vercel/Render.
+La publicación posterior, la revisión efectiva y el recorrido autenticado de
+Vercel/Render se registran en el
+[informe cloud de paginación y login](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md):
+59/59 comprobaciones API, Auditoría paginada y espera de login verificadas.
+Las pruebas de descargas CSV descritas abajo mantienen su evidencia local;
+esa comprobación cloud no se presenta como una nueva prueba de las cinco descargas.
 
 ## Reportes y descargas CSV
 
@@ -49,6 +53,13 @@ timestamps por días UTC y mantenimiento por fecha programada de calendario.
 La entrada **Auditoría** abre `/auditoria`. Está disponible solo para ADMIN;
 GESTOR y LECTOR no tienen entrada ni acceso autorizado por la API. La pantalla
 consume `GET /api/admin/auditoria` y permite consultar, sin modificar eventos.
+
+Desde el 27 de octubre la interfaz solicita páginas al servidor, con tamaños
+20/50/100, navegación Anterior/Siguiente y total del conjunto filtrado. Cambiar
+filtros o tamaño vuelve a la primera página. El contrato usa base cero y
+`{content,number,size,totalElements,totalPages,first,last}`; sin `page/size`
+se mantiene el array para consumidores anteriores. La consulta y el conteo
+aplican los mismos filtros y el acceso exclusivo de ADMIN.
 
 Los filtros son entidad, ID del registro, ID de usuario actor, acción, fecha
 desde y fecha hasta. Los IDs deben ser enteros positivos. Un rango de fechas

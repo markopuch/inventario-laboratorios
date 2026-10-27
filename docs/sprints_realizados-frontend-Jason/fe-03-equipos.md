@@ -1,13 +1,33 @@
 # FE-03 — Equipos e inventario
 
 Fecha de inicio: 1 de octubre de 2026.
-Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
+Actualización de evidencia: **27 de octubre de 2026**. Docker `e1ce75a` conserva
+sus resultados históricos del 3 de octubre.
 
-**Estado vigente: CRUD, filtros, traslado y baja lógica integrados. En el smoke Docker actual alta, edición y traslado se hicieron mediante interfaz; la baja se verificó mediante HTTP.**
+**Estado vigente: CRUD, filtros, traslado, baja lógica, paginación y búsqueda
+de equipos en servidor integrados y publicados.**
 
 ## Implementación y verificación actuales
 
-Se comprobó código interno inmutable, traslado L201 → L206, historia conservada y Equipo BAJA sin botones de mutación en la interfaz GESTOR. LECTOR recibió 403 al consultar el equipo fuera de alcance. Durante mantenimiento EN_PROCESO, edición/baja/traslado devolvieron 409. La confirmación nativa de baja bloqueó la automatización del navegador; se canceló y la operación se realizó por API. Esto no acredita el clic final de baja por UI en esta ejecución. Jason conserva tarjetas/modal; tabla/página, adjuntos, paginación y exportación del mockup no se declaran implementados.
+Equipos usa `listarPagina`, con tamaños 20/50/100, anterior/siguiente, totales y
+búsqueda `q` en todo el conjunto filtrado/autorizado antes del conteo. Cambiar
+filtros, búsqueda o tamaño vuelve a página cero; cancela solicitudes y descarta
+respuestas obsoletas. Auditoría también pagina. Los GET conservan arrays sin
+`page/size`; dashboard, selectores e importador no cambian de contrato.
+
+Regresión acreditada: **410/410 backend, 107/107 frontend**, build de **1681
+módulos** y CI aprobado. `ef31d65` quedó Live tras reconstrucción limpia Render
+`dep-dbgfo1mi0phs73dt8020` (4m52s), Vercel success y API cloud **59/59**.
+La UI pública verificó tamaños, segunda página y búsqueda fuera de la primera
+con 258 equipos; Auditoría se comprobó sobre 351 eventos.
+[Guía](../backend-final/paginacion-login.md) e
+[informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+Jason conserva tarjetas/modal; tabla/página de alta, adjuntos y exportación
+detallada del mockup continúan fuera del alcance implementado.
+
+## Evidencia histórica del 3 de octubre
+
+Se comprobó código interno inmutable, traslado L201 → L206, historia conservada y Equipo BAJA sin botones de mutación en la interfaz GESTOR. LECTOR recibió 403 al consultar el equipo fuera de alcance. Durante mantenimiento EN_PROCESO, edición/baja/traslado devolvieron 409. La confirmación nativa de baja bloqueó la automatización del navegador; se canceló y la operación se realizó por API. Esto no acredita el clic final de baja por UI en esa ejecución.
 
 La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
 

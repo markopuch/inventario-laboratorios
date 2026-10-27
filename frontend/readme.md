@@ -3,6 +3,18 @@
 El frontend integrado y publicado es la versión **Jason**, ubicada en
 [`version-jason/frontend/`](version-jason/frontend/README.md).
 
+**Estado publicado al 27 de octubre de 2026:** Equipos y Auditoría usan páginas
+del servidor de 20/50/100 registros; Equipos busca con `q` antes de contar y
+paginar. Login muestra la espera de `429/Retry-After` y deshabilita el envío.
+El límite agrega cinco fallos por nombre normalizado en 900 s, independiente
+de la conexión. La API conserva arrays cuando no se solicita `page/size`.
+La revisión `ef31d65` aprobó CI con 410 pruebas backend, 107 frontend y 28 del
+importador. Render/Vercel y el recorrido público aprobaron 59 comprobaciones
+API y la verificación visual descrita en el
+[informe cloud](../docs/despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+Los resultados locales e históricos que siguen conservan su fecha y alcance;
+la auditoría del 26 no sustituye esa comprobación posterior.
+
 Desde el **26 de octubre de 2026**, la variante de tutoría
 `frontend/version-marko/` y sus registros `docs/sprints_realizados-frontend-Marko/`
 se conservan únicamente en el equipo local, excluidos del seguimiento de Git y

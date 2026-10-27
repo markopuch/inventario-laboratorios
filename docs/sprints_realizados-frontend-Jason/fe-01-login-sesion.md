@@ -1,13 +1,34 @@
 # FE-01 — Diseño común, login y sesión
 
 Fecha de inicio: 1 de octubre de 2026.
-Actualización de evidencia: 3 de octubre de 2026, posterior al despliegue `e1ce75a`.
+Actualización de evidencia: **27 de octubre de 2026**. Docker `e1ce75a` conserva
+sus resultados históricos del 3 de octubre.
 
-**Estado vigente: Login y sesión integrados; tres roles comprobados con las imágenes Docker actuales. JWT y usuario permanecen en memoria.**
+**Estado vigente: login y sesión integrados, JWT en memoria y límite temporal
+de login con 429/Retry-After y espera visible comprobados en nube.**
 
 ## Implementación y verificación actuales
 
-El login usa `{ userName, password }`, carga el alcance autorizado y agrega Bearer a las solicitudes. Recarga y logout requieren nuevo login; un 401 de la sesión vigente la limpia. La adaptación añadió refresco de perfil/alcance ante autocambios administrativos permitidos. Recordarme y recuperación no están implementados. Las 14 pruebas actuales de `api.test.js` forman parte de las 67 del conjunto, no se añaden otra vez a su total.
+El login usa `{ userName, password }`, carga el alcance autorizado y agrega Bearer a las solicitudes. Recarga y logout requieren nuevo login; un 401 de la sesión vigente la limpia y 403 la conserva. El refresco de perfil/alcance ante autocambios administrativos no renueva JWT: no hay refresh token, Recordarme ni recuperación de contraseña.
+
+El backend agrega cinco fallos por username normalizado en 900 s, independiente
+del origen, y limita 60 solicitudes por peer en 60 s. Ante 429, Login muestra
+Retry-After en un contador y deshabilita Reintentar; al vencer la espera no
+envía otra solicitud ni inicia sesión automáticamente. Los contadores viven
+por proceso; un ataque a un username puede imponer espera temporal a su dueño.
+
+Regresión acreditada: **410/410 backend, 107/107 frontend**, build de **1681
+módulos** y CI aprobado. `ef31d65` quedó Live tras reconstrucción limpia Render
+`dep-dbgfo1mi0phs73dt8020` (4m52s), con Vercel success y API cloud **59/59**:
+cinco 401 y sexto 429 desde conexiones independientes, Retry-After y login
+ADMIN posterior 200. La UI Vercel mostró espera 868→839 s y botón deshabilitado.
+[Contrato](../backend-final/paginacion-login.md) e
+[informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+
+## Evidencia histórica del 3 de octubre
+
+Las 14 pruebas de `api.test.js` documentadas en esa adaptación forman parte de
+sus 67 tests históricos; no describen el tamaño actual de la suite.
 
 La [verificación Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md) y la [evidencia Docker actual](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json) registran el commit `e1ce75a`, ambas imágenes publicadas y tres contenedores habituales saludables. El smoke aislado aprobó **94/94 comprobaciones HTTP**, **30 aserciones funcionales** y **siete controles SQL sin inconsistencias**, con Flyway V1–V13. Son resultados del flujo completo, no pruebas exclusivas de este sprint ni una nueva ejecución JUnit.
 
@@ -43,9 +64,10 @@ rutas `src/` de esta guía se entienden relativas a esa carpeta.
 | 401 de API | IMPLEMENTADO en interceptor: limpia sesión local y redirige a `/login` salvo en el propio login |
 | Login, sesión y panel | IMPLEMENTADOS; faltan comprobaciones de cierre y escenarios de error exhaustivos |
 
-El Login actual conserva visualmente «Recordarme» y «¿Olvidaste tu contraseña?»,
-pero no implementa persistencia específica de Recordarme ni recuperación de contraseña.
-El botón «Acceso de prueba» solamente precarga `usuario` / `usuario`.
+El Login de la entrega inicial conservaba visualmente «Recordarme» y
+«¿Olvidaste tu contraseña?», sin persistencia específica ni recuperación.
+El botón «Acceso de prueba» solamente precargaba `usuario` / `usuario`.
+Esos controles se retiraron después; no describen el login vigente.
 
 ## Alcance confirmado
 

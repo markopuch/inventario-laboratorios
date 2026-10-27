@@ -1,12 +1,22 @@
 # Usuarios y autenticación JWT
 
-**Estado vigente:** commit `e1ce75a`, 3 de octubre de 2026. [Evidencia Docker/Actions](despliegue/verificacion-docker-actions-2026-10-03.md). El flujo del curso permanece y la administración de cuentas se amplió después de Sprint 7.
+**Estado vigente: 27 de octubre de 2026.** La corrección de login se publicó en
+`ef31d659983493e9ca9eeea2e063caf0b5e63029`: CI **410 backend / 107 frontend / 28
+importador**, Render Live tras el despliegue limpio `dep-dbgfo1mi0phs73dt8020`
+y **59/59 comprobaciones API cloud**. Véase la
+[verificación cloud](despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+La [evidencia e1ce75a del 3 de octubre](despliegue/verificacion-docker-actions-2026-10-03.md)
+y los recorridos fechados al final conservan su alcance histórico.
 
 La API incorpora usuarios JPA, login con BCrypt y tokens JWT. Se conserva la
 organización de carpetas y el flujo de los ejemplos de `Carlos_backend/workshop`,
 con las comprobaciones de usuario activo de los otros ejemplos del profesor.
 
 ## Cuentas de demostración y permisos
+
+La tabla describe las cuentas que crea el perfil dev; no representa el número
+actual de cuentas de cada entorno. El snapshot Render comprobado el 27 contiene
+seis usuarios, según el informe cloud enlazado arriba.
 
 | Usuario de acceso | Nombre | Rol | Consultar categorías | Crear, editar y dar de baja categorías |
 |---|---|---|---|---|
@@ -35,7 +45,9 @@ LECTOR consulta. ADMIN administra también usuarios: alta, edición pública, ro
 
 ```text
 POST /api/auth/login
+  → LoginRateLimitFilter comprueba la cuota del peer antes de parsear el body
   → AuthController recibe AuthRequest(userName, password)
+  → LoginRateLimiter reserva un intento para el nombre normalizado
   → AuthenticationManager / DaoAuthenticationProvider
   → UsuarioService implements UserDetailsService
   → UsuarioRepository → UsuarioEntity + RolEntity → PostgreSQL
@@ -65,6 +77,8 @@ Solicitud con Authorization: Bearer ...
 | `security/UserInfoDetails.java` | Identidad y authorities `ROLE_ADMIN`, `ROLE_GESTOR` o `ROLE_LECTOR` |
 | `security/JwtService.java` | JWT HS256 con emisor, sujeto, ID, emisión y vencimiento |
 | `security/JwtAuthFilter.java` | Procesa el Bearer y recarga permisos vigentes |
+| `security/LoginRateLimitFilter.java` | Limita solicitudes de login por peer antes de body/JWT |
+| `security/LoginRateLimiter.java` | Presupuesto agregado por username, reservas concurrentes y expiración |
 | `security/SecurityErrorHandler.java` | Respuestas JSON 401/403 y fallos internos del filtro |
 | `config/AppConfig.java` | BCrypt, proveedor de autenticación y AuthenticationManager |
 | `config/SecurityConfig.java` | Rutas, roles, filtro y sesiones deshabilitadas |
@@ -86,12 +100,47 @@ El secreto de firma se obtiene de `JWT_SECRET`, en Base64 estándar y con al men
 aleatorios. La duración predeterminada es de 1800 segundos y se puede configurar
 mediante `JWT_EXPIRATION_SECONDS`. Una clave nueva invalida los tokens anteriores.
 
+## Límite de intentos de login
+
+El login admite por defecto **cinco fallos por username normalizado en 900
+segundos**, sumados aunque cambie la conexión o el origen. El nombre usa
+trim/minúsculas; la contraseña no se recorta ni transforma. Un éxito previo al
+bloqueo reinicia los fallos de ese nombre. Se conserva además una cuota de
+**60 solicitudes por peer en 60 segundos**, incluyendo JSON inválido; el éxito
+no reinicia esa cuota. El peer procede de `getRemoteAddr()`, sin interpretar
+`Forwarded` ni `X-Forwarded-For` enviados por el cliente.
+
+Tras agotar el presupuesto se devuelve **429** con `ApiError`, `Retry-After`
+en segundos y `Cache-Control: no-store`. Las reservas concurrentes cuentan antes
+de BCrypt. La UI muestra la espera y no reintenta automáticamente. Los mapas son
+acotados y por proceso: se vacían al reiniciar y no coordinan réplicas. Un ataque
+al nombre puede imponer espera temporal también a su dueño; no bloquea la
+cuenta en PostgreSQL. Variables y límites: [guía de paginación/login](backend-final/paginacion-login.md).
+
+## Documentación pública y consultas paginadas
+
+Springdoc publica **70 operaciones de aplicación**. Solo los GET de Swagger
+`/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs`, `/v3/api-docs.yaml` y
+`/v3/api-docs/swagger-config` son públicos para documentación; las operaciones
+de inventario conservan JWT, roles y alcance. `API_DOCS_ENABLED=false`
+deshabilita la interfaz y la especificación. Véase [OpenAPI/Postman](backend-final/openapi.md).
+
+`GET /api/equipos`, `GET /api/admin/equipos` y `GET /api/admin/auditoria`
+conservan el array cuando se omiten **ambos** parámetros `page` y `size`.
+Enviar cualquiera activa la página base cero, defaults `0/20` y máximo 100,
+con `{content,number,size,totalElements,totalPages,first,last}`. Equipos admite
+`q` literal sin distinguir mayúsculas, trim y máximo 200 caracteres, junto con
+los filtros existentes y el alcance antes de contar/limitar. El orden es ID ASC;
+Auditoría es exclusiva ADMIN y ordena fecha DESC, ID DESC. La
+[guía de paginación/login](backend-final/paginacion-login.md) detalla validaciones
+y compatibilidad con los consumidores anteriores.
+
 ## Migración y persistencia
 
 V6 agrega `usuario.username` y un índice único sobre `UPPER(username)`. Si hubiera
 usuarios anteriores, se les asigna `usuario_<id_usuario>` como identificador de
 acceso; se conservan sus datos. Las tres cuentas de demostración usan sus nombres
-de acceso explícitos. V1–V5 no se editaron. V11 agregó el índice UNIQUE de email por UPPER sin cambiar identidades/credenciales existentes; el backend Docker actual validó V1–V13.
+de acceso explícitos. V1–V5 no se editaron. V11 agregó el índice UNIQUE de email por UPPER sin cambiar identidades/credenciales existentes; la evidencia Docker del 3 de octubre validó V1–V13 y el despliegue cloud del 27 conserva esas trece migraciones.
 
 Flyway administra el esquema y Hibernate sigue usando `ddl-auto=validate`.
 Los hashes los genera BCrypt al crear cuentas mediante JPA; no hay contraseñas
@@ -166,6 +215,9 @@ Sin el perfil dev también se puede iniciar el backend con la base preparada y
 
 Crea variables de colección `baseUrl` = `http://localhost:8080`, `tokenAdmin`,
 `tokenGestor` y `tokenLector`. Copia los tokens manualmente; no necesitas scripts.
+Este recorrido manual supone cuotas disponibles; un login o un JSON inválido
+también puede recibir 429 si se agotó un presupuesto. La colección actual y su
+entorno sin credenciales exportadas están en [Postman](backend-final/postman/README.md).
 
 1. **Login ADMIN**: POST `{{baseUrl}}/api/auth/login`, Authorization **No Auth**,
    Body **raw → JSON**, `Content-Type: application/json`.
@@ -221,7 +273,8 @@ Crea variables de colección `baseUrl` = `http://localhost:8080`, `tokenAdmin`,
     un carácter del JWT. Espera **401**, sin detalles técnicos.
 
 11. **Contraseña incorrecta o usuario inexistente**: POST al login con **No Auth**.
-    Ambos casos deben devolver **401** con el mismo mensaje genérico.
+     Ambos casos devuelven **401** con el mismo mensaje genérico mientras quede
+     presupuesto; después corresponde **429**, con Retry-After y no-store.
 
 12. **Validación del login**: POST al login con `{}`. Espera **400**, con errores
     de `userName` y `password`.
@@ -237,6 +290,7 @@ Crea variables de colección `baseUrl` = `http://localhost:8080`, `tokenAdmin`,
 
 Los errores usan el mismo formato `ApiError`. **401** indica falta de
 autenticación válida; **403** indica que el usuario autenticado no tiene permiso.
+**429** indica que se agotó temporalmente una cuota del login.
 
 ## Comandos de comprobación en otra ventana PowerShell
 
@@ -326,8 +380,9 @@ base `inventario_verificacion_*`. El reporte queda en
 ## Resultado de la implementación y verificación
 
 Este apartado conserva la evidencia histórica de la incorporación de JWT,
-anterior a los sprints 4–7. La verificación vigente se encuentra en
-[verificación final del backend](backend-final/verificacion-final.md); el cierre
+anterior a los sprints 4–7. La verificación vigente se encuentra en la
+[verificación cloud del 27](despliegue/verificacion-paginacion-login-cloud-2026-10-27.md);
+la [verificación final del backend](backend-final/verificacion-final.md) conserva el cierre histórico. El cierre
 de Sprint 6 tuvo 233 pruebas. No se reinterpretan las cifras siguientes como
 estado actual.
 

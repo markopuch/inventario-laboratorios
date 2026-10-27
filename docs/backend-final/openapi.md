@@ -42,10 +42,14 @@ validador externo. Cerrar la pestaña o quitar la autorización al terminar.
 
 ADMIN tiene alcance global. GESTOR y LECTOR requieren asignaciones activas a
 laboratorios activos; ocultar un botón no sustituye la autorización del servidor.
-El bloque posterior de [paginación y login](paginacion-login.md), todavía local,
-añade page/size a Equipos/Auditoría y 429/Retry-After al login. Sin page/size
-se mantienen arreglos JSON. Render d8f2123 conserva el contrato anterior hasta
-publicar esa actualización.
+El bloque posterior de [paginación y login](paginacion-login.md) está publicado
+y comprobado en Render/Vercel con la revisión `ef31d65`: añade page/size a
+Equipos/Auditoría y 429/Retry-After al login. Sin page/size se mantienen arrays.
+Cinco fallos por nombre normalizado en 900 s se agregan entre conexiones;
+la cuota general sigue siendo 60 solicitudes por peer en 60 s. La
+[verificación cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md)
+registra el despliegue limpio y las 59 comprobaciones API aprobadas. La
+verificación Swagger de d8f2123 que se conserva más abajo es su antecedente.
 La baja de Equipo es lógica; el traslado tiene su propia operación. Los reportes
 son agregados; los CSV los genera el frontend y no son endpoints adicionales.
 

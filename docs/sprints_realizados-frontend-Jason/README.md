@@ -1,6 +1,6 @@
 # Sprints realizados — Frontend Jason
 
-Estado funcional actualizado el **26 de octubre de 2026**. La evidencia Docker
+Estado funcional actualizado el **27 de octubre de 2026**. La evidencia Docker
 del 3 de octubre corresponde a `e1ce75a` y se conserva como antecedente.
 
 Esta carpeta registra el frontend de `frontend/version-jason/frontend/`. Cada FE presenta primero su estado vigente y después la entrega original como historia. Los resultados de Marko no certifican Jason. Los sprints organizan trabajo por módulos; no equivalen por sí solos a aprobación completa de cada mockup o escenario.
@@ -10,13 +10,25 @@ sus sprints se conservan solo en el equipo local, excluidos del seguimiento de G
 y de nuevos clones. Las referencias a ese material son antecedentes históricos;
 esta carpeta continúa documentando únicamente Jason.
 
+**Cierre publicado del 27:** Equipos y Auditoría paginan en servidor con tamaños
+20/50/100; Equipos aplica búsqueda `q` antes del conteo. Sin `page/size` se
+conservan arrays. Login agrega cinco fallos por username normalizado/900 s,
+independiente del origen; mantiene 60 solicitudes por peer/60 s y 429 con
+Retry-After, contador UI y botón deshabilitado, sin reintento automático.
+JWT sigue en memoria, sin refresh token ni login automático tras recargar.
+Regresión: **410 backend, 107 frontend**, build **1681 módulos** y CI aprobado;
+`ef31d65` Live en Render tras reconstrucción limpia `dep-dbgfo1mi0phs73dt8020`
+(4m52s), Vercel success y API cloud **59/59**. [Guía](../backend-final/paginacion-login.md)
+e [informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+Los resultados históricos siguientes no se suman a estas suites.
+
 ## Estado actual
 
 | Bloque | Estado y evidencia |
 |---|---|
-| [FE-01 · Login/sesión](fe-01-login-sesion.md) | Integrado; tres roles, JWT en memoria, alcance, 401 y refresco de perfil ante autocambios administrativos. |
+| [FE-01 · Login/sesión](fe-01-login-sesion.md) | Integrado; tres roles, JWT en memoria, alcance, 401 y refresco de perfil ante autocambios. Login 429 con Retry-After, espera y botón deshabilitado; sin refresh token. |
 | [FE-02 · Dashboard](fe-02-dashboard.md) | Equipos, laboratorios autorizados, movimientos y resumen real de mantenimiento; errores diferenciados de ceros. |
-| [FE-03 · Equipos](fe-03-equipos.md) | CRUD, filtros, baja lógica y traslado. Docker actual: alta/edición/traslado por UI y baja por HTTP; GESTOR vio BAJA sin acciones. |
+| [FE-03 · Equipos](fe-03-equipos.md) | CRUD, filtros, baja lógica y traslado; paginación 20/50/100 y búsqueda en servidor comprobadas en nube. El smoke Docker del 3 acredita por separado alta/edición/traslado por UI y baja por HTTP. |
 | [FE-04 · Catálogos](fe-04-categorias-subcategorias.md) | Categorías/subcategorías; activos/inactivos administrativos, inactivación y reactivación reales. |
 | [FE-05 · Organización](fe-05-laboratorios-sedes-areas.md) | Sedes/áreas/laboratorios; jerarquía, actividad y estadoOperativo independiente de activo. |
 | [FE-06 · Usuarios/roles/asignaciones](fe-06-usuarios-roles-asignacion.md) | Administración ADMIN: directorio, creación, edición, rol, estado, contraseña y laboratorios. Último ADMIN protegido; acceso propio a Asignaciones en menú ADMIN. |
@@ -25,7 +37,7 @@ esta carpeta continúa documentando únicamente Jason.
 | [FE-09 · Reportes](fe-09-reportes.md) | Cinco agregados y filtros reales; cinco descargas CSV con filtros aplicados y alcance. Gráficos completos y otros formatos pendientes. |
 | [FE-10 · Configuración](fe-10-configuracion.md) | Menú y ruta retirados. Preferencias persistentes y seguridad configurable futuras. |
 | [FE-11 · Arquitectura](fe-11-arquitectura-frontend.md) | React/Vite/Axios, routing, sesión, proxy y Nginx integrados; navegación ADMIN de Usuarios, Asignaciones y Auditoría. Fidelidad visual y accesibilidad exhaustivas no certificadas. |
-| [Auditoría ADMIN](../frontend/guia-reportes-auditoria.md) | Pantalla de consulta con filtros, fechas UTC y visualización en Lima; reutiliza API existente, solo lectura. |
+| [Auditoría ADMIN](../frontend/guia-reportes-auditoria.md) | Consulta paginada, filtros, fechas UTC y visualización en Lima; API existente, solo lectura. UI cloud verificada con 351 eventos. |
 
 ## Verificación del cierre del 26 de octubre
 

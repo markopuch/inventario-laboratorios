@@ -1,5 +1,26 @@
 # Ampliación del backend — 3 de octubre de 2026
 
+**Nota vigente del 27 de octubre de 2026:** este documento conserva la ampliación
+y las verificaciones históricas del 3 de octubre. El contrato posterior publicado
+en `ef31d659983493e9ca9eeea2e063caf0b5e63029` incorpora paginación opcional en
+`GET /api/equipos`, `/api/admin/equipos` y `/api/admin/auditoria`: enviar `page`
+o `size` activa página base cero, defaults 0/20, máximo 100 y sobre
+`{content,number,size,totalElements,totalPages,first,last}`; omitir ambos conserva
+el array. Equipos admite `q` literal IgnoreCase, trim y máximo 200 caracteres,
+aplicado con filtros/alcance antes de contar/limitar. Auditoría sigue siendo ADMIN.
+
+Login limita cinco fallos por username normalizado/900s entre orígenes y conserva
+60 solicitudes por peer/60s, sin confiar en headers de origen. Devuelve 429 con
+Retry-After, no-store y ApiError; un éxito previo al bloqueo limpia los fallos
+del nombre. Los contadores son por proceso, sin bloqueo de cuentas en BD.
+Swagger/OpenAPI documenta 70 operaciones; los GET de documentación son públicos
+y la API conserva JWT/roles/alcance. CI vigente **410 backend / 107 frontend / 28
+importador**, Render Live tras despliegue limpio `dep-dbgfo1mi0phs73dt8020` y
+comprobación API cloud **59/59**. No se añaden migraciones en este bloque.
+Detalle: [paginación/login](../../docs/backend-final/paginacion-login.md),
+[OpenAPI](../../docs/backend-final/openapi.md) y
+[verificación cloud](../../docs/despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+
 **Actualización de seguridad del 27 de octubre de 2026:** crear usuarios,
 restablecer claves y crear cuentas demo ausentes exige al menos 15 caracteres
 Unicode y máximo 72 bytes UTF-8. No se recortan/transforman claves y se rechazan
@@ -8,10 +29,10 @@ conservan; no hubo migración ni cambio forzado de contraseñas. Los resultados
 de verificación nuevos se registran en el [cierre del 27 de octubre](../../docs/despliegue/verificacion-cierre-2026-10-27.md).
 Las pruebas Docker y la ampliación funcional que siguen conservan su fecha histórica.
 
-**Estado de integración posterior:** esta ampliación ya está conectada al frontend
+**Estado de integración histórico del 3 de octubre:** esta ampliación quedó conectada al frontend
 Jason y desplegada en Docker local con las imágenes `sha-e1ce75a`.
 Flyway V1–V13 tiene `success=true`; los checksums V1–V9 y los registros habituales
-se conservaron. El [reporte vigente de Docker y Actions](../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
+se conservaron. El [reporte de Docker y Actions del 3 de octubre](../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
 documenta ambas publicaciones, 94 comprobaciones HTTP, 30 aserciones funcionales,
 siete controles SQL y la eliminación del entorno temporal. Esas cifras no son
 una nueva ejecución de la suite JUnit. La actualización de documentación no

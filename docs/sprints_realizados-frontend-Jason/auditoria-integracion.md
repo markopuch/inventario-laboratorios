@@ -1,14 +1,32 @@
 # Auditoría de integración — Frontend Jason
 
-Actualización funcional: **26 de octubre de 2026**. Evidencia Docker histórica:
+Actualización funcional: **27 de octubre de 2026**. Evidencia Docker histórica:
 3 de octubre, commit `e1ce75a`.
 
-**Estado vigente en fuente: integración con V1–V13; CSV de agregados en Reportes,
+**Estado vigente: integración con V1–V13; Equipos y Auditoría paginados, búsqueda
+de equipos en servidor y login 429 con espera visible; CSV de agregados en Reportes,
 Auditoría de solo lectura ADMIN y acceso propio a Asignaciones. Configuración
 retirada del menú y de las rutas. No se declara fidelidad visual 1:1 ni
 accesibilidad exhaustiva.**
 
 ## Estado vigente y fuente de evidencia
+
+Equipos/Auditoría usan tamaños 20/50/100 y totales filtrados; Equipos aplica `q`
+antes de contar/limitar. Sin `page/size` los GET conservan arrays. Login agrega
+cinco fallos por username normalizado/900 s, independiente del origen, y mantiene
+60 solicitudes por peer/60 s. La UI respeta Retry-After con contador y botón
+deshabilitado, sin reintento ni login automáticos. JWT sigue solo en memoria,
+sin refresh token; refrescar perfil no renueva el JWT.
+Regresión acreditada: **410 backend, 107 frontend**, build **1681 módulos** y
+CI aprobado. `ef31d65` quedó Live tras reconstrucción limpia Render
+`dep-dbgfo1mi0phs73dt8020` (4m52s), Vercel success y API cloud **59/59**,
+incluidos cinco 401 y sexto 429. La UI pública verificó páginas/búsqueda y
+espera de login con botón deshabilitado.
+[Guía](../backend-final/paginacion-login.md) e
+[informe cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+Estas suites y recorridos no se ejecutaron nuevamente al editar este documento.
+
+### Antecedente funcional del 26 de octubre
 
 El cierre del 26 de octubre reutiliza los contratos existentes y no cambia
 backend, migraciones ni datos. Los CSV conservan filtros aplicados y alcance;
@@ -34,18 +52,18 @@ El habitual quedó con V1–V13 exitosas, checksums V1–V9 conservados y nueve 
 
 | Sprint | Estado en fuente y antecedentes de comprobación | Límites |
 |---|---|---|
-| [FE-01](fe-01-login-sesion.md) | Tres roles, JWT en memoria, alcance y 401; refresco de perfil ante autocambios. | Sin Recordarme/recuperación; recarga vuelve a Login. |
+| [FE-01](fe-01-login-sesion.md) | Tres roles, JWT en memoria, alcance y 401; refresco de perfil ante autocambios. Login 429/Retry-After con contador y botón deshabilitado, comprobado en nube. | Sin Recordarme/recuperación ni refresh token; recarga exige login y el contador no envía otro intento. |
 | [FE-02](fe-02-dashboard.md) | Equipos, alcance, movimientos y mantenimiento con respuestas reales. | Sin mockup independiente ni certificación de todos los datos. |
-| [FE-03](fe-03-equipos.md) | Alta/edición/traslado por UI; baja por HTTP; BAJA sin acciones para GESTOR. | Confirmación nativa impidió automatizar clic final de baja; tarjetas/modal difieren del mockup. |
+| [FE-03](fe-03-equipos.md) | CRUD, traslado y baja lógica; paginación 20/50/100 y búsqueda de todo el conjunto filtrado en servidor comprobadas con 258 equipos cloud. | Tarjetas/modal difieren del mockup; el límite de confirmación nativa corresponde al smoke histórico de baja del 3. |
 | [FE-04](fe-04-categorias-subcategorias.md) | Catálogos administrativos, actividad/reativación; conflictos de dependencias. | Sin maestro/detalle idéntico al mockup. |
 | [FE-05](fe-05-laboratorios-sedes-areas.md) | Jerarquía, actividad y estadoOperativo real desde V10. | Estado de ubicación distinto de Mantenimiento de Equipo; diferencias visuales. |
 | [FE-06](fe-06-usuarios-roles-asignacion.md) | Directorio, creación, edición, rol, actividad, contraseña y asignaciones ADMIN; nuevo menú ADMIN comprobado con API simulada. | Password histórico por HTTP; no se repitieron escrituras contra BD real en el cierre del 26. |
 | [FE-07](fe-07-movimientos.md) | Actor/origen del servidor e historia LECTOR por origen tras BAJA. | Sin estados de proceso ni filtros de fechas/tipo/exportación en esa pantalla. |
 | [FE-08](fe-08-mantenimientos.md) | Programar/editar/iniciar/completar/cancelar, filtros/alcance y bloqueo de Equipo. | Sin calendario. |
-| [FE-09](fe-09-reportes.md) | Cinco agregados, filtros y errores/reintento; CSV por bloque con filtros aplicados y alcance, comprobado con API simulada. | Otros formatos y gráficos completos pendientes; sin nueva prueba contra backend real. |
+| [FE-09](fe-09-reportes.md) | Cinco agregados, filtros y errores/reintento; CSV por bloque con filtros aplicados y alcance. Evidencia CSV del 26 y recorridos API/BD posteriores separados. | Otros formatos y gráficos completos pendientes de priorización. |
 | [FE-10](fe-10-configuracion.md) | Ruta/menú retirados; la dirección antigua vuelve al inicio. | Preferencias y seguridad configurable futuras. |
 | [FE-11](fe-11-arquitectura-frontend.md) | React/Vite/Axios, sesión, rutas por rol, Nginx/proxy/fallback SPA. | Fidelidad visual y accesibilidad exhaustivas no certificadas. |
-| [Auditoría ADMIN](../frontend/guia-reportes-auditoria.md) | Tabla, filtros, errores/vacío y rutas/menú ADMIN comprobados con API simulada. | No es versionado completo de entidades ni nueva prueba contra backend real. |
+| [Auditoría ADMIN](../frontend/guia-reportes-auditoria.md) | Tabla paginada, filtros, errores/vacío y rutas/menú ADMIN; UI pública 20/100 sobre 351 eventos y API cloud comprobadas el 27. | No es versionado completo de entidades. |
 
 ## Smoke histórico de las imágenes: 3 de octubre
 
@@ -130,7 +148,7 @@ responsabilidad de autorizar cada operación.
 |---|---|---|
 | [FE-01](fe-01-login-sesion.md) | Login de tres roles, logout, recarga a Login y error de credenciales comprobados. Sesión coherente en memoria, manejo de 401 y respuestas antiguas; 10 pruebas de lógica. | Sin Recordarme, recuperación ni persistencia de sesión. Escenarios de expiración/concurrencia cubiertos por lógica, no todos reproducidos en navegador. |
 | [FE-02](fe-02-dashboard.md) | Resúmenes e historial comprobados, errores/reintento y valores indisponibles diferenciados. El contador consulta alcance actualizado al entrar, también para ADMIN. | No hay mockup independiente. No se certifica cada combinación de datos ni accesibilidad exhaustiva. |
-| [FE-03](fe-03-equipos.md) | Alta, edición, traslado y baja por UI; filtros OPERATIVO/BAJA; permisos y campos inmutables; BAJA sin acciones. CRUD GESTOR, filtros y errores adicionales por HTTP. | Tarjetas y modal, en lugar de tabla/página de mockup. Sin ficha completa, adjuntos, paginación, exportación ni selector nominal de responsables. |
+| [FE-03](fe-03-equipos.md) | Alta, edición, traslado y baja por UI; filtros OPERATIVO/BAJA; permisos y campos inmutables; BAJA sin acciones. CRUD GESTOR, filtros y errores adicionales por HTTP. | La entrega inicial no tenía ficha completa, adjuntos, paginación, exportación ni selector nominal de responsables. Paginación se incorporó el 27; esta fila conserva el alcance histórico. |
 | [FE-04](fe-04-categorias-subcategorias.md) | Categoría creada/editada y subcategoría relacionada por UI. CRUD y conflicto de padre con hijas comprobados por HTTP. Se usa activo real. | Pestañas en lugar de maestro/detalle; no se certificó cada baja mediante navegador. |
 | [FE-05](fe-05-laboratorios-sedes-areas.md) | Laboratorio creado/editado por UI, sede resuelta correctamente y árbol expandible. CRUD de sede/área/laboratorio probado por HTTP. | Sin ficha detallada, búsqueda del árbol ni filtros combinados del mockup. Mantenimiento de laboratorio no tiene contrato actual. |
 | [FE-06](fe-06-usuarios-roles-asignacion.md) | Selector real; asignación de 2 laboratorios a GESTOR y 1 a LECTOR por UI. Cambiar ID invalida resultado. 7 pruebas de identidad, lista vacía, doble envío y respuestas tardías. | Consulta por ID; no existe directorio, creación ni cambio administrativo de roles. Vaciar asignaciones no se ejecutó por UI. |
@@ -170,16 +188,18 @@ concluir que todos los indicadores fueran correctos. Las correcciones actuales
 retiran esos controles engañosos o derivan sus valores del contrato real, según la
 matriz anterior; la sección de hallazgos permanece como historia.
 
-## Diferencias con las referencias visuales
+## Diferencias con las referencias visuales de la entrega inicial (histórico)
 
 Las diez imágenes se inspeccionaron directamente. Esta comparación describe la
-estructura que falta o cambia; se complementa con las capturas de ejecución enlazadas abajo, sin constituir una aprobación de fidelidad al píxel. Los valores y personas ilustrados
+entrega inicial del 3 de octubre, anterior a las ampliaciones V10–V13 y al cierre
+del 27; no es el backlog vigente. Se complementa con las capturas de ejecución
+enlazadas abajo, sin constituir una aprobación de fidelidad al píxel. Los valores y personas ilustrados
 en los mockups no son datos de prueba del backend.
 
 | Referencia | Diferencia observada en la entrega Jason |
 |---|---|
 | [01 · Login](../frontend/mockup/01_inicio_sesion_inventario_laboratorios.png) | Conserva dos columnas y acciones principales. La ilustración se aproxima con CSS/Lucide; Recordarme y recuperación eran controles sin recorrido. |
-| [02 · Equipos](../frontend/mockup/02_equipos_listado_general.png) | La referencia es una tabla con miniaturas, responsable, último mantenimiento, detalle, paginación y exportación; Jason usa tarjetas sin esas partes. |
+| [02 · Equipos](../frontend/mockup/02_equipos_listado_general.png) | La entrega inicial usaba tarjetas y no implementaba las partes de tabla, miniaturas, responsable, último mantenimiento, detalle, paginación y exportación del mockup. La paginación se incorporó y comprobó el 27; véase el estado vigente anterior. |
 | [03 · Nuevo equipo](../frontend/mockup/03_equipos_nuevo_registro.png) | La referencia es una página con categoría, responsable, fechas, adjuntos y resumen; Jason usa un modal con un subconjunto distinto de campos. |
 | [04 · Categorías](../frontend/mockup/04_categorias_y_subcategorias.png) | La referencia muestra categoría seleccionada y subcategorías simultáneamente; Jason usa pestañas sin maestro/detalle ni conteo por categoría. |
 | [05 · Ubicaciones](../frontend/mockup/05_laboratorios_sedes_y_areas.png) | Existe árbol, pero faltan búsqueda del árbol, selección/ficha de laboratorio y filtros por sede/área/estado. El retiro de la fecha decorativa es una diferencia consciente ya documentada. |
@@ -276,6 +296,6 @@ Las capturas de movimientos contienen fixtures eliminados al cerrar las pruebas.
 
 ## Límites de la auditoría inicial y evolución posterior
 
-En la auditoría inicial FE-08, FE-09 y FE-10 eran placeholders y Usuarios solo tenía asignaciones. Después la adaptación V10–V13 incorporó usuarios administrativos, mantenimiento y reportes reales, según el estado vigente del inicio. Configuración permanece futura. La ampliación no certifica fidelidad visual ni accesibilidad exhaustivas.
+En la auditoría inicial FE-08, FE-09 y FE-10 eran placeholders y Usuarios solo tenía asignaciones. Después la adaptación V10–V13 incorporó usuarios administrativos, mantenimiento y reportes reales; el 27 se publicaron paginación de Equipos/Auditoría y límite de login. Configuración fue retirada; preferencias persistentes siguen como ampliación futura. El estado vigente y sus comprobaciones figuran al inicio. La ampliación no certifica fidelidad visual ni accesibilidad exhaustivas.
 
 Queda como mejora de interfaz revisar exhaustivamente navegación por teclado, foco/Escape y restauración de foco de modales, lectores de pantalla y otros tamaños de dispositivo. Los nombres accesibles básicos y el menú móvil se mejoraron, pero esta revisión no certifica accesibilidad integral.

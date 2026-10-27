@@ -2,6 +2,15 @@
 
 ## Arquitectura general
 
+**Revisión transversal de Markdown, 27 de octubre:** además de las memorias,
+backlog e informes ya publicados, se sincronizaron las guías JWT/Swagger,
+arquitectura, README del frontend, sprints Jason y planes de adaptación con
+paginación y límite de login vigentes. Las propuestas y ejecuciones anteriores
+quedan identificadas como históricas. Los 17 Markdown se publican como una
+actualización documental sobre `a850dfb`, sin cambios de código, dependencias
+o migraciones. Las comprobaciones posteriores de alojamiento se registran con
+fecha propia; no se confunden con las suites históricas citadas abajo.
+
 **Paginación y login, 27 de octubre — publicación posterior:** Equipos,
 su alias ADMIN y Auditoría admiten `page/size` opcionales, base cero, tamaño 20
 por defecto y máximo 100; sin ambos conservan el arreglo anterior. La búsqueda

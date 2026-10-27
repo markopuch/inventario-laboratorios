@@ -1,6 +1,13 @@
 # Arquitectura del backend — estado vigente V13
 
-Revisión documental del 3 de octubre de 2026, commit `e1ce75a`. Se conserva la arquitectura del curso; las extensiones ya implementadas se distinguen del [cierre histórico de Sprint 7](verificacion-final.md). [Evidencia Docker/Actions](../despliegue/verificacion-docker-actions-2026-10-03.md).
+Revisión vigente: **27 de octubre de 2026**, con paginación y corrección de login
+publicadas en `ef31d659983493e9ca9eeea2e063caf0b5e63029`. CI aprobó **410 backend /
+107 frontend / 28 importador**; Render quedó Live en el despliegue limpio
+`dep-dbgfo1mi0phs73dt8020` y la API cloud aprobó **59/59**. La
+[verificación cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md)
+separa esas comprobaciones de la [evidencia del 3 de octubre, e1ce75a](../despliegue/verificacion-docker-actions-2026-10-03.md)
+y del [cierre histórico de Sprint 7](verificacion-final.md). Se conserva la
+arquitectura del curso y Flyway V1–V13.
 
 ## 1. Estructura que conserva el proyecto
 
@@ -38,7 +45,7 @@ Las rutas siguientes son relativas al paquete
 
 | Capa | Responsabilidad | Ejemplo |
 |---|---|---|
-| `config`, `security` | Autenticar y aplicar permisos por método/ruta | `SecurityConfig`, `JwtAuthFilter`, `JwtService` |
+| `config`, `security` | Autenticar, limitar login y aplicar permisos por método/ruta | `SecurityConfig`, `JwtAuthFilter`, `JwtService`, `LoginRateLimiter` |
 | `controller` | Recibir HTTP, extraer el principal, validar DTO y devolver status/response | `EquipoController`, `EquipoMovimientoController` |
 | `dto/request` | Definir qué puede enviar el cliente y sus restricciones | `CreateEquipoRequest`, `UpdateEquipoRequest`, `TrasladarEquipoRequest` |
 | `dto/response` | Exponer únicamente el contrato público | `EquipoResponse`, `MovimientoEquipoResponse` |
@@ -58,7 +65,8 @@ automáticamente igualdad o `toString` sobre relaciones JPA.
 Los Controllers de inventario no deciden si un laboratorio pertenece al actor
 ni si un Equipo puede trasladarse. Delegan al Service. AuthController coordina
 AuthenticationManager, generación JWT y la protección del límite de 72 bytes de
-BCrypt siguiendo el patrón de autenticación existente.
+BCrypt siguiendo el patrón de autenticación existente; también completa la
+reserva de intento del limitador según éxito/fallo.
 
 ## 3. Autenticación, rol y pertenencia
 
@@ -67,6 +75,25 @@ comprueba las credenciales BCrypt y devuelve un JWT. El cliente envía después
 `Authorization: Bearer <token>`. La API no autentica mediante sesión o cookies.
 El filtro valida el token y recarga el usuario y rol vigentes: la autorización
 no depende únicamente de un rol que quedó escrito en un token antiguo.
+
+Antes de parsear el login, `LoginRateLimitFilter` aplica la cuota de **60
+solicitudes por peer/60s**. AuthController reserva de forma atómica en
+`LoginRateLimiter` un intento del presupuesto de **cinco fallos por username
+normalizado/900s**, independiente del peer. Un éxito previo al bloqueo reinicia
+los fallos del nombre, sin reiniciar la cuota por peer. Se usa `getRemoteAddr()`
+sin confiar en headers Forwarded/X-Forwarded-For. Un límite agotado devuelve
+429, `ApiError`, `Retry-After` y `Cache-Control: no-store`.
+
+Los mapas son acotados y por proceso; se reinician con la instancia y no
+coordinan réplicas. Acumular fallos contra un nombre puede imponer una espera
+temporal a su dueño, sin guardar bloqueos en BD. Contrato y variables en la
+[guía de paginación/login](paginacion-login.md).
+
+Springdoc genera **70 operaciones de aplicación**. La documentación permite
+GET públicos a `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs`,
+`/v3/api-docs.yaml` y `/v3/api-docs/swagger-config`; la API conserva JWT, roles y
+alcance. `API_DOCS_ENABLED=false` deshabilita UI y especificación. No hay
+servicio de documentación independiente; véase [OpenAPI](openapi.md).
 
 El rol establece **qué operaciones** puede realizar una persona. La pertenencia
 establece **sobre qué laboratorios** puede realizarlas:
@@ -87,6 +114,25 @@ consulta histórica global de ADMIN y no restringen esa consulta a la lista de
 laboratorios activos. Los catálogos existentes tampoco se filtran por pertenencia.
 
 ## 4. Ejemplo: crear y editar Equipo
+
+### Consultas paginadas compatibles
+
+`GET /api/equipos` y su alias ADMIN `/api/admin/equipos` conservan arrays si se
+omiten ambos `page` y `size`. Enviar cualquiera activa página base cero, defaults
+0/20 y máximo 100. `PaginacionRequest` valida el contrato; Service/Repository
+aplican filtros, alcance y búsqueda `q` antes del COUNT y del límite SQL.
+`q` usa trim, máximo 200 caracteres y coincidencia literal IgnoreCase en nombre,
+código, marca, modelo y nombre de laboratorio; `%` y `_` no actúan como comodines.
+
+EquipoRepository usa Specification y Pageable con orden estable por ID ASC.
+El dominio `Pagina<T>` y los DTO concretos `PaginaEquiposResponse` y
+`PaginaAuditoriaResponse` evitan exponer Page/JPA. El sobre tiene exactamente
+`content,number,size,totalElements,totalPages,first,last`; una página fuera de
+rango conserva totales y contenido vacío. `GET /api/admin/auditoria`, exclusivo
+ADMIN, usa el mismo contrato opcional, filtros antes de contar y orden fecha
+DESC, ID DESC. Los selectores/clientes anteriores pueden seguir pidiendo arrays.
+
+### Escrituras
 
 `POST /api/equipos` valida `CreateEquipoRequest`. El Mapper convierte sus datos
 en `Equipo`; el Service obtiene al actor vigente, normaliza strings y valida
@@ -237,6 +283,7 @@ Flyway está en V13. MovimientoEquipo ya estaba en V3; su vertical no requirió 
 | 403 | Rol o alcance insuficiente |
 | 404 | Recurso inexistente según el contrato del endpoint |
 | 409 | Duplicado conocido, relación inactiva, dependencia que impide baja o transición prohibida |
+| 429 | Cuota de login agotada; ApiError, Retry-After y Cache-Control: no-store |
 | 500 | Error inesperado; respuesta pública genérica |
 
 `ApiError` contiene timestamp, status, error, message, path y errors por campo.
@@ -293,17 +340,25 @@ Es una variante existente de persistencia, no un cambio a la arquitectura.
 AuditoriaService persiste las acciones de servicios en la transacción de
 negocio; un rollback tampoco deja ese registro confirmado. El actor se resuelve
 en servidor. AuditoriaController permite solo GET ADMIN con filtros.
+La consulta conserva array sin page/size y admite el sobre paginado descrito en
+la sección 4; aplica filtros y orden estable antes del límite SQL.
 AuditoriaMapper produce un DTO seguro: descripción de cambios, nunca password,
 hash, token, secretos o SQL. No es un versionado completo de atributos.
 
-## 11. Ejecución integrada
+## 11. Ejecución integrada y evidencia histórica
 
 En Docker: navegador → Nginx frontend Jason → /api → Spring Security/backend →
 PostgreSQL. Nginx sirve archivos React y rutas SPA; PostgreSQL mantiene el volumen
-habitual. Las imágenes publicadas e1ce75a se verificaron primero con una base
+habitual. En la comprobación histórica del 3 de octubre, las imágenes publicadas
+e1ce75a se verificaron primero con una base
 temporal y después se actualizaron los contenedores habituales.
 
 Se registraron 94 HTTP, 30 aserciones y siete consultas SQL de consistencia.
 No se reejecutó JUnit/npm durante este despliegue ni en esta revisión documental.
 Las 233 pruebas de Sprint 7, los 319 XML locales posteriores y las 67 pruebas
-frontend se describen separadamente en la evidencia vigente.
+frontend se describen separadamente en la evidencia histórica del 3 de octubre.
+
+La publicación cloud actual sigue navegador → Vercel/proxy `/api` → Spring
+Boot en Render → PostgreSQL Render. El despliegue limpio ef31d65 y sus 59/59
+comprobaciones se registran en el informe enlazado al inicio; publicar imágenes
+o commits no actualiza automáticamente el stack Docker principal.

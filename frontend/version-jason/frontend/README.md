@@ -5,7 +5,25 @@ está en `frontend/version-jason/frontend/`. La variante de tutoría Marko y sus
 registros de sprints se conservan solo en el equipo local, excluidos del seguimiento
 de Git desde el 26 de octubre de 2026; no se incluyen en nuevos clones.
 
-**Estado al 3 de octubre de 2026:** esta versión consume los contratos actuales de
+**Estado vigente — 27 de octubre de 2026:** Equipos y Auditoría tienen paginación
+del servidor, tamaños 20/50/100, totales filtrados y protección frente a respuestas
+obsoletas. Equipos busca con `q` sobre todo el conjunto autorizado. `page/size`
+son opcionales: base cero, tamaño predeterminado 20 y máximo 100; sin ambos, la
+API conserva arrays para dashboard, selectores e importador.
+Login limita cinco fallos por username normalizado en 900 s, independiente del
+origen, y 60 solicitudes por peer en 60 s. La UI respeta 429/Retry-After con
+contador y botón deshabilitado, sin reintentos ni login automáticos.
+Regresión acreditada: **410/410 backend, 107/107 frontend**, build de **1681
+módulos** y CI 40567596491 aprobado. `ef31d65` quedó Live en Render mediante
+reconstrucción limpia `dep-dbgfo1mi0phs73dt8020` (4m52s); Vercel confirmó
+success para el mismo SHA. La comprobación API cloud aprobó **59/59**, incluidos
+cinco 401 y sexto 429; la UI pública verificó paginación y espera de login.
+Véanse [contratos y configuración](../../../docs/backend-final/paginacion-login.md),
+[verificación cloud](../../../docs/despliegue/verificacion-paginacion-login-cloud-2026-10-27.md)
+y [memoria frontend](../../../docs/memory/frontend.md). Esta edición documental
+no vuelve a ejecutar esas pruebas ni actualiza el stack Docker local.
+
+**Antecedente Docker — 3 de octubre de 2026:** esta versión consumía los contratos de
 catálogos administrativos, usuarios, mantenimientos y reportes. El Docker local ya
 utiliza las imágenes publicadas del commit `e1ce75a`, con backend Flyway V1–V13,
 frontend en **3000**, backend en **8080** y tres contenedores saludables. Se
@@ -13,7 +31,7 @@ conservaron PostgreSQL, las cuentas y las cuatro asignaciones habituales. La
 adaptación anterior modificó solo Jason; el despliegue posterior reemplazó
 backend/frontend sin cambios de código, Compose ni migraciones.
 
-La [evidencia actual](evidencias/docker-actual-2026-10-03.json) y el
+La [evidencia histórica](evidencias/docker-actual-2026-10-03.json) y el
 [informe Docker/Actions](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md)
 separan pruebas históricas, publicación y preservación. El
 [cierre del 27 de octubre](../../../docs/despliegue/verificacion-cierre-2026-10-27.md)
@@ -128,7 +146,7 @@ usa `GITHUB_TOKEN`, sin incorporar credenciales a los archivos del proyecto.
 El Compose local sigue construyendo las imágenes `:local`; publicar en GHCR
 no sustituye automáticamente los contenedores que ya están ejecutándose.
 
-La [ejecución actual 37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428),
+La [ejecución histórica 37158784428](https://github.com/markopuch/inventario-laboratorios/actions/runs/37158784428),
 del 3 de octubre de 2026, completó ambos trabajos sobre el commit
 `e1ce75a1abf5058ad83ffafd85357dd0aa4c644b`. Las imágenes
 `backend:sha-e1ce75a` y `frontend-jason:sha-e1ce75a` se publicaron en GHCR y
@@ -136,7 +154,8 @@ se desplegaron en Docker local; referencias completas/digests constan en la
 [evidencia Docker y Actions](../../../docs/despliegue/verificacion-docker-actions-2026-10-03.md).
 Las **67/67 pruebas frontend** y el build están documentados en la adaptación
 previa. El smoke del reemplazo Docker no volvió a ejecutar npm/Gradle.
-El despliegue en la nube sigue sin acreditarse por estas comprobaciones.
+Ese smoke Docker no acredita por sí solo nube; la publicación y comprobación
+cloud del 27 se documentan al inicio de este archivo.
 
 Como antecedente anterior a V10–V13, la [ejecución 37136137900](https://github.com/markopuch/inventario-laboratorios/actions/runs/37136137900)
 publicó el commit `9956939` con 27/27 pruebas de Jason. Esa imagen no es la
@@ -173,7 +192,10 @@ No se documentan ni precargan contraseñas.
 El JWT y el usuario se conservan únicamente en memoria. Recargar la página, cerrar
 la pestaña o cerrar sesión requiere iniciar sesión otra vez. Se eliminan las claves
 antiguas de almacenamiento local; no existe Recordarme ni recuperación de contraseña
-implementados. Un 401 de una solicitud de la sesión vigente cierra esa sesión.
+implementados. Un 401 de una solicitud de la sesión vigente cierra esa sesión;
+403 conserva la sesión. Refrescar perfil/alcance no renueva el JWT: no existe
+refresh token. Un 429 del login indica espera temporal y no credenciales
+incorrectas; al terminar el contador se habilita el botón, sin enviar otro login.
 
 | Rol | Recorridos de interfaz |
 |---|---|
@@ -192,7 +214,7 @@ los permisos de cada solicitud, aunque una sesión ajena conserve datos visuales
 El backend autoriza cada operación. La lectura de catálogos y organización es global para los tres roles; el alcance por laboratorio restringe equipos, movimientos, mantenimientos y reportes. Los movimientos pueden seguir siendo visibles por su origen aunque el equipo haya salido de ese laboratorio. Las rutas `/asignaciones` y `/usuarios`
 y `/auditoria` además están protegidas por rol ADMIN en el frontend.
 
-En el despliegue actual del 3 de octubre de 2026 se conservaron las tres cuentas
+En el despliegue histórico del 3 de octubre de 2026 se conservaron las tres cuentas
 habituales, **cuatro asignaciones** y cero equipos. Antes/después se compararon
 conteos y contenido de nueve tablas, incluidos usuarios y asignaciones. Una
 pantalla vacía de Equipos puede ser correcta para ese inventario. El login y las
@@ -200,7 +222,8 @@ escrituras del flujo se comprobaron con cuentas de fixtures en un entorno aislad
 no se cambiaron contraseñas ni datos habituales por la API.
 
 La auditoría inicial de ese mismo día había registrado cero asignaciones. Ese
-conteo es histórico y no describe el despliegue actual.
+conteo es histórico y no describe las bases Windows/Render actuales ni acredita
+el estado presente del stack Docker.
 
 ## Alcance y pendientes
 
@@ -211,6 +234,8 @@ estado real. Laboratorio distingue `activo` de `estadoOperativo`.
 Asignaciones permite consultar por ID y seleccionar laboratorios activos, también
 desde la acción Laboratorios de cada usuario;
 guardar una lista vacía retira las asignaciones del usuario consultado.
+Equipos y Auditoría paginan en servidor desde el 27; cambiar filtros, búsqueda
+o tamaño reinicia la página. Dashboard y selectores siguen consumiendo arrays.
 
 **Cierre del 26 de octubre de 2026:** Configuración se retira del menú y de las
 rutas; una visita a `/configuracion` sigue el fallback general al inicio.
@@ -220,11 +245,12 @@ Reportes descarga cinco CSV de agregados con filtros aplicados y alcance;
 no crea un endpoint de exportación ni descarga registros detallados de equipos.
 Consulta la [guía de uso](../../../docs/frontend/guia-reportes-auditoria.md) y la
 [matriz de roles](../../../docs/matriz-permisos.md).
-Verificación del cierre: **90/90 tests frontend**, build aprobado con **1679
+Verificación histórica de ese cierre: **90/90 tests frontend**, build aprobado con **1679
 módulos** y diez comprobaciones de navegador local con API simulada, sin errores
 de página. Se verificaron navegación por rol, Auditoría, cinco descargas CSV,
 filtros y estados de carga/error/vacío, y móvil de 390 px. No se ejecutaron pruebas
-nuevas contra backend/BD reales ni se publicaron estos cambios. Ver el
+nuevas contra backend/BD reales ni se publicaron estos cambios en esa ejecución.
+La publicación y comprobación posterior del 27 figuran al inicio. Ver el
 [detalle de la comprobación](../../../docs/frontend/guia-reportes-auditoria.md#verificación-local-del-26-de-octubre).
 El mantenimiento de Laboratorio es un estado operativo independiente del ciclo
 de Mantenimiento de Equipo. Los Movimientos siguen siendo traslados confirmados,
@@ -243,7 +269,7 @@ npm.cmd test
 npm.cmd run build
 ```
 
-### Resultado de la adaptación al backend actual
+### Resultado histórico de la adaptación al backend del 3 de octubre
 
 Verificación del 3 de octubre de 2026: **67/67 pruebas aprobadas**, cero fallos,
 cero cancelaciones y cero omitidas. Se conservan las 27 pruebas anteriores y se
@@ -467,7 +493,7 @@ esperados, no una indicación de que React haya cambiado el dato localmente.
 14. Comprueba el acceso ADMIN a Asignaciones desde el menú. Configuración no
     debe aparecer; la ruta retirada `/configuracion` vuelve al inicio.
 
-La auditoría Vite inicial utilizó 5173/8080. El despliegue actual `e1ce75a` dejó
+La auditoría Vite inicial utilizó 5173/8080. El despliegue histórico `e1ce75a` dejó
 Docker en 3000/8080 con sus tres contenedores saludables y Flyway V1–V13.
 Para este modo, abre 3000 y sigue la sección Frontend Jason en Docker.
 Para detener Vite usa Ctrl+C en su terminal; `docker compose stop` desde

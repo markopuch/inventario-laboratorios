@@ -35,6 +35,15 @@ históricas; su estado no sustituye el cierre ni acredita pruebas de sus cambios
 
 ## 1. Objetivo y límites
 
+**Ampliación publicada el 27 de octubre de 2026:** Equipos y Auditoría ya
+utilizan paginación del servidor, Equipos busca mediante `q` y Login muestra
+la espera por `429/Retry-After`. Swagger/Postman y el contrato corregido de
+cinco fallos por nombre normalizado entre conexiones están publicados y
+comprobados. Este avance supera la propuesta histórica de páginas locales de
+FE02-04, sin convertir este plan inicial en el registro de ejecución actual.
+Véanse la [guía vigente](../backend-final/paginacion-login.md) y la
+[verificación cloud](../despliegue/verificacion-paginacion-login-cloud-2026-10-27.md).
+
 Construir una primera versión funcional que conserve el diseño de los mockups y consuma el backend existente. No ampliar automáticamente el backend para reproducir controles que todavía no tienen soporte.
 
 La referencia Tech Store aporta React, Vite, JavaScript/JSX, pantallas, componentes, estado, props, formularios controlados, `fetch` y CSS normal. No trasladar al inventario su login simulado, datos comerciales, carrito, API de productos o reglas de cantidad.
@@ -162,7 +171,7 @@ Login válido abre el panel; inválido mantiene el formulario con error. Cerrar 
 - **FE02-01 — Listado:** crear `Equipos`, `FilaEquipo`, `EtiquetaEstado`, `IndicadorResumen` y `equiposService`.
 - **FE02-02 — Filtros:** conectar estado, `idLaboratorio`, `idSubcategoria` y `requiereMantenimiento` a los filtros reales del servidor.
 - **FE02-03 — Detalle:** crear `DetalleEquipo` derivado de la estética del formulario, sin inventar un mockup adicional aprobado.
-- **FE02-04 — Búsqueda/páginas:** si se incluyen, hacerlas locales sobre la lista autorizada ya recibida. Identificar claramente que no son búsquedas o paginación del servidor. Una respuesta antigua no debe sobrescribir el resultado de filtros más recientes.
+- **FE02-04 — Búsqueda/páginas:** la propuesta inicial era local sobre la lista autorizada; quedó superada el 27 de octubre por `q` y `page/size` en el servidor para Equipos. Jason utiliza esos contratos y descarta respuestas obsoletas; Auditoría también pagina. Los demás listados conservan sus contratos y se priorizan por separado.
 - **FE02-05 — Contadores:** calcular cifras del resultado autorizado y declarar si corresponden al conjunto consultado, filtrado o completo del alcance. No inventar tendencias mensuales.
 
 ### Endpoints

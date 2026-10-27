@@ -81,7 +81,9 @@ La demora inicial al ingresar permanece fuera del trabajo solicitado.
 
 El **27 de octubre**, el usuario autorizó por separado actualizar Postman a las
 70 operaciones y añadir Swagger/OpenAPI. La [guía API](backend-final/openapi.md)
-documenta ese bloque y su comprobación; no incluye paginación ni refresh token.
+documenta ese bloque y su comprobación. Su alcance inicial fue la documentación
+API; la paginación y el límite de login se autorizaron y publicaron después,
+como se detalla a continuación. Refresh token continúa como ampliación futura.
 
 Por petición posterior del mismo día, se implementaron localmente paginación de
 Equipos/Auditoría y límite de intentos de login. [Guía](backend-final/paginacion-login.md)

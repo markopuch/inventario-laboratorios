@@ -218,7 +218,7 @@ Ver [detalle del cierre y publicación](../despliegue/verificacion-cierre-2026-1
 - Reportes: gráficos completos, Excel/PDF e inventario detallado siguen pendientes; tablas/conteos y CSV agregados están disponibles.
 - Mantenimientos: calendario fuera del alcance actual.
 - Refresh tokens, recuperación de contraseña y revocación de sesión no implementados en frontend.
-- Build, pruebas de lógica/contratos y recorridos UI simulado y con API/BD reales aprobados. La cobertura real descrita no acredita accesibilidad exhaustiva, comportamiento bajo carga ni flujos autenticados de nube.
+- Build, pruebas de lógica/contratos y recorridos UI simulado y con API/BD reales aprobados. La comprobación cloud posterior acredita 59/59 consultas/logins y la UI pública de paginación y espera de login; no acredita accesibilidad exhaustiva, carga ni un recorrido completo de escrituras en nube. Los recorridos locales anteriores conservan su alcance y fecha.
 - Marko: continuar la tutoría local desde composición visual de login/FE-01 solo si el usuario retoma esa variante. Sus carpetas permanecen ignoradas y no forman parte de nuevos clones; no volver a añadirlas al seguimiento sin una petición que cambie esta decisión. No portar automáticamente paquetes/código de Jason ni afirmar completados los sprints de Marko.
 - Confirmar variante y modo de ejecución antes de cualquier cambio; no ejecutar ambos Vite en 5173. Usar lockfile y `npm ci` al preparar un entorno nuevo y no actualizar versiones para documentar.
 - Mantener secretos fuera del bundle. `VITE_*` es configuración pública de compilación. No incluir contraseñas, JWT ni archivos `.env` privados en memorias o commits.
