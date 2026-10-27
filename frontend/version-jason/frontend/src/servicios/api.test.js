@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import axios from 'axios';
-import api, { authApi, crearControlSesion, esCancelacion, limpiarSesionLegacy, mensajeError } from './api.js';
+import api, { authApi, crearControlSesion, esCancelacion, limpiarSesionLegacy, mensajeError, segundosParaReintentar } from './api.js';
 
 const respuestaLogin = (id = 1, rol = 'GESTOR') => ({
   accessToken: `token-ficticio-${id}`, tokenType: 'Bearer', expiresIn: 3600,
@@ -233,4 +233,38 @@ test('400, 403, 404 y 409 muestran mensajes seguros de negocio; 500 los oculta',
       'No se puede desactivar al último ADMIN activo.');
   }
   assert.equal(mensajeError({ response: { status: 409, data: { message: '<script>detalle</script>' } } }, 'Conflicto.'), 'Conflicto.');
+});
+
+test('429 interpreta Retry-After en segundos y no lo presenta como credenciales incorrectas', () => {
+  for (const headers of [{ 'retry-after': '900' }, { 'Retry-After': '900' }, new axios.AxiosHeaders({ 'Retry-After': '900' })]) {
+    const error = { response: { status: 429, headers, data: { message: 'detalle que no debe mostrarse' } }, config: { url: '/auth/login' } };
+    assert.equal(segundosParaReintentar(error), 900);
+    assert.match(mensajeError(error), /900 segundos/);
+    assert.doesNotMatch(mensajeError(error), /incorrectos|detalle que/);
+  }
+  assert.match(mensajeError({ response: { status: 429, headers: { 'Retry-After': '1' } } }), /1 segundo antes/);
+  assert.equal(segundosParaReintentar({ response: { status: 429, headers: { 'Retry-After': '0' } } }), 0);
+});
+
+test('429 con cabecera ausente o inválida mantiene un mensaje genérico sin inventar un contador', () => {
+  for (const valor of [undefined, '', '-1', '1.5', 'mañana', '<script>', Infinity, 2147483648]) {
+    const error = { response: { status: 429, headers: { 'retry-after': valor } } };
+    assert.equal(segundosParaReintentar(error), null);
+    assert.equal(mensajeError(error), 'Demasiados intentos. Espera unos minutos antes de volver a intentar.');
+  }
+  assert.equal(segundosParaReintentar({ response: { status: 401, headers: { 'retry-after': '900' } } }), null);
+});
+
+test('un login limitado no se reintenta ni consulta alcance ni publica una sesión', async t => {
+  let intentos = 0, consultas = 0;
+  const error = { response: { status: 429, headers: { 'retry-after': '30' } } };
+  const { control, ultimo } = controlar(t, {
+    login: async () => { intentos++; throw error; },
+    laboratorios: async () => { consultas++; return { data: alcance }; }
+  });
+  await assert.rejects(control.login('usuario-test', 'clave-ficticia'), recibido => recibido === error);
+  assert.equal(intentos, 1);
+  assert.equal(consultas, 0);
+  assert.equal(ultimo().token, null);
+  assert.equal(ultimo().alcance, null);
 });

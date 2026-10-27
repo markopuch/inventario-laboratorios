@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { History, RefreshCw } from 'lucide-react';
 import Boton from '../componentes/Boton';
+import Paginacion from '../componentes/Paginacion';
 import { useAuth } from '../contextos/AuthContext';
 import { auditoriaApi, esCancelacion, mensajeError } from '../servicios/api';
 import {
   ACCIONES_AUDITORIA, ENTIDADES_AUDITORIA, etiquetaAccionAuditoria, etiquetaEntidadAuditoria,
   filtrosAuditoria, mostrarFechaAuditoria, registroAuditoria, validarAuditoria
 } from '../utilidades/auditoria.js';
+import { paginaDisponible, validarPagina } from '../utilidades/paginacion.js';
 
 const filtrosIniciales = () => ({ entidad: '', idEntidad: '', idUsuario: '', accion: '', fechaDesde: '', fechaHasta: '' });
 
@@ -27,29 +29,35 @@ export default function Auditoria() {
   const [aplicados, setAplicados] = useState({});
   const [errorFiltros, setErrorFiltros] = useState('');
   const [intento, setIntento] = useState(0);
-  const [consulta, setConsulta] = useState({ clave: null, estado: 'cargando', datos: [], error: '' });
+  const [numero, setNumero] = useState(0), [tamano, setTamano] = useState(20);
+  const [consulta, setConsulta] = useState({ clave: null, estado: 'cargando', pagina: null, error: '' });
   // Identifica también el resultado visible: al cambiar sesión/filtros no se muestran datos de la consulta anterior.
-  const clave = useMemo(() => ({}), [esAdmin, token, aplicados, intento]);
+  const clave = useMemo(() => ({}), [esAdmin, token, aplicados, intento, numero, tamano]);
 
   useEffect(() => {
     if (!esAdmin || !token) return;
     let vigente = true;
     const solicitud = new AbortController();
-    setConsulta({ clave, estado: 'cargando', datos: [], error: '' });
+    setConsulta({ clave, estado: 'cargando', pagina: null, error: '' });
     async function cargar() {
       try {
-        const { data } = await auditoriaApi.listar(aplicados, { signal: solicitud.signal });
-        const datos = validarAuditoria(data);
-        if (vigente) setConsulta({ clave, estado: 'listo', datos, error: '' });
+        const { data } = await auditoriaApi.listarPagina({ ...aplicados, page: numero, size: tamano }, { signal: solicitud.signal });
+        const pagina = validarPagina(data, validarAuditoria);
+        if (pagina.number !== numero || pagina.size !== tamano) throw new Error('La página recibida no corresponde a la consulta.');
+        if (!vigente) return;
+        const disponible = paginaDisponible(pagina);
+        if (disponible !== numero) { setNumero(disponible); return; }
+        setConsulta({ clave, estado: 'listo', pagina, error: '' });
       } catch (error) {
         if (!vigente || esCancelacion(error)) return;
-        setConsulta({ clave, estado: 'error', datos: [], error: error.code === 'RESPUESTA_AUDITORIA_INVALIDA'
+        setConsulta({ clave, estado: 'error', pagina: null, error: ['RESPUESTA_AUDITORIA_INVALIDA', 'RESPUESTA_PAGINA_INVALIDA'].includes(error.code)
           ? error.message : mensajeError(error, 'No se pudieron cargar los eventos de auditoría.') });
       }
     }
     cargar();
     return () => { vigente = false; solicitud.abort(); };
-  }, [esAdmin, token, aplicados, clave]);
+  }, [esAdmin, token, aplicados, clave, numero, tamano]);
+  useEffect(() => { setNumero(0); }, [esAdmin, token]);
 
   const actualizar = () => setIntento(valor => valor + 1);
   function cambiar(event) {
@@ -58,11 +66,12 @@ export default function Auditoria() {
   }
   function aplicar(event) {
     event.preventDefault();
-    try { setAplicados(filtrosAuditoria(filtros)); setErrorFiltros(''); }
+    try { const params = filtrosAuditoria(filtros); setNumero(0); setAplicados(params); setErrorFiltros(''); }
     catch (error) { setErrorFiltros(error.message); }
   }
   function limpiar() {
     setFiltros(filtrosIniciales());
+    setNumero(0);
     setAplicados({});
     setErrorFiltros('');
   }
@@ -71,7 +80,8 @@ export default function Auditoria() {
 
   const cargando = consulta.clave !== clave || consulta.estado === 'cargando';
   const fallo = !cargando && consulta.estado === 'error';
-  const datos = !cargando && !fallo ? consulta.datos : [];
+  const pagina = !cargando && !fallo ? consulta.pagina : null;
+  const datos = pagina?.content ?? [];
 
   return <div className="pagina">
     <div className="pagina-cabecera">
@@ -91,7 +101,7 @@ export default function Auditoria() {
     <p className="nota-reporte">Los resúmenes describen cambios seleccionados de cada operación; no reconstruyen todas las versiones de un registro. Esta consulta es de solo lectura.</p>
     {errorFiltros && <div className="mensaje-error" role="alert">{errorFiltros}</div>}
     <section className="panel" aria-busy={cargando}>
-      <div className="panel-titulo"><h2>Eventos registrados</h2><span className="auditoria-total" role="status">{cargando ? 'Consultando…' : fallo ? 'No disponibles' : `${datos.length} ${datos.length === 1 ? 'evento' : 'eventos'}`}</span></div>
+      <div className="panel-titulo"><h2>Eventos registrados</h2><span className="auditoria-total" role="status">{cargando ? 'Consultando…' : fallo || !pagina ? 'No disponibles' : `${pagina.totalElements} ${pagina.totalElements === 1 ? 'evento' : 'eventos'}`}</span></div>
       {cargando ? <div className="vacio" role="status">Cargando auditoría…</div>
         : fallo ? <div className="vacio"><p className="mensaje-error" role="alert">{consulta.error}</p><Boton variante="secundario" onClick={actualizar}>Reintentar auditoría</Boton></div>
         : !datos.length ? <div className="vacio">No hay eventos de auditoría para los filtros aplicados.</div>
@@ -106,6 +116,8 @@ export default function Auditoria() {
             <td><ResumenEvento evento={evento}/></td>
           </tr>)}</tbody>
         </table></div>}
+      <Paginacion pagina={pagina} numero={numero} tamano={tamano} cargando={cargando} error={fallo}
+        nombre="eventos" onPagina={setNumero} onTamano={valor => { setTamano(valor); setNumero(0); }}/>
     </section>
   </div>;
 }

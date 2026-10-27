@@ -54,3 +54,18 @@ export function laboratoriosPermitidos(laboratorios, alcance, esAdmin) {
 }
 
 export const lista = (value) => Array.isArray(value) ? value.filter(Boolean) : [];
+
+export function validarEquipos(data) {
+  const idValido = valor => Number.isSafeInteger(valor) && valor > 0;
+  if (!Array.isArray(data) || data.some(equipo => !equipo || !idValido(equipo.id) ||
+      typeof equipo.codigoInterno !== 'string' || !equipo.codigoInterno.trim() ||
+      typeof equipo.nombre !== 'string' || !equipo.nombre.trim() ||
+      !['OPERATIVO', 'MANTENIMIENTO', 'INOPERATIVO', 'BAJA'].includes(equipo.estado) ||
+      !idValido(equipo.laboratorio?.id) || !idValido(equipo.subcategoria?.id) ||
+      typeof equipo.requiereMantenimiento !== 'boolean') ||
+      new Set(data.map(equipo => equipo.id)).size !== data.length) {
+    throw Object.assign(new Error('El servidor devolvió una lista de equipos inválida. Intenta actualizar los resultados.'),
+      { code: 'RESPUESTA_EQUIPOS_INVALIDA' });
+  }
+  return data;
+}

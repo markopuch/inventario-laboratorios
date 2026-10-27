@@ -54,10 +54,25 @@ export const authApi = {
 
 export const esCancelacion = (error) => axios.isCancel(error) || error?.name === 'AbortError';
 
+export function segundosParaReintentar(error) {
+  if (error?.response?.status !== 429) return null;
+  const headers = error.response.headers;
+  const valor = headers?.get?.('retry-after') ?? headers?.['retry-after'] ?? headers?.['Retry-After'];
+  if (typeof valor !== 'number' && (typeof valor !== 'string' || !/^\d+$/.test(valor.trim()))) return null;
+  const segundos = Number(typeof valor === 'string' ? valor.trim() : valor);
+  return Number.isSafeInteger(segundos) && segundos >= 0 && segundos <= 2147483647 ? segundos : null;
+}
+
 export function mensajeError(error, alternativa = 'No se pudo completar la operación.') {
   if (esCancelacion(error)) return 'La operación fue cancelada.';
   if (error?.code === 'SESION_INVALIDA') return 'El servidor devolvió una sesión inválida. Intenta iniciar sesión nuevamente.';
   const estado = error?.response?.status;
+  if (estado === 429) {
+    const segundos = segundosParaReintentar(error);
+    return segundos === null ? 'Demasiados intentos. Espera unos minutos antes de volver a intentar.'
+      : segundos === 0 ? 'Demasiados intentos. Puedes volver a intentar.'
+        : `Demasiados intentos. Espera ${segundos} ${segundos === 1 ? 'segundo' : 'segundos'} antes de volver a intentar.`;
+  }
   if (estado === 401) return error.config?.url === '/auth/login'
     ? 'Usuario o contraseña incorrectos.' : 'La sesión expiró. Inicia sesión nuevamente.';
   if (estado >= 500) return 'El servidor no pudo completar la operación. Intenta nuevamente.';
@@ -233,12 +248,20 @@ export const catalogoApi = {
 };
 
 export const equiposApi = {
-  listar: (params = {}) => api.get('/equipos', { params }),
+  listar: (params = {}, config = {}) => api.get('/equipos', { ...config, params }),
+  listarPagina: (params = {}, config = {}) => api.get('/equipos', {
+    ...config, params: parametrosPermitidos({ page: 0, size: 20, ...params },
+      ['estado', 'idLaboratorio', 'idSubcategoria', 'requiereMantenimiento', 'q', 'page', 'size'])
+  }),
   detalle: (id) => api.get(`/equipos/${id}`),
   crear: (data) => api.post('/equipos', data),
   actualizar: (id, data) => api.put(`/equipos/${id}`, data),
   baja: (id) => api.delete(`/equipos/${id}`),
-  listarAdmin: (params = {}) => api.get('/admin/equipos', { params })
+  listarAdmin: (params = {}, config = {}) => api.get('/admin/equipos', { ...config, params }),
+  listarPaginaAdmin: (params = {}, config = {}) => api.get('/admin/equipos', {
+    ...config, params: parametrosPermitidos({ page: 0, size: 20, ...params },
+      ['estado', 'idLaboratorio', 'idSubcategoria', 'requiereMantenimiento', 'q', 'page', 'size'])
+  })
 };
 
 export const movimientosApi = {
@@ -288,6 +311,9 @@ const filtrosAuditoria = ['entidad', 'idEntidad', 'idUsuario', 'accion', 'fechaD
 export const auditoriaApi = {
   listar: (params = {}, config = {}) => api.get('/admin/auditoria', {
     ...config, params: parametrosPermitidos(params, filtrosAuditoria)
+  }),
+  listarPagina: (params = {}, config = {}) => api.get('/admin/auditoria', {
+    ...config, params: parametrosPermitidos({ page: 0, size: 20, ...params }, [...filtrosAuditoria, 'page', 'size'])
   })
 };
 

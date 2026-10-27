@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-27",
+  "environment": "Vite + backend/BD Docker temporales",
+  "fixtures": 53,
+  "checks": {
+    "equipmentPaging": true,
+    "sizes20And50": true,
+    "serverSearchOutsideFirstPage": true,
+    "resetPageOnSearch": true,
+    "mobile390NoOverflow": true,
+    "auditPagingAndSize100": true,
+    "fiveFailures401": true,
+    "sixthAttempt429": true,
+    "retryAfterPositive": true,
+    "countdownDisablesSubmit": true,
+    "automaticRetries": 0,
+    "pageErrors": 0
+  },
+  "uiVerificationFailureWindowSeconds": 60,
+  "productionDefaultFailureWindowSeconds": 900,
+  "existingDatabasesModified": false
+}

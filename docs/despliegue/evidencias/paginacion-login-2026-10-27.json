@@ -1,0 +1,70 @@
+{
+  "verified_at_utc": "2026-10-27T18:46:20.659888+00:00",
+  "scope": "local working tree; not published",
+  "base_revision": "e0f20de09576e9e062c4a8e3773536d44c342dd1",
+  "backend": {
+    "tests": 406,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontend": {
+    "tests": 107,
+    "failures": 0,
+    "build_modules": 1681
+  },
+  "postman": {
+    "controllers": 19,
+    "operaciones": 70,
+    "solicitudes": 75,
+    "cuerpos_dto": 30,
+    "listados_filtro_dto": 7,
+    "sandbox": {
+      "scripts_compilados": 150,
+      "solicitudes_simuladas": 75,
+      "escrituras_bloqueadas": 33,
+      "logins_invalidos_sin_token": 24,
+      "casos_password_unicode": 8,
+      "logins_limitados_validos": 3,
+      "limites_invalidos_rechazados": 21,
+      "paginas_validas": 23,
+      "paginas_invalidas_rechazadas": 33,
+      "http_real": false
+    },
+    "http_real": false
+  },
+  "browser": {
+    "date": "2026-10-27",
+    "environment": "Vite + backend/BD Docker temporales",
+    "fixtures": 53,
+    "checks": {
+      "equipmentPaging": true,
+      "sizes20And50": true,
+      "serverSearchOutsideFirstPage": true,
+      "resetPageOnSearch": true,
+      "mobile390NoOverflow": true,
+      "auditPagingAndSize100": true,
+      "fiveFailures401": true,
+      "sixthAttempt429": true,
+      "retryAfterPositive": true,
+      "countdownDisablesSubmit": true,
+      "automaticRetries": 0,
+      "pageErrors": 0
+    },
+    "uiVerificationFailureWindowSeconds": 60,
+    "productionDefaultFailureWindowSeconds": 900,
+    "existingDatabasesModified": false
+  },
+  "schema": "Flyway V1-V13 unchanged",
+  "api_operations": 70,
+  "existing_databases_modified": false,
+  "temporary_services_removed": true,
+  "cleanup_residual": {
+    "relative_path": "backend/inventario/build/paginacion-ui.private.json",
+    "ignored_by_git": true,
+    "credentials_for_removed_test_instance_only": true,
+    "removal_rejected_by_automatic_review": true,
+    "reason": "blocked by policy"
+  },
+  "published": false
+}

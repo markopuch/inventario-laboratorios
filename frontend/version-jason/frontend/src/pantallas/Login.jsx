@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { FlaskConical, LockKeyhole, UserRound, Eye, EyeOff, ArrowRight, ShieldCheck, Settings2, BarChart3, Microscope } from 'lucide-react';
 import { useAuth } from '../contextos/AuthContext';
-import { esCancelacion, mensajeError } from '../servicios/api';
+import { esCancelacion, mensajeError, segundosParaReintentar } from '../servicios/api';
 import Boton from '../componentes/Boton';
 import './Login.css';
 
@@ -10,16 +10,32 @@ export default function Login(){
  const {token,login,cancelarLogin,mensajeSesion}=useAuth();
  const [userName,setUserName]=useState(''); const [password,setPassword]=useState(''); const [mostrar,setMostrar]=useState(false);
  const [error,setError]=useState(''); const [cargando,setCargando]=useState(false);
+ const [esperaHasta,setEsperaHasta]=useState(0); const [segundosEspera,setSegundosEspera]=useState(0);
  const enviando=useRef(false); const montado=useRef(true);
  useEffect(()=>{montado.current=true;return ()=>{montado.current=false;cancelarLogin();};},[cancelarLogin]);
+ useEffect(()=>{
+   if(!esperaHasta)return;
+   const actualizar=()=>{
+     const segundos=Math.max(0,Math.ceil((esperaHasta-Date.now())/1000));
+     setSegundosEspera(segundos);
+     if(!segundos){setEsperaHasta(0);setError('Ya puedes volver a intentar iniciar sesión.');}
+   };
+   actualizar();
+   const intervalo=window.setInterval(actualizar,1000);
+   return ()=>window.clearInterval(intervalo);
+ },[esperaHasta]);
  if(token)return <Navigate to="/" replace/>;
  async function submit(e){
    e.preventDefault();
-   if(enviando.current)return;
+   if(enviando.current||Date.now()<esperaHasta)return;
    if(!userName.trim()){setError('Ingresa tu usuario.');return;}
    enviando.current=true;setError('');setCargando(true);
    try{await login(userName,password);if(montado.current){setPassword('');setMostrar(false);}}
-   catch(err){if(montado.current&&!esCancelacion(err))setError(mensajeError(err,'No fue posible iniciar sesión. Intenta nuevamente.'));}
+   catch(err){if(montado.current&&!esCancelacion(err)){
+     const segundos=segundosParaReintentar(err);
+     if(segundos>0){setSegundosEspera(segundos);setEsperaHasta(Date.now()+segundos*1000);}
+     setError(mensajeError(err,'No fue posible iniciar sesión. Intenta nuevamente.'));
+   }}
    finally{enviando.current=false;if(montado.current)setCargando(false);}
  }
  return <main className="login-pantalla">
@@ -29,8 +45,8 @@ export default function Login(){
      <form onSubmit={submit} aria-busy={cargando}>
        <label>Usuario<div className="campo-icono"><UserRound size={18}/><input type="text" value={userName} onChange={e=>setUserName(e.target.value)} required maxLength={50} autoComplete="username" placeholder="Ingresa tu usuario" disabled={cargando}/></div></label>
        <label>Contraseña<div className="campo-icono"><LockKeyhole size={18}/><input type={mostrar?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} required maxLength={72} autoComplete="current-password" placeholder="Ingresa tu contraseña"/><button type="button" className="ver-password" onClick={()=>setMostrar(v=>!v)} aria-label={mostrar?'Ocultar contraseña':'Mostrar contraseña'}>{mostrar?<EyeOff size={18}/>:<Eye size={18}/>}</button></div></label>
-       {(error||mensajeSesion)&&<div className="mensaje-error" role="alert">{error||mensajeSesion}</div>}
-       <Boton tipo="submit" disabled={cargando} className="btn-login">{cargando?'Validando...':'Ingresar'} <ArrowRight size={18}/></Boton>
+       {(error||mensajeSesion)&&<div className="mensaje-error" role="alert">{segundosEspera>0?`Demasiados intentos. Espera ${segundosEspera} ${segundosEspera===1?'segundo':'segundos'} antes de volver a intentar.`:error||mensajeSesion}</div>}
+       <Boton tipo="submit" disabled={cargando||segundosEspera>0} className="btn-login">{cargando?'Validando...':segundosEspera>0?`Reintentar en ${segundosEspera} s`:'Ingresar'} <ArrowRight size={18}/></Boton>
      </form>
    </section>
    <section className="login-presentacion">

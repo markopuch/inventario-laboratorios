@@ -84,5 +84,5 @@ test('auditoría consulta la API de administración y limita parámetros al cont
   assert.deepEqual(llamadas.at(-1), { metodo: 'get', ruta: '/admin/auditoria',
     params: { entidad: 'equipo', idEntidad: 4, idUsuario: 2, accion: 'EDITAR',
       fechaDesde: '2026-10-01', fechaHasta: '2026-10-26' }, payload: null });
-  assert.deepEqual(Object.keys(auditoriaApi), ['listar']);
+  assert.deepEqual(Object.keys(auditoriaApi), ['listar', 'listarPagina']);
 });
