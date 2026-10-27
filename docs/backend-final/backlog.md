@@ -61,5 +61,7 @@ aprobaron **90/90 tests frontend** y diez comprobaciones simuladas, y después
 ocho comprobaciones con API/BD reales. El 27 de octubre se aprobaron **93/93
 tests frontend** y build de 1679 módulos. La regresión backend en PostgreSQL
 temporal aprobó **365/365**, con JAR correcto; importador **28/28**.
-Los resultados GitHub/Actions se registran en el
-[anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md) al completarse.
+El commit 58ac8f6 se publicó en main y GitHub Actions aprobó los cinco trabajos,
+repitió esas pruebas y publicó ambas imágenes; la inspección independiente de
+cuatro etiquetas GHCR confirmó sus digests. Ver
+[anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md).

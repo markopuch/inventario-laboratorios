@@ -223,13 +223,17 @@ Se verificó servicio Windows **`postgresql-x64-18` en ejecución**, procesos `p
 
 Las variables `DB_URL`, `DB_USER`, `DB_PASSWORD` y `PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD` no estaban definidas en el entorno de la sesión auditora. El `.env` del backend contiene claves orientadas a Docker; se revisaron nombres de claves, sin volcar sus valores. Un intento único de conexión local sin prompt/contraseña disponible falló con código 2, antes de poder ejecutar la consulta de versión en transacción READ ONLY. No se insistió ni se probaron contraseñas.
 
+La regresión actual de **365 pruebas** y el JAR correcto ya están registrados
+en el [anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md),
+vinculados al commit publicado 58ac8f6 y repetidos en CI. Los 319 casos y el JAR
+descritos en la auditoría inicial conservan su fecha histórica del 3 de octubre.
+
 Pendientes de comprobación actualizados, sin tratarlos como fallos confirmados del producto:
 
 1. La carga y los conteos están comprobados mediante API sobre la base nativa. Consultar versión de servidor y `flyway_schema_history` en la instancia concreta si se requiere acreditación SQL del esquema/checksums; no extrapolar los resultados de otra base.
-2. Registrar la regresión y el JAR nuevos del cierre en su anexo, vinculados al commit publicado; los 319 casos y el JAR descritos arriba siguen siendo evidencia histórica del 3 de octubre.
-3. Validar despliegue efectivo, variables de entorno y salud del backend en su plataforma; revisar la [memoria de infraestructura](./docker-deployment.md).
-4. Revisar políticas de producto si se requieren invalidación inmediata de JWT al restablecer contraseña, refresh token o recuperaciones: no están implementadas en los endpoints revisados.
-5. Si crecen datos, evaluar paginación: los listados revisados, incluidos movimientos/auditoría, devuelven listas completas. No atribuir paginación o exportación de reportes a la API actual.
-6. Al trabajar con rangos de fechas desde interfaz peruana, preservar conscientemente la interpretación UTC de filtros con timestamp o cambiarla mediante una decisión y verificación explícitas.
+2. Validar despliegue efectivo, variables de entorno y salud del backend en su plataforma; revisar la [memoria de infraestructura](./docker-deployment.md).
+3. Revisar políticas de producto si se requieren invalidación inmediata de JWT al restablecer contraseña, refresh token o recuperaciones: no están implementadas en los endpoints revisados.
+4. Si crecen datos, evaluar paginación: los listados revisados, incluidos movimientos/auditoría, devuelven listas completas. No atribuir paginación o exportación de reportes a la API actual.
+5. Al trabajar con rangos de fechas desde interfaz peruana, preservar conscientemente la interpretación UTC de filtros con timestamp o cambiarla mediante una decisión y verificación explícitas.
 
 Este documento no es un respaldo SQL ni exportación de datos. Es una memoria técnica reproducible desde fuentes y evidencia local. No incorpora valores de configuración privados, hashes de contraseñas, JWT ni contenido de filas de usuarios.

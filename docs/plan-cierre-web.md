@@ -87,8 +87,10 @@ Tres CSV con datos se descargaron y contrastaron con la API; los bloques de
 Movimientos/Mantenimientos vacíos deshabilitaron sus descargas. El 27 de octubre,
 tras reforzar contraseñas, se aprobaron **93/93 tests frontend** y build de
 **1679 módulos**. La regresión backend aprobó **365/365** con JAR generado en
-PostgreSQL temporal; importador **28/28**. La publicación CI se registra en el
-[anexo del cierre](despliegue/verificacion-cierre-2026-10-27.md) según su resultado real.
+PostgreSQL temporal; importador **28/28**. El commit 58ac8f6 se publicó en main;
+Actions aprobó **5/5 trabajos** y publicó ambas imágenes en GHCR, con cuatro
+etiquetas consultadas y digests coincidentes. Ver
+[anexo del cierre](despliegue/verificacion-cierre-2026-10-27.md).
 Las pruebas históricas del 3 de octubre y las comprobaciones iniciales del
 26 se conservan por separado en el [registro de verificación](memory/verification-2026-10-26.md).
 

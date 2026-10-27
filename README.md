@@ -39,6 +39,13 @@ correctos. JUnit utilizó PostgreSQL temporal independiente del inventario habit
 La [guía de importación](docs/importacion-inventario-demo.md)
 y el [anexo del cierre](docs/despliegue/verificacion-cierre-2026-10-27.md) detallan
 la resolución de la serie repetida, JUnit, GitHub Actions y los límites de Docker/nube.
+El código se publicó en `main`, commit
+[`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2);
+[Actions 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249)
+terminó correctamente, **5/5 trabajos aprobados**: backend 365, frontend 93 e
+importador 28 pruebas, más ambas imágenes publicadas en GHCR con etiquetas
+`sha-58ac8f6` y `latest`. Los digests están en el anexo del cierre. Esto acredita
+publicación; Docker local y el recorrido autenticado de nube requieren su propia comprobación.
 
 
 ## 1. Descripción
@@ -392,7 +399,9 @@ dos copias del backend en el mismo puerto.
 
 La [guía de importación](docs/importacion-inventario-demo.md) documenta la selección
 del Excel, cuentas demo, reparto por laboratorio, auditoría real y registros
-pendientes. La preparación está comprobada; no equivale a una carga realizada.
+pendientes. La carga actual ya se aplicó y verificó: **257 equipos importados**
+y **31 pendientes** por estado vacío. El siguiente comando, sin `-Aplicar`,
+solo prepara o revisa el plan y no escribe en la base:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\importar-inventario-demo.ps1

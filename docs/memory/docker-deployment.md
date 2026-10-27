@@ -13,6 +13,24 @@ registra los resultados finales de las suites, commit y Actions. El motor Docker
 local sigue inaccesible: no se acredita ejecución local de las imágenes nuevas.
 No hubo despliegue manual Render/Vercel y sus datos siguen siendo independientes.
 
+El código del cierre se publicó en `main`, commit
+[`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2).
+La [ejecución 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249)
+terminó **completed/success, 5/5 trabajos**, el **27 de octubre 00:18:54 Lima**.
+Los logs repitieron backend 365/365, frontend 93/93 y build de 1679 módulos,
+e importador 28/28;
+las dos imágenes se publicaron con `sha-58ac8f6` y `latest`. La consulta
+independiente `docker buildx imagetools inspect` de las cuatro etiquetas pasó
+sin daemon, con digests iguales a los de publicación. Los índices OCI incluyen
+linux/amd64 y atestación; esto acredita GHCR, no ejecución local de contenedores.
+Digests publicados:
+
+- Backend: `sha256:ccde889fa75361e791c9375c031e0c63450c40cf02d34233a4c5af4a61de14b9`.
+- Jason: `sha256:183d4100c69eb95879b7ba13fd0e9c3ae7ea6c53118118ae1235c8361efa8a74`.
+
+Las imágenes corresponden al commit de código 58ac8f6; una actualización posterior
+solo de Markdown no vuelve a construirlas por los filtros del workflow.
+
 **Actualización de organización, 26 de octubre de 2026:** la variante Marko y sus
 sprints quedan solo locales, ignorados por Git. Un clon nuevo no contiene
 `frontend/version-marko/` ni `docs/sprints_realizados-frontend-Marko/`.
@@ -293,7 +311,6 @@ Para reproducir exactamente el Docker local histórico, usar tags `sha-e1ce75a` 
 - Cuentas/login de Render y datos gestionados pendientes de comprobación; no asumir importación de la base local.
 - No se verificaron commit desplegado, plan, región, versiones de runtime, backups ni expiración de servicios Render/Vercel.
 - El PostgreSQL nativo escucha en todas las interfaces; no se inspeccionaron firewall, `listen_addresses` ni `pg_hba.conf`, por lo que no se afirma acceso remoto efectivo. El Compose limita backend/frontend a loopback y no publica PostgreSQL.
-- El cierre del 27 integra JUnit en CI antes de publicar; acreditar su resultado remoto en el anexo, sin sustituirlo por las pruebas históricas locales ni por un build Docker que omite tests.
 - Versiones base Docker y tags de acciones son mutables; no están fijados a digest/SHA. No se modificó esta decisión durante la auditoría.
 - La documentación de octubre 3 es valiosa para evidencia reproducible, pero su apartado de nube quedó superado por octubre 11; consultar esta memoria junto con el historial y la configuración actual.
 
@@ -302,5 +319,6 @@ Para reproducir exactamente el Docker local histórico, usar tags `sha-e1ce75a` 
 - Configuración activa: [Compose](../../backend/inventario/docker-compose.yml), [Dockerfile backend](../../backend/inventario/Dockerfile), [Dockerfile Jason](../../frontend/version-jason/frontend/Dockerfile), [Nginx](../../frontend/version-jason/frontend/nginx.conf), [Vercel](../../frontend/version-jason/frontend/vercel.json), [workflow](../../.github/workflows/imagen.yml), [application.properties](../../backend/inventario/src/main/resources/application.properties).
 - Versiones declaradas: [build.gradle.kts](../../backend/inventario/build.gradle.kts), [wrapper](../../backend/inventario/gradle/wrapper/gradle-wrapper.properties), package.json/lockfile de Jason. Las versiones Marko son evidencia de la copia local/histórica excluida; ver [anexo frontend](frontend.md). Versiones instaladas consultadas por comandos de lectura.
 - Evidencia local previa: [informe Docker y Actions](../despliegue/verificacion-docker-actions-2026-10-03.md), [JSON Docker](../../frontend/version-jason/frontend/evidencias/docker-actual-2026-10-03.json), [JSON Actions e1ce75a](../despliegue/evidencias/actions-ghcr-e1ce75a-2026-10-03.json).
-- Evidencia remota de hoy: API GitHub y [run 38183985364](https://github.com/markopuch/inventario-laboratorios/actions/runs/38183985364), GET HTTP públicos descritos; sin autenticación de aplicación ni escrituras.
+- Evidencia remota de la auditoría inicial del 26: API GitHub y [run 38183985364](https://github.com/markopuch/inventario-laboratorios/actions/runs/38183985364), GET HTTP públicos descritos; sin autenticación de aplicación ni escrituras en esa fase.
+- Evidencia del cierre del 27: [commit 58ac8f6](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2), [run 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249) y logs de sus cinco trabajos aprobados; consultas independientes de las cuatro etiquetas GHCR con digests coincidentes. No acredita ejecución de contenedores locales.
 - Historial conversacional facilitado por el agente principal: chat **Etapa final**, verificación del 11 de octubre, y chat **Resumen grabaciones - docker 24,25,26y28**, publicación Vercel y nueva base Render sin importación confirmadas por el usuario.

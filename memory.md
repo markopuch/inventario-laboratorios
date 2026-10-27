@@ -292,7 +292,8 @@ integra verificaciones backend/JUnit con PostgreSQL aislado, frontend y herramie
 de importación antes de publicar. El Dockerfile backend continúa con
 `bootJar -x test`; la verificación JUnit se realiza antes del build de imagen.
 El [anexo del cierre](docs/despliegue/verificacion-cierre-2026-10-27.md) registra
-el resultado remoto cuando exista; no inferirlo solo de la configuración.
+la ejecución remota aprobada y los digests consultados en GHCR; esa publicación
+no acredita el arranque de los contenedores locales.
 Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 
 ## Estado actual y evidencia
@@ -308,8 +309,9 @@ Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 | Datos vivos Windows | Importación y API reales acreditan 257 equipos de Excel más uno previo BAJA; 31 estados vacíos pendientes. Esta comprobación no equivale a una nueva consulta SQL de todo el esquema. |
 | Herramienta de importación | Regresión final **28/28 aprobada**: 12 pruebas de preparación y 16 de aplicación, con datos/HTTP simulados. |
 | Validación de contraseñas | API real: 11 casos válidos/inválidos sin cambiar cuentas ni auditorías. Formularios reales: mínimo 15 y cinco casos Unicode/espacios sin errores ni escrituras. |
+| Publicación del cierre | Commit [`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2) publicado en `main`. [Actions 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249) **completed/success, 5/5 trabajos**. Dos imágenes GHCR publicadas con `sha-58ac8f6`/`latest`; cuatro etiquetas consultadas independientemente, con digests coincidentes. |
 | Último Docker local documentado | `e1ce75a`, 3 de octubre: V13, tres servicios saludables y smoke aislado 94 HTTP/30 aserciones/7 SQL; es histórico |
-| Última publicación CI visible | [run 38183985364](https://github.com/markopuch/inventario-laboratorios/actions/runs/38183985364), commit `b164c44`, ambos jobs success, 11 de octubre 18:23:14 Lima |
+| Última publicación CI comprobada | [run 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249), commit `58ac8f6`, cinco trabajos success, **27 de octubre 00:18:54 Lima**; imágenes y digests en el anexo del cierre. La publicación histórica de `b164c44` se conserva en el anexo de infraestructura. |
 | Vercel hoy | [/login](https://inventario-laboratorios.vercel.app/login) responde HTTP 200 HTML |
 | Render y proxy hoy | GET salud/proxy agotaron 35 y 50 segundos; estado indeterminado, sin atribuir causa |
 | Login/flujos cloud | No acreditados. Historial confirma BD Render nueva sin importación; no confirma creación del primer ADMIN |
@@ -335,7 +337,7 @@ en nube. Los README y el backlog distinguen evidencia histórica y estado en fue
 3. **Docker local:** cuando responda su motor, comprobar contenedores, imágenes, tags/digests y volumen existente antes de cualquier actualización.
 4. **Producto:** Configuración está fuera del alcance y fue retirada. Auditoría ADMIN y CSV de reportes están implementados; gráficos completos, Excel/PDF, exportación detallada y calendario siguen pendientes de priorización.
 5. **Mejoras de plataforma:** Swagger/OpenAPI, refresh/revocación, recuperación de contraseña, paginación, permisos dinámicos y operación avanzada no están implementados en el alcance revisado. Asignar roles sí existe; CRUD del catálogo Rol no.
-6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de la política de contraseñas sin escrituras. Accesibilidad completa, carga y restauración siguen fuera de esa cobertura. Registrar el resultado remoto de Actions en el anexo del cierre; no reutilizar resultados históricos como actuales.
+6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos localmente y repetidos en CI; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de la política de contraseñas sin escrituras. Actions 5/5 e imágenes publicadas y consultadas en GHCR. Accesibilidad completa, carga y restauración siguen fuera de esa cobertura; no reutilizar estos resultados como acreditación de Docker local o nube.
 
 Los pendientes no autorizan por sí mismos cambiar código o desplegar: orientan la
 próxima petición. No se requieren Kubernetes ni una reestructuración del monorepo

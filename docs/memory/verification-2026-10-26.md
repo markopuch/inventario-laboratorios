@@ -199,8 +199,11 @@ backend aislada aprobó **365/365 pruebas**, cero fallos/errores/omitidas, con
 `compileJava test bootJar --rerun-tasks`, salida 0 y build correcto en 2 min 23 s.
 El PostgreSQL 18 temporal en 55432 usó builtin `C.UTF-8`, tras resolver un fallo
 del primer intento con locale `C`; el clúster propio se detuvo y eliminó al
-terminar. El backend habitual conservó su base y salud UP. GitHub/Actions se incorpora en el
-[anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md).
+terminar. El backend habitual conservó su base y salud UP. El commit 58ac8f6
+se publicó en main; Actions 40454293249 aprobó cinco trabajos y repitió las
+pruebas backend/frontend/importador antes de publicar ambas imágenes. Las cuatro
+etiquetas GHCR se consultaron independientemente y coincidieron con los digests
+de publicación. Ver [anexo del cierre](../despliegue/verificacion-cierre-2026-10-27.md).
 
 El daemon Docker local continúa inaccesible; no se validó ejecución de nuevas
 imágenes localmente ni hubo despliegue manual en Render/Vercel. Esas limitaciones

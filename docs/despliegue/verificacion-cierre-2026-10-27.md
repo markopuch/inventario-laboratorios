@@ -96,14 +96,44 @@ verificaciones: backend/JUnit con Java 21 y PostgreSQL 18 temporal del runner,
 frontend con Node 22 y herramienta de importación con Python 3.14/openpyxl 3.1.5.
 Los dos trabajos de publicación Docker dependen del éxito de las tres
 verificaciones. Los pull requests ejecutan verificaciones; solo push a `main`
-o ejecución manual sobre `main` pueden publicar imágenes. El resultado
-remoto y los enlaces de la ejecución se incorporarán después del push; la
-configuración por sí sola no acredita una ejecución aprobada.
+o ejecución manual sobre `main` pueden publicar imágenes. El código se publicó
+en `main`, commit [`58ac8f6`](https://github.com/markopuch/inventario-laboratorios/commit/58ac8f6123849e7467663a53ac62b1c9a09318b2).
+La [ejecución 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249)
+terminó **completed/success, 5/5 trabajos aprobados**, el 27 de octubre entre
+las **00:15:36 y 00:18:54 Lima** (`05:15:36Z–05:18:54Z`). Los logs de los trabajos
+confirman pruebas y publicación de manifiestos. Una consulta independiente al
+registro comprobó las cuatro etiquetas publicadas; no se infiere el resultado
+solo de la configuración.
+
+| Trabajo remoto | Resultado comprobado en logs |
+|---|---|
+| Backend/JUnit | **365 pruebas**, 0 fallos, errores u omitidas; `BUILD SUCCESSFUL` en **1 min 44 s**. |
+| Jason | **93/93 pruebas**, 0 fallos; build de **1679 módulos**, **2,47 s**. |
+| Importador | **28/28 pruebas**, **10,259 s**, `OK`. |
+| Publicar backend | Aprobado; manifiesto publicado y digest confirmado por `containerimage.digest`. |
+| Publicar frontend Jason | Aprobado; manifiesto publicado y digest confirmado por `containerimage.digest`. |
+
+Las dos imágenes se publicaron con las etiquetas **`sha-58ac8f6` y `latest`**:
+
+| Imagen | Digest publicado |
+|---|---|
+| `ghcr.io/markopuch/inventario-laboratorios-backend:sha-58ac8f6` | `sha256:ccde889fa75361e791c9375c031e0c63450c40cf02d34233a4c5af4a61de14b9` |
+| `ghcr.io/markopuch/inventario-laboratorios-frontend-jason:sha-58ac8f6` | `sha256:183d4100c69eb95879b7ba13fd0e9c3ae7ea6c53118118ae1235c8361efa8a74` |
+
+Desde Windows, `docker buildx imagetools inspect` consultó **las cuatro etiquetas**
+(`sha-58ac8f6` y `latest` de ambas imágenes), con salida 0 y digests iguales a los
+logs de publicación. Los índices OCI incluyen `linux/amd64` y atestación.
+Esta inspección remota no necesita el daemon y **no acredita contenedores locales
+arrancados** ni una actualización del volumen PostgreSQL.
+
+El commit que identifica esas imágenes es **58ac8f6**. Una actualización posterior
+solo de documentación no modifica esas imágenes ni reconstruye la aplicación:
+el workflow filtra rutas de código, scripts y su propia configuración.
 
 | Entorno | Estado y límite |
 |---|---|
-| GitHub / Actions | Workflow actualizado en fuente y pendiente de publicación; commit, run y resultado remoto pendientes de incorporar. |
-| GHCR | Se mantienen imágenes separadas backend/Jason, etiquetas `latest` y `sha-<commit>`. No se acredita una imagen nueva hasta finalizar la publicación. |
+| GitHub / Actions | Código publicado en `main`, commit 58ac8f6; run 40454293249 terminado correctamente, **5/5 trabajos aprobados**. |
+| GHCR | Backend y Jason publicados, etiquetas `sha-58ac8f6` y `latest`; logs e inspección independiente de las cuatro etiquetas acreditan los digests indicados arriba. |
 | Docker local | Motor inaccesible en esta sesión. No se certifica ejecución local de las imágenes nuevas ni se reemplazó el volumen existente. |
 | Render / Vercel | Sin despliegue manual en este cierre ni verificación autenticada de nube. Un posible despliegue automático debe confirmarse en el proveedor. |
 | PostgreSQL | Windows, Compose y Render son bases distintas. Código e imágenes no incluyen el inventario ni sus credenciales. |
@@ -112,19 +142,23 @@ La [memoria de Docker/CI](../memory/docker-deployment.md) distingue esta etapa d
 la [evidencia histórica del 3 de octubre](verificacion-docker-actions-2026-10-03.md).
 La variante y los sprints Marko siguen solo locales e ignorados por Git.
 
-La revisión previa a publicar examinó **421 archivos versionados o nuevos no
-ignorados**: no encontró coincidencias con las tres contraseñas demo generadas.
-Se confirmó la exclusión de las carpetas Marko y la ausencia de cambios a las
-migraciones V1–V13. Las credenciales, respaldos y manifiestos privados permanecen
-fuera del repositorio.
+La revisión del árbol publicado examinó **420 archivos de `git ls-files`**:
+no encontró coincidencias con las tres contraseñas demo generadas. El árbol de
+GitHub contiene 420 blobs; las carpetas Marko, el Excel y los archivos privados
+están ausentes, y las migraciones V1–V13 permanecen intactas. Las credenciales,
+respaldos y manifiestos privados se conservan fuera del repositorio.
+
+La comprobación global revisó **63 Markdown y 904 enlaces locales**: 903 están
+disponibles en un clon nuevo; uno corresponde al reporte JUnit local histórico,
+identificado como artefacto regenerable. Ese enlace a `build/reports` no implica
+publicar los reportes de compilación ni cambia su carácter de evidencia local.
 
 ## Pendientes delimitados
 
-1. Registrar commit/push y ejecución real de GitHub Actions con sus imágenes.
-2. Verificar Docker local cuando esté disponible el motor, conservando su volumen.
-3. Acreditar posteriormente el release y recorrido autenticado en Render/Vercel;
+1. Verificar Docker local cuando esté disponible el motor, conservando su volumen.
+2. Acreditar posteriormente el release y recorrido autenticado en Render/Vercel;
    los datos locales no se transfieren por publicar el código.
-4. Completar los 31 estados pendientes solo con información confirmada.
+3. Completar los 31 estados pendientes solo con información confirmada.
 
 La PPT continúa aplazada. Los demás elementos del
 [backlog](../backend-final/backlog.md) requieren priorización independiente.

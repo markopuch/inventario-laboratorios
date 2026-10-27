@@ -3,7 +3,8 @@
 Actualización: **27 de octubre de 2026, America/Lima**. Describe el cierre
 frontend autorizado para Jason. Las comprobaciones locales del 26 y 27 se
 detallan al final; la evidencia del 3 de octubre conserva su alcance histórico.
-Estos cambios no se publicaron en Vercel/Render.
+La publicación en GitHub/GHCR se registra en el anexo del cierre; este documento
+no acredita la versión efectiva ni el recorrido autenticado de Vercel/Render.
 
 ## Reportes y descargas CSV
 
