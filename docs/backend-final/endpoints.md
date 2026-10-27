@@ -206,29 +206,33 @@ Reglas de historia:
 - ADMIN consulta historia incluso tras la baja del equipo/laboratorio o inactivación del actor. G/L necesitan laboratorios activos asignados para su alcance.
 - No hay POST/PUT/DELETE directo de movimientos; el evento se genera únicamente al trasladar.
 
-## Uso guiado de Postman — colección histórica Sprint 7
+## Uso guiado de Postman — colección vigente V13
 
-La colección JSON existente cubre los contratos del cierre Sprint 7. No fue ampliada en este paso de documentación y no se presenta como colección completa de V13. Para usuarios, PATCH de catálogos, mantenimiento, reportes y auditoría, usar las rutas/DTO vigentes de las secciones siguientes y credenciales privadas de una base de verificación.
+La actualización del **27 de octubre de 2026** cubre las 70 operaciones V13,
+incluidas administración de usuarios, PATCH de catálogos, mantenimiento,
+reportes y auditoría. Hay solicitudes adicionales de login por rol y de acceso
+denegado que no incrementan el número de operaciones de la API.
 
-### Importación de la colección base
+Importar [la colección](postman/Inventario-Laboratorios.postman_collection.json)
+y [el environment](postman/Inventario-Laboratorios.postman_environment.json).
+Configurar `baseUrl` sin barra final ni `/api`. Usuarios, contraseñas, tokens e
+IDs iniciales están vacíos; completar únicamente los valores locales del
+entorno elegido. No exportar ni publicar valores privados.
 
-Importar [la colección](postman/Inventario-Laboratorios.postman_collection.json) y [el environment](postman/Inventario-Laboratorios.postman_environment.json) mediante **Import** y seleccionar el environment `Inventario Laboratorios - Local`. La colección usa el [esquema oficial Postman Collection v2.1](https://schema.postman.com/collection/json/v2.1.0/draft-04/collection.json); el procedimiento de importación está descrito en la [documentación de Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-data/).
+La [guía de Postman](postman/README.md) explica selección de rol, variables,
+cuerpos, filtros deshabilitados y guardia de escrituras. La
+[guía Swagger/OpenAPI](openapi.md) describe la documentación generada por el
+backend y su interfaz interactiva.
 
-`baseUrl` comienza en `http://localhost:8080`; el backend y PostgreSQL deben estar iniciados. Los nombres iniciales son marko/aldo/romel. **Contraseñas, tokens e IDs se entregan vacíos**: completa las contraseñas de tu entorno local. No compartas/exportes después un environment con contraseñas o tokens completos. Las variables son el mecanismo estándar para [reutilizar valores entre solicitudes](https://learning.postman.com/docs/sending-requests/variables/variables/).
+Empezar por login, perfil y alcance, y después las consultas GET. Para escribir,
+utilizar una instancia de verificación dedicada y preparar padres, usuarios y
+asignaciones propios. Las bajas, traslados y transiciones de mantenimiento
+alteran las precondiciones: seleccionar y ordenar las solicitudes antes de
+usar el Runner. Un PUT de asignaciones reemplaza todo el conjunto, incluso
+cuando se envía una lista vacía.
 
-Los scripts guardan tokens e IDs solo cuando la respuesta tiene el código esperado. No imprimen secretos. `sufijo` se genera al primer envío y diferencia los nombres/códigos de las pruebas; para iniciar otro conjunto, vacía `sufijo` y los IDs antes de volver a crear registros. Si una creación devuelve 409, no supongas que su ID fue actualizado: corrige el nombre/código o inicia otro conjunto.
-
-Secuencia sugerida, seleccionando solicitudes individuales:
-
-1. **Auth:** ejecutar los tres login. Se guardan `tokenAdmin/Gestor/Lector` e `idUsuarioAdmin/Gestor/Lector`. Consultar `me` para comprobar cada rol.
-2. Crear, sin ejecutar sus DELETE todavía: **Categoría → Subcategoría**; **Sede → Área → Laboratorio origen → Laboratorio destino**. Los POST guardan sus IDs.
-3. **UsuarioLaboratorio:** asignar ambos laboratorios al Gestor y solo el origen al Lector. Esto **reemplaza** las asignaciones de esos usuarios: úsalo en tu entorno de pruebas y conserva su configuración previa si deseas restaurarla.
-4. **Equipos:** crear equipo como Gestor en origen. Probar detalle, filtros, alias ADMIN y PUT. El ejemplo de escritura LECTOR debe devolver 403; la consulta sin JWT debe devolver 401.
-5. **Movimientos:** trasladar como Gestor a destino. Consultar historial como Gestor y Lector, y filtrar por origen/destino. Lector conserva el evento visible por origen, aunque ya no pueda consultar el detalle actual del equipo en destino (403). Consultar `me/laboratorios` confirma que el traslado no cambió asignaciones.
-6. Dar de baja el equipo **después** del traslado. Comprobar que ADMIN/GESTOR pueden consultarlo como BAJA y que el historial persiste. Para repetir un traslado se necesita otro equipo vigente o moverlo a un destino diferente antes de la baja.
-7. Si deseas terminar el conjunto: vaciar asignaciones de Gestor y Lector, dar de baja Subcategoría y Categoría, ambos Laboratorios, Área y Sede. Los DELETE no borran físicamente: equipos y movimientos siguen registrados. Restaurar las asignaciones previas si se reemplazaron en el paso 3.
-
-**No ejecutar el Runner completo sin seleccionar y ordenar los casos.** Los DELETE están cerca del CRUD de cada recurso y los casos negativos requieren estados concretos; ejecutar toda la colección en el orden visual destruye precondiciones. Esta entrega verifica estructura JSON, esquema y correspondencia estática con las 42 rutas. No afirma haber ejecutado la colección en la aplicación Postman.
+Las comprobaciones estáticas de la colección y la comparación HTTP con OpenAPI
+se documentan por separado de una ejecución manual integral en Postman.
 
 ## Trazabilidad del inventario
 

@@ -53,9 +53,13 @@ no sustituyen la verificación final ni acreditan un despliegue remoto.
 
 PDF/XLSX, exportación de registros detallados, gráficos completos del mockup,
 calendario, paginación, refresh tokens, recuperación de contraseña, permisos
-dinámicos y Swagger/OpenAPI no se incorporan en bloque al cierre.
+dinámicos no se incorporan en bloque al cierre.
 Se evaluarán según necesidad y requisitos acordados.
 La demora inicial al ingresar permanece fuera del trabajo solicitado.
+
+El **27 de octubre**, el usuario autorizó por separado actualizar Postman a las
+70 operaciones y añadir Swagger/OpenAPI. La [guía API](backend-final/openapi.md)
+documenta ese bloque y su comprobación; no incluye paginación ni refresh token.
 
 El usuario autorizó después reforzar contraseñas y preparar la verificación de
 GitHub Actions/Docker antes de publicar en GitHub; ese trabajo sí forma parte

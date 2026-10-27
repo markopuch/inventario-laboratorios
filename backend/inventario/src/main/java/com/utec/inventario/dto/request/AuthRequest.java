@@ -1,6 +1,7 @@
 package com.utec.inventario.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -24,5 +25,7 @@ public class AuthRequest {
     @Size(max = 72, message = "La contraseña no puede superar los 72 caracteres")
     @ToString.Exclude
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Schema(format = "password", accessMode = Schema.AccessMode.WRITE_ONLY,
+            description = "Clave existente, sin recortar espacios. Máximo 72 bytes UTF-8. El login no impone el mínimo nuevo de altas/restablecimientos.")
     private String password;
 }

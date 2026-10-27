@@ -1,5 +1,9 @@
 package com.utec.inventario.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,7 @@ import com.utec.inventario.service.LaboratorioService;
 
 import jakarta.validation.constraints.Positive;
 
+@Tag(name = "Laboratorios", description = "Ubicaciones del inventario; actividad y estado operativo son independientes.")
 @RestController
 @RequestMapping("/api/areas/{idArea}/laboratorios")
 public class AreaLaboratorioController {
@@ -29,6 +34,10 @@ public class AreaLaboratorioController {
         this.mapper = mapper;
     }
 
+    @Operation(summary = "Listar laboratorios activos de un área",
+            description = "ADMIN, GESTOR y LECTOR, consulta global. Requiere área activa; esta consulta de catálogo no representa el alcance efectivo del usuario.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<LaboratorioResponse> listarPorArea(

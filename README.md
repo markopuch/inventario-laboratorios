@@ -19,6 +19,15 @@ publicación de Jason en Vercel y del backend/base de datos en Render. La
 no acredita aún el recorrido autenticado actual; distingue publicación y
 funcionamiento comprobado.
 
+**Copia a Render verificada el 27 de octubre:** tras respaldar y probar la
+restauración de ambas bases, `miproyecto-db` reproduce el snapshot Windows con
+**258 equipos, seis usuarios, 351 auditorías y cuatro asignaciones**. Se
+comprobaron salud UP, tres logins y alcance por rol; el proxy autenticado de
+Vercel consulta los 258 equipos. La base local y Docker se conservaron.
+El [informe de migración](docs/despliegue/verificacion-migracion-render-2026-10-27.md)
+documenta las verificaciones y los respaldos privados fuera de Git. La copia
+es puntual: futuros cambios locales no se sincronizan automáticamente.
+
 **Cierre funcional del 26 de octubre de 2026:** la navegación incorpora
 Asignaciones y Auditoría para ADMIN; Configuración se retira del menú y de las
 rutas. Reportes permite descargar cinco CSV de agregados con los filtros
@@ -91,6 +100,7 @@ registra la preservación de la base habitual y las pruebas sobre una base tempo
 | Persistencia | Spring Data JPA / Hibernate y PostgreSQL |
 | Migraciones | Flyway, V1–V13 |
 | Seguridad | Spring Security, BCrypt, JJWT 0.13.0 |
+| Documentación API | Springdoc OpenAPI Web MVC UI 3.2.0; Postman V13/70 operaciones |
 | Mapeo | MapStruct 1.6.3, Lombok, lombok-mapstruct-binding 0.2.0 |
 | Validación y pruebas | Jakarta Validation, JUnit 5, Spring Boot Test |
 | Frontend activo | React 18.3.1, Vite 6.4.3, React Router y Axios; versión Jason |
@@ -484,12 +494,13 @@ Reporte HTML: `backend/inventario/build/reports/tests/test/index.html`.
 JAR: `backend/inventario/build/libs/inventario-0.0.1-SNAPSHOT.jar`.
 La verificación automatizada escribe fixtures solo en la base de pruebas.
 
-## 13. Postman
+## 13. Postman y Swagger/OpenAPI
 
 Importa la [colección](docs/backend-final/postman/Inventario-Laboratorios.postman_collection.json)
 y el [environment](docs/backend-final/postman/Inventario-Laboratorios.postman_environment.json).
-La colección conserva el alcance histórico de Sprint 7; no incluye todas las
-ampliaciones V10–V13. Para estudiar/probar las 70 operaciones actuales usa el
+La colección está actualizada a las **70 operaciones vigentes V13**, con
+autenticación JWT, filtros, cuerpos y variables sin secretos. Consulta la
+[guía de Postman](docs/backend-final/postman/README.md), el
 [catálogo vigente](docs/backend-final/endpoints.md) y los ejemplos de la
 [ampliación](backend/inventario/ACTUALIZACION-BACKEND.md).
 Completa los secretos localmente; tokens e IDs iniciales están vacíos. Sigue el
@@ -504,6 +515,14 @@ La colección no equivale a un Runner integral sin preparación: las bajas deben
 ejecutarse después de probar los recursos dependientes. Las verificaciones
 HTTP automatizadas y el uso manual de Postman se documentan por separado.
 
+Con el backend actualizado en ejecución, abre
+[Swagger UI](http://localhost:8080/swagger-ui.html),
+[OpenAPI JSON](http://localhost:8080/v3/api-docs) o
+[YAML](http://localhost:8080/v3/api-docs.yaml). La
+[guía OpenAPI](docs/backend-final/openapi.md) explica el login, **Authorize**,
+roles/alcance y `API_DOCS_ENABLED=false`. Estas rutas pertenecen al backend;
+su disponibilidad en Render requiere desplegar esta actualización.
+
 ## 14. Documentación
 
 | Documento vigente | Contenido |
@@ -513,7 +532,9 @@ HTTP automatizadas y el uso manual de Postman se documentan por separado.
 | [Arquitectura](docs/backend-final/arquitectura-backend.md) | Capas y responsabilidades |
 | [Auditoría Entity/Flyway Sprint 7](docs/backend-final/auditoria-entity-flyway.md) | Cotejo histórico V9 y alcance de la ampliación |
 | [Flujos principales](docs/backend-final/flujos-principales.md) | Recorridos y ampliaciones de una solicitud |
-| [Endpoints](docs/backend-final/endpoints.md) | Las 70 operaciones; cobertura de la colección histórica |
+| [Endpoints](docs/backend-final/endpoints.md) | Las 70 operaciones y contratos V13 |
+| [Swagger/OpenAPI](docs/backend-final/openapi.md) | Documentación generada, JWT y configuración |
+| [Postman](docs/backend-final/postman/README.md) | Colección completa, variables y ejecución guiada |
 | [Códigos HTTP](docs/backend-final/codigos-http.md) | Éxitos y errores reales |
 | [Reglas](docs/reglas-negocio.md) / [permisos](docs/matriz-permisos.md) | RN-01–45 y autorización |
 | [JWT](docs/autenticacion-jwt.md) | Login, variables y comprobaciones |
@@ -550,7 +571,8 @@ administrativa, frontend Jason, Docker local y publicación GHCR están
 implementados después del cierre histórico de Sprint 7.
 El cierre del 26 de octubre incorpora la pantalla frontend de Auditoría y la
 exportación CSV de agregados; Configuración se retira de la navegación y las rutas.
-Siguen pendientes acreditar el flujo autenticado actual en la nube,
+La copia y el acceso autenticado cloud están acreditados en el informe de
+migración del 27. Siguen pendientes ampliar E2E si se solicita,
 Configuración persistida si se prioriza, PDF/XLSX, refresh tokens,
 permisos dinámicos y paginación para escala futura. La auditoría administrativa
 existente no equivale a una plataforma general de auditoría/observabilidad.
@@ -558,5 +580,6 @@ existente no equivale a una plataforma general de auditoría/observabilidad.
 El [backlog](docs/backend-final/backlog.md) separa esas ampliaciones de mejoras
 opcionales y no las presenta como defectos del alcance entregado.
 Las verificaciones históricas conservan su fecha. El anexo del 27 de octubre
-registra el recorrido local real y los resultados de publicación; la nube y
-Docker local requieren su propia comprobación operativa.
+registra el recorrido local real y los resultados de publicación. La evidencia
+posterior de migración acredita los datos SQL, salud y acceso autenticado cloud;
+no sustituye una comprobación operativa nueva al cambiar cualquier entorno.

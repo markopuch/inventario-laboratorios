@@ -1,5 +1,8 @@
 package com.utec.inventario.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,7 @@ import com.utec.inventario.dto.response.LaboratorioResponse;
 import com.utec.inventario.mapper.LaboratorioMapper;
 import com.utec.inventario.service.LaboratorioService;
 
+@Tag(name = "Catálogos administrativos", description = "Consulta exclusiva de ADMIN, con filtro opcional de actividad.")
 @RestController
 @RequestMapping("/api/admin")
 public class CatalogoAdminController {
@@ -58,26 +62,36 @@ public class CatalogoAdminController {
         this.laboratorioMapper = laboratorioMapper;
     }
 
+    @Operation(summary = "Listar categorías administrativas",
+            description = "Solo ADMIN, alcance global. Sin activo devuelve activas e inactivas; activo=true o false filtra explícitamente.")
     @GetMapping("/categorias")
     public List<CategoriaResponse> listarCategorias(@RequestParam(required = false) Boolean activo) {
         return this.categoriaMapper.toResponse(this.categoriaService.listarCategoriasAdmin(activo));
     }
 
+    @Operation(summary = "Listar subcategorías administrativas",
+            description = "Solo ADMIN, alcance global. Incluye inactivas si se omite activo y permite filtrar por actividad.")
     @GetMapping("/subcategorias")
     public List<SubcategoriaResponse> listarSubcategorias(@RequestParam(required = false) Boolean activo) {
         return this.subcategoriaMapper.toResponse(this.subcategoriaService.listarSubcategoriasAdmin(activo));
     }
 
+    @Operation(summary = "Listar sedes administrativas",
+            description = "Solo ADMIN, alcance global. Incluye inactivas si se omite activo y permite filtrar por actividad.")
     @GetMapping("/sedes")
     public List<SedeResponse> listarSedes(@RequestParam(required = false) Boolean activo) {
         return this.sedeMapper.toResponse(this.sedeService.listarSedesAdmin(activo));
     }
 
+    @Operation(summary = "Listar áreas administrativas",
+            description = "Solo ADMIN, alcance global. Incluye inactivas si se omite activo y permite filtrar por actividad.")
     @GetMapping("/areas")
     public List<AreaResponse> listarAreas(@RequestParam(required = false) Boolean activo) {
         return this.areaMapper.toResponse(this.areaService.listarAreasAdmin(activo));
     }
 
+    @Operation(summary = "Listar laboratorios administrativos",
+            description = "Solo ADMIN, alcance global. Filtra por actividad lógica; estadoOperativo es un dato independiente. Sin activo incluye activos e inactivos.")
     @GetMapping("/laboratorios")
     public List<LaboratorioResponse> listarLaboratorios(@RequestParam(required = false) Boolean activo) {
         return this.laboratorioMapper.toResponse(this.laboratorioService.listarLaboratoriosAdmin(activo));

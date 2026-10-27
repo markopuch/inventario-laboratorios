@@ -1,5 +1,11 @@
 package com.utec.inventario.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
@@ -31,6 +37,7 @@ import com.utec.inventario.service.AlcanceLaboratorioService;
 
 import jakarta.validation.Valid;
 
+@Tag(name = "Autenticación", description = "Acceso JWT, perfil propio y alcance efectivo de laboratorios.")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -55,6 +62,9 @@ public class AuthController {
         this.asignacionMapper = asignacionMapper;
     }
 
+    @Operation(summary = "Iniciar sesión y obtener JWT",
+            description = "Acceso público con userName y password. Normaliza el usuario; no recorta la contraseña. Devuelve Bearer, vigencia y perfil. No renueva ni revoca tokens previos.")
+    @SecurityRequirements
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@Valid @RequestBody AuthRequest request) {
@@ -75,15 +85,21 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Consultar el perfil autenticado",
+            description = "ADMIN, GESTOR y LECTOR. Devuelve el usuario vigente identificado por el JWT; no permite seleccionar otro usuario.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public UsuarioResponse me(@AuthenticationPrincipal UserInfoDetails principal) {
+    public UsuarioResponse me(@Parameter(hidden = true) @AuthenticationPrincipal UserInfoDetails principal) {
         return this.mapper.toResponse(this.usuarioService.obtenerUsuario(principal.getId()));
     }
 
+    @Operation(summary = "Consultar el alcance propio de laboratorios",
+            description = "ADMIN obtiene alcance global y laboratorios activos. GESTOR y LECTOR obtienen solo asignaciones activas a laboratorios activos. Usa el estado vigente sin exigir un JWT nuevo.")
     @GetMapping("/me/laboratorios")
     @ResponseStatus(HttpStatus.OK)
-    public AlcanceLaboratoriosResponse meLaboratorios(@AuthenticationPrincipal UserInfoDetails principal) {
+    public AlcanceLaboratoriosResponse meLaboratorios(@Parameter(hidden = true) @AuthenticationPrincipal UserInfoDetails principal) {
         return this.asignacionMapper.toResponse(
                 this.alcanceLaboratorioService.obtenerAlcanceEfectivo(principal.getId()));
     }

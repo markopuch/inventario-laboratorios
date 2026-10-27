@@ -1,0 +1,101 @@
+{
+  "started_utc": "2026-10-27T11:21:14.840965-05:00",
+  "completed_utc": "2026-10-27T11:22:05.487208-05:00",
+  "target_service": "miproyecto-db",
+  "database": "inventario_laboratorios",
+  "restore_exit": 0,
+  "committed": true,
+  "atomic_pre_and_post_assertions": true,
+  "all_13_table_contents_match_source": true,
+  "user_password_hashes_preserved": true,
+  "flyway_versions_checksums_preserved": true,
+  "foreign_keys_validated": 16,
+  "sequences_preserved_and_next_id_valid": 11,
+  "invalid_indexes": 0,
+  "counts": {
+    "area": 3,
+    "auditoria": 351,
+    "categoria": 25,
+    "equipo": 258,
+    "flyway_schema_history": 13,
+    "laboratorio": 5,
+    "mantenimiento": 0,
+    "movimiento_equipo": 0,
+    "rol": 3,
+    "sede": 2,
+    "subcategoria": 53,
+    "usuario": 6,
+    "usuario_laboratorio": 4
+  },
+  "roles": [
+    {
+      "rol": "ADMIN",
+      "activo": true,
+      "usuarios": 3
+    },
+    {
+      "rol": "GESTOR",
+      "activo": true,
+      "usuarios": 2
+    },
+    {
+      "rol": "LECTOR",
+      "activo": true,
+      "usuarios": 1
+    }
+  ],
+  "local_database_modified": false,
+  "docker_database_modified": false,
+  "backend_resume_pending": false,
+  "application_verification": {
+    "checked_utc": "2026-10-27T11:27:23.099373-05:00",
+    "backend_health": "UP",
+    "logins": [
+      {
+        "username": "jason",
+        "http_status": 200,
+        "role": "ADMIN",
+        "scope_checked": true
+      },
+      {
+        "username": "jorge",
+        "http_status": 200,
+        "role": "GESTOR",
+        "scope_checked": true
+      },
+      {
+        "username": "gabriela",
+        "http_status": 200,
+        "role": "ADMIN",
+        "scope_checked": true
+      }
+    ],
+    "gestor_equipment_count": 56,
+    "admin_users_count": 6,
+    "admin_equipment_count": 258,
+    "audit_count": 351,
+    "report_total_equipment": 258,
+    "vercel_authenticated_proxy_equipment_count": 258,
+    "vercel_anonymous_auth_status": 401,
+    "application_writes_performed": false
+  },
+  "backups": {
+    "local": {
+      "filename": "local-current.backup",
+      "bytes": 74236,
+      "sha256": "8c54d78bac6ddfe1c04d436b2866c7c3d732d5112c79f91f14d7fac0f7d3d7a9",
+      "restore_verified": true
+    },
+    "render_before": {
+      "filename": "render-before.backup",
+      "bytes": 58053,
+      "sha256": "3a94fa606dc98470ef5a3d89910c944d3d47c65d199714c29c2daa2beee37d2a",
+      "restore_verified": true
+    }
+  },
+  "temporary_cluster_stopped": true,
+  "temporary_cluster_files_retained": true,
+  "recursive_cleanup_blocked_by_execution_review": true,
+  "temporary_connection_files_retained": true,
+  "temporary_private_directory_restricted_to_windows_user": true
+}

@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-27",
+  "environment": "PostgreSQL/backend temporales en loopback",
+  "operations": 70,
+  "checks": {
+    "uiLoaded": true,
+    "authorizeDialog": true,
+    "jwtReadOnlyRequest": true,
+    "authorizationNotPersistedAfterReload": true,
+    "pageErrors": 0
+  },
+  "screenshot": "swagger-ui-2026-10-27.png",
+  "applicationDataModified": false
+}

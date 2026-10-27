@@ -19,6 +19,7 @@ repositories {
 
 val mapstructVersion = "1.6.3"
 val jwtVersion = "0.13.0"
+val springdocVersion = "3.2.0"
 
 dependencies {
 	implementation("io.jsonwebtoken:jjwt-api:$jwtVersion")
@@ -30,6 +31,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.mapstruct:mapstruct:$mapstructVersion")
 	compileOnly("org.projectlombok:lombok")

@@ -1,5 +1,32 @@
 # Memoria técnica: backend y base de datos
 
+**OpenAPI/Postman, 27 de octubre:** Springdoc **3.2.0** genera las 70 operaciones
+desde Controllers/DTO. Swagger UI `/swagger-ui.html`, JSON `/v3/api-docs` y YAML
+`/v3/api-docs.yaml` públicos solo GET; JWT y roles de negocio sin cambios.
+Documentación deshabilitable mediante `API_DOCS_ENABLED=false`. Postman cubre
+V13/70 operaciones, con credenciales/IDs vacíos y guía actualizada.
+Regresión nueva en PostgreSQL temporal: **373/373 backend**, cero omitidas,
+JAR correcto; **93/93 frontend**. Ocho pruebas HTTP nuevas contrastan mappings,
+colección, schemas, éxito/errores, filtros, Swagger y seguridad, incluida la
+desactivación de documentación. No se tocaron migraciones ni bases habituales;
+no se publicó ni desplegó este bloque. [Guía y evidencia](../backend-final/openapi.md).
+
+**Copia a Render, 27 de octubre de 2026:** el respaldo nuevo de PostgreSQL
+Windows 18.6 se copió a `miproyecto-db` después de respaldar también el destino.
+Ambos archivos Custom se restauraron correctamente en una base temporal aislada
+antes del cambio. Render PostgreSQL 18.6 conserva **258 equipos, seis cuentas
+activas (3 ADMIN/2 GESTOR/1 LECTOR), 351 auditorías y cuatro asignaciones**.
+Las trece tablas coinciden íntegramente con el respaldo de origen, incluidas las
+credenciales almacenadas; no se publican sus valores. Flyway V1–V13, dieciséis
+FK, once secuencias y cero índices inválidos quedaron comprobados. La operación
+no modificó Windows ni Docker. Detalle, respaldos y alcance HTTP posterior:
+[verificación de migración](../despliegue/verificacion-migracion-render-2026-10-27.md).
+Después se acreditó salud UP y acceso con las contraseñas locales de Jason,
+Jorge y Gabriela. La API ADMIN devuelve seis usuarios, 258 equipos y 351
+auditorías; el resumen de reportes y el proxy autenticado Vercel muestran 258.
+Jorge conserva rol GESTOR, un laboratorio y 56 equipos dentro de su alcance.
+Las observaciones de auditoría anteriores conservan sus fechas históricas.
+
 Fecha de auditoría: **2026-10-26, America/Lima**. Documento local para continuidad de trabajo. Ruta del módulo: `backend/inventario`; paquete raíz `com.utec.inventario`. Se revisaron fuentes, DDL, configuración y artefactos existentes sin iniciar la aplicación, ejecutar migraciones ni repetir pruebas que escriben en PostgreSQL. No se incluyen valores de secretos ni registros personales.
 
 **Actualización del 27 de octubre:** la importación se aplicó en la base nativa
@@ -69,7 +96,7 @@ Hay **12 tablas del dominio, 16 FK y 98 columnas** en el modelo acumulado V1–V
 | Micrometer | **1.17.1** | `micrometer-core` del JAR histórico |
 | Cliente `psql` nativo | **18.6** | Ejecutado `psql --version` el 2026-10-26; no es prueba de versión del servidor |
 
-Dependencias funcionales declaradas: starters de JPA, Flyway, Security, Validation, Web MVC y Actuator; driver PostgreSQL; MapStruct; Lombok; DevTools solo desarrollo. Pruebas con starters específicos de Spring Boot para JPA/Flyway/Security/Validation/Web MVC y plataforma JUnit; Gradle usa `useJUnitPlatform()`.
+Dependencias funcionales declaradas: starters de JPA, Flyway, Security, Validation, Web MVC y Actuator; Springdoc OpenAPI Web MVC UI 3.2.0; driver PostgreSQL; MapStruct; Lombok; DevTools solo desarrollo. Pruebas con starters específicos de Spring Boot para JPA/Flyway/Security/Validation/Web MVC y plataforma JUnit; Gradle usa `useJUnitPlatform()`.
 
 Artefacto leído: `backend/inventario/build/libs/inventario-0.0.1-SNAPSHOT.jar`, **63 246 614 bytes**, modificación registrada el **2026-10-03**. SHA-256: `001e0d7d0ed4003f89854dd5d79f86f616c5eec3813cf49e5c150560631f93e5`. Su manifest identifica `InventarioApplication` como clase de arranque. Las versiones transitivas anteriores corresponden a ese archivo, no a una resolución Gradle repetida hoy. El directorio `build/` puede estar ignorado y no existir en otra copia del repositorio.
 

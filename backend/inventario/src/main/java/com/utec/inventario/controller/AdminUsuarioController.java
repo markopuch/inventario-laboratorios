@@ -1,5 +1,12 @@
 package com.utec.inventario.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.net.URI;
 import java.util.List;
 
@@ -28,6 +35,7 @@ import com.utec.inventario.service.AdminUsuarioService;
 
 import jakarta.validation.Valid;
 
+@Tag(name = "Usuarios", description = "Administración exclusiva de ADMIN; no existe registro público ni CRUD de roles.")
 @RestController
 @RequestMapping("/api/admin/usuarios")
 public class AdminUsuarioController {
@@ -41,16 +49,29 @@ public class AdminUsuarioController {
         this.mapper = mapper;
     }
 
+    @Operation(summary = "Listar usuarios administrativos",
+            description = "Solo ADMIN, alcance global. Incluye cuentas activas e inactivas y devuelve datos públicos, sin contraseñas ni hashes.")
     @GetMapping
     public List<AdminUsuarioResponse> listarUsuarios() {
         return this.mapper.toAdminResponse(this.usuarioService.listarUsuarios());
     }
 
+    @Operation(summary = "Consultar un usuario administrativo",
+            description = "Solo ADMIN, alcance global. Permite consultar una cuenta existente, incluso inactiva, por su ID.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
     @GetMapping("/{id}")
     public AdminUsuarioResponse obtenerUsuario(@PathVariable("id") Integer id) {
         return this.mapper.toAdminResponse(this.usuarioService.obtenerUsuario(id));
     }
 
+    @Operation(summary = "Crear un usuario",
+            description = "Solo ADMIN. Crea una cuenta con rol ADMIN, GESTOR o LECTOR. Username y email son únicos incluso para inactivos. La contraseña exige al menos 15 caracteres Unicode y hasta 72 bytes UTF-8.")
+    @ApiResponse(responseCode = "201", description = "Usuario creado",
+            content = @Content(schema = @Schema(implementation = AdminUsuarioResponse.class)),
+            headers = @Header(name = "Location", description = "URI del recurso creado",
+                    schema = @Schema(type = "string", format = "uri")))
+    @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflict")
     @PostMapping
     public ResponseEntity<AdminUsuarioResponse> crearUsuario(@Valid @RequestBody CreateUsuarioRequest request) {
         AdminUsuarioResponse response = this.mapper.toAdminResponse(
@@ -60,6 +81,11 @@ public class AdminUsuarioController {
         return ResponseEntity.created(location).body(response);
     }
 
+    @Operation(summary = "Actualizar los datos públicos de un usuario",
+            description = "Solo ADMIN. Reemplaza nombre, apellido, email y cargo. No admite cambiar username, rol, actividad o contraseña mediante este contrato.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+    @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflict")
     @PutMapping("/{id}")
     public AdminUsuarioResponse actualizarUsuario(@PathVariable("id") Integer id,
             @Valid @RequestBody UpdateUsuarioRequest request) {
@@ -67,18 +93,32 @@ public class AdminUsuarioController {
                 this.usuarioService.actualizarUsuario(id, this.mapper.convert(request)));
     }
 
+    @Operation(summary = "Activar o desactivar un usuario",
+            description = "Solo ADMIN. Cambia la actividad sin borrar la cuenta; no permite desactivar al último ADMIN activo.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+    @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflict")
     @PatchMapping("/{id}/estado")
     public AdminUsuarioResponse cambiarEstado(@PathVariable("id") Integer id,
             @Valid @RequestBody CambiarEstadoUsuarioRequest request) {
         return this.mapper.toAdminResponse(this.usuarioService.cambiarEstado(id, request.getActivo()));
     }
 
+    @Operation(summary = "Cambiar el rol de un usuario",
+            description = "Solo ADMIN. Asigna uno de los tres roles existentes y protege al último ADMIN activo frente a una degradación.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
+    @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflict")
     @PatchMapping("/{id}/rol")
     public AdminUsuarioResponse cambiarRol(@PathVariable("id") Integer id,
             @Valid @RequestBody CambiarRolUsuarioRequest request) {
         return this.mapper.toAdminResponse(this.usuarioService.cambiarRol(id, request.getRol()));
     }
 
+    @Operation(summary = "Restablecer la contraseña de un usuario",
+            description = "Solo ADMIN. Exige al menos 15 caracteres Unicode y hasta 72 bytes UTF-8, sin recortar la clave. No invalida automáticamente los JWT ya emitidos.")
+    @ApiResponse(responseCode = "204", description = "Contraseña restablecida; sin cuerpo", content = @Content)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
     @PutMapping("/{id}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cambiarPassword(@PathVariable("id") Integer id,

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "backend/inventario/**"
+      - "docs/backend-final/postman/**"
       - "frontend/version-jason/frontend/**"
       - "scripts/**"
       - "importar-inventario-demo.ps1"
@@ -15,6 +16,7 @@ on:
     branches: [main]
     paths:
       - "backend/inventario/**"
+      - "docs/backend-final/postman/**"
       - "frontend/version-jason/frontend/**"
       - "scripts/**"
       - "importar-inventario-demo.ps1"
@@ -41,6 +43,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      - name: Preparar Node para validar scripts Postman
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Validar coleccion Postman contra Controllers y DTO
+        run: python3 -B docs/backend-final/postman/validar_coleccion.py
       - name: Compilar y probar con base exclusiva del runner
         working-directory: backend/inventario
         shell: bash

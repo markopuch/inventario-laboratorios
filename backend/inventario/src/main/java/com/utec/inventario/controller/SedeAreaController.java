@@ -1,5 +1,9 @@
 package com.utec.inventario.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,7 @@ import com.utec.inventario.service.AreaService;
 
 import jakarta.validation.constraints.Positive;
 
+@Tag(name = "Áreas", description = "Segundo nivel de organización, dependiente de una sede.")
 @RestController
 @RequestMapping("/api/sedes/{idSede}/areas")
 public class SedeAreaController {
@@ -29,6 +34,10 @@ public class SedeAreaController {
         this.mapper = mapper;
     }
 
+    @Operation(summary = "Listar áreas activas de una sede",
+            description = "ADMIN, GESTOR y LECTOR, consulta global. Requiere sede activa y devuelve sus áreas activas.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<AreaResponse> listarPorSede(

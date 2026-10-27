@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET,"/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
+                                "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/admin/usuarios", "/api/admin/usuarios/*",
                                 "/api/admin/auditoria", "/api/admin/categorias", "/api/admin/subcategorias",
                                 "/api/admin/sedes", "/api/admin/areas", "/api/admin/laboratorios").hasRole("ADMIN")

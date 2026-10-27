@@ -1,5 +1,13 @@
 # Memoria de conversaciones, decisiones y evolución
 
+**Nuevo bloque autorizado el 27 de octubre:** el usuario pidió actualizar
+Postman y añadir Swagger/OpenAPI. Se incorporó Springdoc 3.2.0, documentación
+generada de las 70 operaciones y colección V13 sin credenciales. Regresión
+backend 373/373 y frontend 93/93; scripts Postman simulados y Swagger probado
+en Chrome contra backend/BD temporales, incluidos Authorize y GET autenticado.
+No se cambiaron migraciones ni bases habituales; no hubo publicación/despliegue.
+Detalle y evidencia: [documentación API](../backend-final/openapi.md).
+
 Corte: **27 de octubre de 2026, America/Lima**. Este archivo conserva contexto
 útil para continuar el proyecto. Es una síntesis técnica contrastada con fuentes;
 no es una transcripción literal ni un respaldo de las bases de datos.
@@ -37,6 +45,17 @@ ni secretos de conversaciones antiguas. La petición actual de crear esta memori
 añade documentación; no confirma nuevos cambios de producto o un nuevo despliegue.
 
 ## Evolución y decisiones que siguen siendo relevantes
+
+**Actualización posterior, 27 de octubre:** el usuario autorizó expresamente
+copiar PostgreSQL Windows a `miproyecto-db` después de respaldar ambas bases y
+confirmó prescindibles los datos remotos anteriores. Ambos respaldos se
+restauraron en un PostgreSQL temporal antes del cambio; Render reprodujo las
+trece tablas, con 258 equipos, seis cuentas, 351 auditorías y cuatro asignaciones.
+Se preservaron credenciales, roles y alcance. Backend reanudado, salud UP,
+tres logins correctos y proxy Vercel autenticado comprobados. Es una copia
+puntual y no una sincronización. Fuente:
+[informe de migración](../despliegue/verificacion-migracion-render-2026-10-27.md).
+La tabla siguiente conserva los hitos anteriores con su fecha.
 
 | Etapa | Resultado y significado actual |
 |---|---|
@@ -78,7 +97,7 @@ Fuentes: [índice backend](../sprints_realizados-backend/README.md),
 - **Permisos:** rol define operaciones; UsuarioLaboratorio define alcance. Responsable de Equipo es custodia, no autorización.
 - **Datos separados de imágenes:** publicar en GHCR no copia usuarios/equipos ni actualiza un volumen. Otra instalación obtiene los datos de migraciones/inicializadores o de un respaldo deliberadamente restaurado.
 - **BDs independientes:** PostgreSQL nativo Windows, PostgreSQL de Compose y PostgreSQL de Render no son la misma base. Cambiar la conexión no traslada datos.
-- **Sin Swagger por decisión temporal:** se detectó que no estaba instalado ni permitido y el usuario dejó pendiente añadirlo para continuar con Vercel. Un 401 en esa ruta no prueba que exista la documentación Swagger.
+- **Swagger, decisión posterior del 27 de octubre:** inicialmente se aplazó para continuar con Vercel. El usuario autorizó después actualizar Postman y añadir Swagger/OpenAPI; la implementación actual usa Springdoc 3.2.0 y conserva los permisos de negocio. Ver [guía y verificación](../backend-final/openapi.md). Esto no acredita un nuevo despliegue remoto.
 - **Puertos:** 8081 se sugirió para evitar conflicto con un backend local en 8080; el Compose vigente usa 8080. No tratar 8081 como contrato actual.
 - **Memoria portable:** este conjunto vive en archivos del proyecto. No se escribió la base interna de memoria de Codex ni se exportaron los rollouts privados.
 

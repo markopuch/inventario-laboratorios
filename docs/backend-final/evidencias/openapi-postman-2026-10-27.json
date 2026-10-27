@@ -1,0 +1,71 @@
+{
+  "verified_at_utc": "2026-10-27T17:18:56.988423+00:00",
+  "scope": "local working tree; no cloud release",
+  "base_revision": "166769e9f4ccffcfa56f59eb49f0d9079c4d0cfe",
+  "springdoc": "3.2.0",
+  "openapi": "3.1",
+  "application_operations": 70,
+  "backend_junit": {
+    "tests": 373,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontend_node_tests": {
+    "tests": 93,
+    "failures": 0
+  },
+  "postman_validation": {
+    "controllers": 19,
+    "operaciones": 70,
+    "solicitudes": 75,
+    "cuerpos_dto": 30,
+    "listados_filtro_dto": 7,
+    "sandbox": {
+      "scripts_compilados": 150,
+      "solicitudes_simuladas": 75,
+      "escrituras_bloqueadas": 33,
+      "logins_invalidos_sin_token": 24,
+      "casos_password_unicode": 8,
+      "http_real": false
+    },
+    "http_real": false
+  },
+  "browser_evidence": "swagger-ui-2026-10-27.json",
+  "jar_generated": true,
+  "temporary_resources_removed": true,
+  "existing_databases_modified": false,
+  "remote_release_performed": false,
+  "source_sha256": {
+    ".github/workflows/imagen.yml": "f65e2cdc036fe33ae08c4f543a3c73ed8f5d387e915b0b1b34ba95bd96f45c0f",
+    "backend/inventario/build.gradle.kts": "0805af6d440cdd6a696d270ea1e42a4c28e4e3d1df31c5e19715e9780aebb870",
+    "backend/inventario/src/main/resources/application.properties": "d1f897945fd85784f91f67af5be8c4482abe02a99415f4ac1cffc03dc6ea2352",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/AdminEquipoController.java": "ce57e0dace522ab4c759de2835f0499df9d78018096fdf0189d6c033015649d1",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/AdminUsuarioController.java": "03e28bccf2ee7edec9eed512047868e9a096c24ebe948acf349793a30cd12d2e",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/AreaController.java": "a3e58ff45f05bdb0b8718e31f8de8273c55f02213aa602977ea31086447f6c5d",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/AreaLaboratorioController.java": "88fda9d274a5b47c9e17af9e47ec7959b48d089921c6e0039f71f0d67f47719d",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/AuditoriaController.java": "6101582839d82cd41ef5ee2e2e9e6932d06fc9f8ce0daca14ad2f21a2a6a22fd",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/AuthController.java": "64b38d270085d3c270837909407733ae94dd71b4e4d103dc3a73ab4a3673d9a7",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/CatalogoAdminController.java": "5177e2a45561df79847013de6e3d8527a0434801221a0a6db804500e4b4f2c6f",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/CategoriaController.java": "0d4c87fed48229b7eeef771b95eefb14d247121de23a43d7863d192b17391b56",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/CategoriaSubcategoriaController.java": "93c0ee7f0fbcf11d14ee755818575ac16368382ab39302a33a6204514a810acf",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/EquipoController.java": "17143bda7d66f037cd238b32a79230f04af7a7acaa5c45984a4511a18a488e7e",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/EquipoMovimientoController.java": "03274d3d301485dbf8aa5193fe3200967bd3cebc817f5274b5fb743131fe781a",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/LaboratorioController.java": "711f6f27d79ceff2f613b3c97f3fef21f8530ad3081d0cc14899fe9195c539f0",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/MantenimientoController.java": "e58f49c9fb1209510e1cd0c11ffed959ea8f4454e42bd9fc351b116dbc7aa4d2",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/MovimientoEquipoController.java": "f822527d5ef6dd1443ffffa182367d2f3a3041617bb82ec5163f73508bbda9a8",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/ReporteController.java": "ab84dffce31a5a5a69cb3bbac1ed7290dd4e6c2f740a828fcf36efc48d39c953",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/SedeAreaController.java": "7e9723a7ab94a6617d08ac10ab3f3ecc0f46a53cf6c5021ecc56fa0d7be7856c",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/SedeController.java": "cb7d89f82cdc621528ddbf26f61a15e64d83faf68c7ed9fdf9b60388005bcd39",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/SubcategoriaController.java": "784a50707fb6151c54bf0b17c6ef826810c5f6615c84becec70fb58b676248ca",
+    "backend/inventario/src/main/java/com/utec/inventario/controller/UsuarioLaboratorioController.java": "490f39867012761578adc9a52e4fdb383b78cd4cea186a0ce62a210e0638d375",
+    "backend/inventario/src/main/java/com/utec/inventario/config/OpenApiConfig.java": "ca9edb28ee6b2fdab8f300525d70b0a9fc3a2f86ad0040064db7d323aae43c0b",
+    "backend/inventario/src/main/java/com/utec/inventario/config/SecurityConfig.java": "ce7b40283273988c9a6d128fb2c2ebcfd888324893af3cbd0b9fdf4f2eb4e1d5",
+    "backend/inventario/src/test/java/com/utec/inventario/OpenApiDisabledIntegrationTests.java": "69b903b936d900f1e94be14a6c388cd19fc3ea045148ed7697510633fe0ec784",
+    "backend/inventario/src/test/java/com/utec/inventario/OpenApiIntegrationTests.java": "3a21472728b02a832bc9585d2acb98f79c90c26100cbb5d7ae138199262acd12",
+    "docs/backend-final/postman/Inventario-Laboratorios.postman_collection.json": "d237d037c27f04638659edc86a29df7d643f1b37a706b0645aed446deb54bdee",
+    "docs/backend-final/postman/Inventario-Laboratorios.postman_environment.json": "e45084a6f646e1a5d8848c40d5d75e16fbbec88c5ce8ed3f1eaec0d1d88988c2",
+    "docs/backend-final/postman/validar_coleccion.py": "f3d3bdffb60438185b44a43687be99434724d2930c41147011488778bef2789e",
+    "docs/backend-final/postman/validar_scripts.cjs": "07ab9c61a8ad210db4913213fa74d73e4f7feb74aa97d6320e8b6bb7344db03d"
+  }
+}

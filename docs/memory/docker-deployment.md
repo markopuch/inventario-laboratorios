@@ -1,5 +1,36 @@
 # Memoria de Docker, CI/CD y deployment
 
+**Documentación API posterior, 27 de octubre:** el backend incorpora Springdoc
+3.2.0 y `API_DOCS_ENABLED` (default true), sin modificar Dockerfiles ni Compose.
+La especificación y Swagger UI se sirven desde el backend, no desde las rutas
+SPA del frontend Vercel. El workflow ahora incluye cambios de Postman como
+disparador y valida la colección/scripts con Python/Node antes de JUnit.
+Comprobación local nueva: 373/373 backend y 93/93 frontend; Postman 70 rutas y
+75 solicitudes contrastadas sin HTTP. Chrome verificó 70 operaciones, Authorize,
+consulta autenticada 200 y autorización no persistida, sin errores de página.
+Se ejecutó el JAR nuevo en backend/BD/red Docker temporales, eliminados al final;
+stack principal conservado saludable. [Guía y evidencia](../backend-final/openapi.md).
+No hubo commit/push, ejecución Actions ni despliegue de este bloque. El Render
+58ac8f6 comprobado abajo no incluye todavía Swagger.
+
+**Migración de datos a Render, 27 de octubre:** copia SQL finalizada a las
+11:22:05 Lima desde un respaldo nuevo de PostgreSQL Windows. Se respaldaron
+ambas instancias y se probaron sus restauraciones en PostgreSQL temporal antes
+de sobrescribir el destino autorizado. `miproyecto-db` contiene **258 equipos,
+seis usuarios, 351 auditorías y cuatro asignaciones**; las trece tablas,
+dieciséis FK, once secuencias y Flyway V1–V13 coinciden con el origen respaldado.
+El backend fue suspendido y reanudado para el corte. Panel y logs confirman
+Docker, plan Free, Oregon, rama main, Root Directory backend/inventario,
+despliegue 58ac8f6, Java 21.0.12.1, Spring Boot 4.1.1 y PostgreSQL 18.6.
+La comprobación posterior acreditó salud UP y tres logins HTTP 200 (Jason ADMIN,
+Jorge GESTOR y Gabriela ADMIN), alcance correcto, seis usuarios, 258 equipos y
+351 auditorías. Reportes y proxy autenticado Vercel muestran 258 equipos; el
+acceso anónimo a `/api/auth/me` por Vercel devuelve 401. El arranque Free tardó
+varios minutos; se esperó la respuesta real, sin equiparar Live con salud.
+Windows y Docker se conservaron.
+Fuentes y detalles: [informe de migración](../despliegue/verificacion-migracion-render-2026-10-27.md).
+Los párrafos previos a esta migración que siguen describen estados históricos.
+
 **Cierre actualizado el 27 de octubre de 2026:** la importación y el recorrido
 se comprobaron con backend y PostgreSQL nativos reales; 257 equipos cargados,
 31 pendientes y 258 equipos totales. El workflow integra verificaciones

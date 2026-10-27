@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.utec.inventario.domain.RolUsuario;
 import com.utec.inventario.security.PasswordPolicy;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
@@ -46,6 +47,8 @@ public class CreateUsuarioRequest {
     @NotBlank(message = "La contraseña es obligatoria")
     @ToString.Exclude
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Schema(format = "password", accessMode = Schema.AccessMode.WRITE_ONLY, minLength = 15, maxLength = 72,
+            description = "Mínimo 15 caracteres Unicode y máximo 72 bytes UTF-8. No se recorta; no puede contener solo blancos.")
     private String password;
 
     @NotNull(message = "El rol es obligatorio")

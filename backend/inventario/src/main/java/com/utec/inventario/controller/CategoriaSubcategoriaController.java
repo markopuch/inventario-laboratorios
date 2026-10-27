@@ -1,5 +1,9 @@
 package com.utec.inventario.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,7 @@ import com.utec.inventario.service.SubcategoriaService;
 
 import jakarta.validation.constraints.Positive;
 
+@Tag(name = "Subcategorías", description = "Clasificación dependiente de una categoría; lectura global y escritura ADMIN.")
 @RestController
 @RequestMapping("/api/categorias/{idCategoria}/subcategorias")
 public class CategoriaSubcategoriaController {
@@ -29,6 +34,10 @@ public class CategoriaSubcategoriaController {
         this.mapper = mapper;
     }
 
+    @Operation(summary = "Listar subcategorías activas de una categoría",
+            description = "ADMIN, GESTOR y LECTOR, consulta global. Requiere categoría activa y devuelve únicamente sus hijas activas.")
+    @ApiResponse(responseCode = "200", description = "Respuesta obtenida correctamente", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<SubcategoriaResponse> listarPorCategoria(

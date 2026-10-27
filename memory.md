@@ -2,6 +2,32 @@
 
 ## Arquitectura general
 
+**Documentación API, 27 de octubre:** por petición del usuario se añadió
+Springdoc **3.2.0**, compatible con Spring Boot 4.1.x, y se actualizó Postman a
+las **70 operaciones V13**. Swagger UI, JSON/YAML, JWT mediante Authorize,
+roles/alcance, filtros, DTO y errores se documentan en la
+[guía API](docs/backend-final/openapi.md). Solo GET de documentación es público;
+la API conserva seguridad y contratos. `API_DOCS_ENABLED=false` deshabilita
+interfaz y especificación. La regresión local aprobó **373/373 backend**
+(incluidas ocho pruebas nuevas OpenAPI) y **93/93 frontend**, con JAR generado
+y PostgreSQL temporal eliminado. Esta actualización sigue local; no acredita
+un nuevo commit, GitHub Actions ni despliegue Render. La migración de datos
+descrita abajo mantiene su evidencia propia.
+
+**Copia a Render, 27 de octubre:** se respaldaron de nuevo PostgreSQL Windows y
+`miproyecto-db`, y ambos respaldos se restauraron con éxito en una instancia
+temporal aislada. La copia transaccional al destino confirmó **258 equipos,
+seis usuarios, 351 auditorías y cuatro asignaciones**, con igualdad de las trece
+tablas, V1–V13, dieciséis FK y once secuencias. El backend se pausó y reanudó;
+salud UP, tres logins correctos, roles/alcance, reportes y proxy autenticado
+Vercel quedaron comprobados después. Windows y Docker no se modificaron.
+Es una copia puntual, sin sincronización automática. Véase el
+[informe de migración](docs/despliegue/verificacion-migracion-render-2026-10-27.md).
+El clúster de verificación está detenido y su puerto libre; la revisión
+automática bloqueó la limpieza de su carpeta y de los archivos de conexión.
+Permanecen fuera de Git en un directorio restringido al usuario Windows actual;
+el informe registra ese pendiente sin incluir valores privados.
+
 **Aplicación cliente-servidor de tres niveles en un monorepo:** una SPA React de
 Jason consume una API REST Spring Boot organizada por capas; PostgreSQL conserva
 los datos. Un proxy `/api` une frontend y backend. El navegador nunca accede
@@ -44,11 +70,12 @@ versionable; no contiene contraseñas, JWT, dumps ni hashes de contraseñas.
 | Java del proyecto / equipo | toolchain **21** / Oracle **21.0.12+7-LTS-205** | Declaración / instalación local |
 | Gradle Wrapper | **9.7.1** | `gradle-wrapper.properties`; sin ejecutar resolución nueva |
 | Spring Boot / dependency-management | **4.1.1 / 1.1.7** | Plugins declarados |
+| Springdoc OpenAPI, starter con Swagger UI | **3.2.0** | Dependencia añadida el 27; API y UI comprobadas con HTTP/Chrome en PostgreSQL temporal; no es el número de versión propio de Swagger UI |
 | Spring Framework / Security / Data JPA | **7.0.9 / 7.1.1 / 4.1.1** | Bibliotecas del JAR local histórico del 3 de octubre |
 | Hibernate ORM / Validator | **7.4.5.Final / 9.1.3.Final** | Mismo JAR histórico |
 | Flyway / driver PostgreSQL JDBC | **12.4.0 / 42.7.13** | Mismo JAR; no son la versión del servidor PostgreSQL |
 | MapStruct / JJWT / Lombok binding | **1.6.3 / 0.13.0 / 0.2.0** | Declarados; Lombok sin versión explícita, gestionado por BOM |
-| PostgreSQL Windows | Binarios **18.6**, servicio principal 18 activo | No hubo `SELECT version()` ni lectura autenticada del esquema |
+| PostgreSQL Windows | Binarios y servidor **18.6** | Servidor identificado por el respaldo nuevo del 27; esquema y datos del snapshot restaurados y comprobados de forma aislada |
 | PostgreSQL Docker | `postgres:18-alpine` | Smoke aislado del 27: servidor **18.6** comprobado; no extrapolar su patch a la base del stack principal. |
 | Jason, versión de paquete | **1.0.0** | Frontend integrado |
 | Jason React / React DOM | **18.3.1 / 18.3.1** | Lockfile e instalación local |
@@ -65,7 +92,7 @@ versionable; no contiene contraseñas, JWT, dumps ni hashes de contraseñas.
 | PowerShell / Python | **7.6.5 / 3.14.6** | Herramientas locales; Python no es runtime de la aplicación |
 | VS Code / Postman / pgAdmin 4 | **1.143.1 / 12.31.7 / 9.17** | Registro/metadatos locales; herramientas de desarrollo |
 | Windows | **11 Home**, `10.0.26200`, build **26200**, 64 bits | Sistema anfitrión |
-| Render / Vercel / GHCR | Servicios alojados; sin versión de runtime efectiva confirmada | No inferirla de versiones del equipo ni de Dockerfiles |
+| Render / Vercel / GHCR | Render: PostgreSQL **18.6 Debian**, Java **21.0.12.1** y Spring Boot **4.1.1** observados el 27; runtime efectivo de Vercel/GHCR no inventariado | SQL y logs de Render durante la migración; no inferidos del equipo |
 
 Más versiones: [backend y dependencias del JAR](docs/memory/backend-database.md),
 [todas las dependencias directas de ambos frontends](docs/memory/frontend.md) y
@@ -86,6 +113,7 @@ parte que se vaya a cambiar:
 | [Historia y decisiones](docs/memory/history-decisions.md) | Evolución, sprints, decisiones del usuario, 11 chats recuperados y asuntos no confirmados |
 | [Registro de verificación del 26](docs/memory/verification-2026-10-26.md) | Auditoría inicial y etapas posteriores del 26, con enlace al cierre del 27 |
 | [Cierre local y publicación](docs/despliegue/verificacion-cierre-2026-10-27.md) | Importación aplicada, recorrido con API/BD reales, política de contraseñas y resultados posteriores de JUnit/CI |
+| [Copia Windows → Render](docs/despliegue/verificacion-migracion-render-2026-10-27.md) | Respaldos nuevos, restauración verificada, 258 equipos/seis cuentas y comprobaciones posteriores |
 | [Snapshot de fuentes](docs/memory/snapshot-2026-10-26.json) | Auditoría inicial: HEAD y SHA-256 de fuentes, incluidas cinco rutas de Marko ahora solo locales; no es un manifiesto del árbol publicado tras la reorganización |
 
 Orden para resolver discrepancias: **instrucción actual del usuario → código y
@@ -194,8 +222,9 @@ todas las versiones históricas de atributos.
 Flyway crea/modifica el esquema al arrancar; `ddl-auto=validate` y
 `open-in-view=false`. No editar migraciones ya aplicadas para cambiar el esquema;
 añadir la siguiente versión. V4 siembra roles y catálogos, **no cuentas de acceso**.
-Los ERD v3 representan V13; los ERD v2/PDF antiguos y la colección Postman de
-cierre V9 deben interpretarse según su fecha. Detalle: [modelo V13](docs/Erd_actual/modelo-vigente-v13.md).
+Los ERD v3 representan V13; los ERD v2/PDF antiguos deben interpretarse según
+su fecha. Postman ya cubre V13/70 operaciones y OpenAPI se genera desde los
+Controllers/DTO vigentes. Detalle: [modelo V13](docs/Erd_actual/modelo-vigente-v13.md).
 
 ### Reglas que no deben perderse
 
@@ -269,7 +298,7 @@ Guía y límites: [importación demo](docs/importacion-inventario-demo.md).
 |---|---|---|
 | Desarrollo nativo | Vite `5173` → proxy `/api` → Spring `8080` → PostgreSQL Windows `5432` | Script de backend solicita credenciales; requiere entorno de proceso |
 | Docker local | `127.0.0.1:3000` → Nginx `80` → backend `8080` → `db:5432` | Tres servicios, un Compose; backend también expuesto en `127.0.0.1:8080` |
-| Nube publicada | Vercel → rewrite `/api` → backend Render → BD Render | BD nueva independiente; release/variables/versión efectiva no inspeccionados en panel |
+| Nube publicada | Vercel → rewrite `/api` → backend Render → BD Render | Render ejecuta 58ac8f6; BD copiada del respaldo Windows el 27, sin sincronización continua |
 
 Compose canónico: [backend/inventario/docker-compose.yml](backend/inventario/docker-compose.yml),
 proyecto `inventario-docker`. Volumen declarado `postgres_data`, nombre esperado
@@ -316,13 +345,16 @@ Publicar imágenes no despliega automáticamente contenedores ni copia la BD.
 | Último smoke Docker acreditado | **58ac8f6, 27 de octubre 00:45:44 Lima**, entorno aislado 22/22 incluidas siete de UI, V1–V13 y PostgreSQL 18.6; limpieza correcta. El stack principal conserva su versión anterior. La prueba e1ce75a con 94 comprobaciones HTTP del 3 de octubre sigue histórica. |
 | Última publicación CI comprobada | [run 40454293249](https://github.com/markopuch/inventario-laboratorios/actions/runs/40454293249), commit `58ac8f6`, cinco trabajos success, **27 de octubre 00:18:54 Lima**; imágenes y digests en el anexo del cierre. La publicación histórica de `b164c44` se conserva en el anexo de infraestructura. |
 | Vercel hoy | [/login](https://inventario-laboratorios.vercel.app/login) responde HTTP 200 HTML |
-| Render y proxy hoy | GET salud/proxy agotaron 35 y 50 segundos; estado indeterminado, sin atribuir causa |
-| Login/flujos cloud | No acreditados. Historial confirma BD Render nueva sin importación; no confirma creación del primer ADMIN |
+| Render y proxy | Auditoría inicial del 26: timeouts. El 27: despliegue 58ac8f6 observado, backend reanudado y salud UP; proxy Vercel autenticado devuelve 258 equipos y el acceso anónimo a `/auth/me` devuelve 401. |
+| Datos cloud | Copia SQL confirmada el 27 a las 11:22:05 Lima: 258 equipos, seis cuentas activas, 351 auditorías y cuatro asignaciones; las trece tablas coinciden con el respaldo Windows. |
+| Acceso cloud | Logins HTTP 200 de Jason ADMIN, Jorge GESTOR y Gabriela ADMIN; alcance efectivo comprobado. Jorge consulta 56 equipos de L409 y un laboratorio. API ADMIN acredita seis usuarios, 258 equipos y 351 auditorías, y el reporte resumen devuelve 258. |
 
 El 11 de octubre se observó Render `UP` y 401 JSON por el proxy Vercel. Esa
 evidencia explica que hubo conectividad, pero no sustituye la comprobación actual.
 El corte antiguo del backlog que decía «nube pendiente» quedó superado por la
-publicación comunicada por el usuario; todavía falta acreditar el flujo autenticado.
+publicación comunicada por el usuario. La copia SQL del 27 sustituye el estado
+anterior de base nueva sin importación; el resultado HTTP posterior se registra
+en el informe de migración.
 
 ## Pendientes concretos
 
@@ -335,12 +367,12 @@ exportar CSV y añadir Auditoría exclusiva para ADMIN. Ese bloque está impleme
 y verificado localmente; no incorpora todo el backlog ni acredita una publicación
 en nube. Los README y el backlog distinguen evidencia histórica y estado en fuente.
 
-1. **Cierre cloud:** verificar release/variables por nombre en Render/Vercel, salud/proxy y existencia del primer ADMIN; probar login, roles/alcance y flujo funcional con cuentas autorizadas.
+1. **Operación cloud:** copia de datos, despliegue Render 58ac8f6, salud, tres logins/roles/alcance y proxy Vercel acreditados el 27. Ampliar E2E solo si se solicita y mantener un plan de respaldo/retención; la base Free indica expiración el 9 de noviembre. Los dos respaldos privados verificados se conservan fuera de Git.
 2. **BD local:** carga y conteos comprobados mediante API. Completar los 31 estados pendientes con información confirmada; consultar versión real y `flyway_schema_history` de la instancia concreta cuando se necesite verificación SQL, sin exportar registros privados.
 3. **Docker local:** el motor responde y el stack principal anterior está saludable. Las imágenes publicadas 58ac8f6 aprobaron 22 comprobaciones aisladas; actualizar el stack principal solo con autorización, conservando volumen y datos. Su base tiene tres equipos/tres cuentas, distinta de los 258 equipos/seis cuentas nativos; no se copió la carga Excel a Docker.
 4. **Producto:** Configuración está fuera del alcance y fue retirada. Auditoría ADMIN y CSV de reportes están implementados; gráficos completos, Excel/PDF, exportación detallada y calendario siguen pendientes de priorización.
-5. **Mejoras de plataforma:** Swagger/OpenAPI, refresh/revocación, recuperación de contraseña, paginación, permisos dinámicos y operación avanzada no están implementados en el alcance revisado. Asignar roles sí existe; CRUD del catálogo Rol no.
-6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos localmente y repetidos en CI; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de la política de contraseñas sin escrituras. Actions 5/5 e imágenes publicadas y consultadas en GHCR. Accesibilidad completa, carga y restauración siguen fuera de esa cobertura; no reutilizar estos resultados como acreditación de Docker local o nube.
+5. **Mejoras de plataforma:** Swagger/OpenAPI y Postman V13 están implementados y verificados localmente el 27, pendientes de publicación/despliegue. Refresh/revocación, recuperación de contraseña, límite de intentos de login, paginación, permisos dinámicos y operación avanzada siguen fuera de este bloque. Asignar roles sí existe; CRUD del catálogo Rol no.
+6. **Calidad:** backend 365/365, frontend 93/93 e importador 28/28 correctos localmente y repetidos en CI; JAR/build aprobados, 10 recorridos simulados y 8 con API/BD reales, más comprobaciones reales de contraseñas. Actions 5/5 e imágenes comprobadas en GHCR. La transferencia cloud añade su propia evidencia SQL/HTTP y restauración de ambos backups; no es otra ejecución de esas suites. Accesibilidad completa y carga siguen pendientes.
 
 Los pendientes no autorizan por sí mismos cambiar código o desplegar: orientan la
 próxima petición. No se requieren Kubernetes ni una reestructuración del monorepo
